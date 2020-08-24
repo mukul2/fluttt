@@ -9,10 +9,11 @@ import 'dart:async';
 import 'dart:convert';
 import '../login_view.dart';
 import 'package:http/http.dart' as http;
-List data;
-String AUTH_KEY ;
-class SubscriptionViewPatient extends StatefulWidget {
 
+List data = [];
+String AUTH_KEY;
+
+class SubscriptionViewPatient extends StatefulWidget {
   SubscriptionViewPatient();
 
   @override
@@ -20,37 +21,32 @@ class SubscriptionViewPatient extends StatefulWidget {
 }
 
 class HomePageState extends State<SubscriptionViewPatient> {
-
-
   Future<String> getData() async {
+    Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+    SharedPreferences prefs;
+    prefs = await _prefs;
+    AUTH_KEY = prefs.getString("auth");
     final http.Response response = await http.post(
       "http://telemedicine.drshahidulislam.com/api/" + 'get_subscription_list',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(
-          <String, String>{'uid': USER_ID,'user_type': "patient"}),
+      body:
+          jsonEncode(<String, String>{'uid': USER_ID, 'user_type': "patient"}),
     );
 
     this.setState(() {
       data = json.decode(response.body);
-     // showThisToast("subsc size "+ (data.length).toString());
+      // showThisToast("subsc size "+ (data.length).toString());
     });
-
-
 
     return "Success!";
   }
 
   @override
-  void initState()  async{
-     this.getData();
-     Future<SharedPreferences> _prefs =
-     SharedPreferences.getInstance();
-     SharedPreferences prefs;
-     prefs = await _prefs;
-     AUTH_KEY =  prefs.getString("auth");
+  void initState() {
+    this.getData();
   }
 
   PageController pageController = PageController(
@@ -72,7 +68,6 @@ class HomePageState extends State<SubscriptionViewPatient> {
         appBar: AppBar(
           elevation: 0,
           title: new Text("Subscriptions"),
-
           bottom: TabBar(
             tabs: [
               Tab(
@@ -92,45 +87,43 @@ class HomePageState extends State<SubscriptionViewPatient> {
 }
 
 Widget MySubscription(List data) {
-  return new ListView.builder(
+  return (data.length>0)?  ListView.builder(
     itemCount: data == null ? 0 : data.length,
-
     itemBuilder: (BuildContext context, int index) {
       return new InkWell(
-          onTap: (){
+          onTap: () {
 //            Navigator.push(
 //                context,
 //                MaterialPageRoute(builder: (context) => OnlineDoctorList((data[index]["id"]).toString())));
           },
           child: Card(
-
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(00.0),
             ),
             child: ListTile(
               title: Padding(
                 padding: EdgeInsets.fromLTRB(10, 10, 0, 0),
-                child: new Text(data[index]["dr_info"]["name"],
-                  style: TextStyle(fontWeight: FontWeight.bold),),
+                child: new Text(
+                  data[index]["dr_info"]["name"],
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
-              subtitle:Padding(
-                padding:  EdgeInsets.fromLTRB(10, 00, 0, 10),
-                child: new Text((data[index]["number_of_months"]).toString()+" months",
-                  style: TextStyle(fontWeight: FontWeight.bold),),
-              ) ,
-
+              subtitle: Padding(
+                padding: EdgeInsets.fromLTRB(10, 00, 0, 10),
+                child: new Text(
+                  (data[index]["number_of_months"]).toString() + " months",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
           ));
     },
-  );
+  ):Center(child: Text("No Data"),);
 }
-Widget NewSubscription() {
 
+Widget NewSubscription() {
   return new Text("New Subscription");
 }
-
-
-
 
 //Widget tabBody(){
 //  return

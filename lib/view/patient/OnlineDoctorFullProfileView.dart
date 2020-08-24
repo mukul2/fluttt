@@ -144,7 +144,7 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
                           padding: EdgeInsets.fromLTRB(10, 10, 0, 0),
                           child: new Text(
                             widget.online_doctors_service_info[index]
-                                ["service_name_info"]["name"],
+                            ["service_name_info"]["name"],
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -152,8 +152,8 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
                           padding: EdgeInsets.fromLTRB(10, 00, 0, 10),
                           child: new Text(
                             (widget.online_doctors_service_info[index]
-                                        ["fees_per_unit"])
-                                    .toString() +
+                            ["fees_per_unit"])
+                                .toString() +
                                 CURRENCY_USD_SIGN,
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
@@ -168,98 +168,111 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
                             // makePayment();
                             payable_amount =
                                 (widget.online_doctors_service_info[index]
-                                        ["fees_per_unit"])
+                                ["fees_per_unit"])
                                     .toString();
                             docID = widget.id.toString();
                             docNAME = widget.name;
                             docPhoto = widget.photo;
                             type = (widget.online_doctors_service_info[index]
-                                    ["service_name_info"]["name"])
+                            ["service_name_info"]["name"])
                                 .toString();
                             showThisToast(type);
                             scaffoldKey.currentState
-                                .showBottomSheet((context) => Container(
-                                      width: double.infinity,
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding: EdgeInsets.all(15),
-                                            child: Text(
-                                              "Choose a Payment Method",
-                                              style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                          ListView.builder(
-                                            shrinkWrap: true,
-                                            itemCount: widget.paymentMethods ==
-                                                    null
-                                                ? 0
-                                                : widget.paymentMethods.length,
-                                            itemBuilder: (BuildContext context,
-                                                int index_) {
-                                              return new InkWell(
-                                                  onTap: () {
-                                                    payable_amount =
-                                                        (widget.online_doctors_service_info[
-                                                                    index][
-                                                                "fees_per_unit"])
-                                                            .toString();
-                                                    docID =
-                                                        widget.id.toString();
-                                                    docNAME = widget.name;
-                                                    docPhoto = widget.photo;
-                                                    type = (widget.online_doctors_service_info[
-                                                                    index][
-                                                                "service_name_info"]
-                                                            ["name"])
-                                                        .toString();
-
-                                                    if (widget.paymentMethods[
-                                                    index_]["name"] ==
-                                                        "Paypal") {
-                                                      showThisToast(type);
-                                                      Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (BuildContext
-                                                                    context) =>
-                                                                PaypalPayment(
-                                                                    type,
-                                                              onFinish:
-                                                                  (number) async {
-                                                                showThisToast(number.toString());
-                                                                  },
-                                                            ),
-                                                          ));
-                                                    }
-                                                  },
-                                                  child: Card(
-                                                      color: Colors.white70,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(00.0),
-                                                      ),
-                                                      child: ListTile(
-                                                        trailing: Icon(
-                                                            Icons.arrow_right),
-                                                        title: Text(widget
-                                                                .paymentMethods[
-                                                        index_]["name"]),
-                                                      )));
-                                            },
-                                          ),
-                                        ],
+                                .showBottomSheet((context) =>
+                                Container(
+                                  width: double.infinity,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.all(15),
+                                        child: Text(
+                                          "Choose a Payment Method",
+                                          style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold),
+                                        ),
                                       ),
-                                      margin: const EdgeInsets.only(
-                                          top: 5, left: 15, right: 15),
-                                      color: Colors.white,
-                                    ));
+                                      ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: widget.paymentMethods ==
+                                            null
+                                            ? 0
+                                            : widget.paymentMethods.length,
+                                        itemBuilder: (BuildContext context,
+                                            int index_) {
+                                          return new InkWell(
+                                              onTap: () {
+                                                payable_amount =
+                                                    (widget
+                                                        .online_doctors_service_info[
+                                                    index][
+                                                    "fees_per_unit"])
+                                                        .toString();
+                                                docID =
+                                                    widget.id.toString();
+                                                docNAME = widget.name;
+                                                docPhoto = widget.photo;
+                                                type = (widget
+                                                    .online_doctors_service_info[
+                                                index][
+                                                "service_name_info"]
+                                                ["name"])
+                                                    .toString();
+
+                                                if (widget.paymentMethods[
+                                                index_]["name"] ==
+                                                    "Paypal") {
+                                                  showThisToast(type);
+                                                  Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (BuildContext
+                                                        context) =>
+                                                            PaypalPayment(
+                                                              type,
+                                                              onFinish:
+                                                                  (
+                                                                  number) async {},
+                                                            ),
+                                                      ));
+                                                } else
+                                                if (widget.paymentMethods[
+                                                index_]["name"] ==
+                                                    "bkash") {
+                                                  Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (BuildContext
+                                                        context) =>
+                                                            BkashPaymentActivity(),
+                                                      ));
+                                                }
+                                              },
+                                              child: Card(
+                                                  color: Colors.white70,
+                                                  shape:
+                                                  RoundedRectangleBorder(
+                                                    borderRadius:
+                                                    BorderRadius
+                                                        .circular(00.0),
+                                                  ),
+                                                  child: ListTile(
+                                                    trailing: Icon(
+                                                        Icons.arrow_right),
+                                                    title: Text(widget
+                                                        .paymentMethods[
+                                                    index_]["name"]),
+                                                  )));
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  margin: const EdgeInsets.only(
+                                      top: 5, left: 15, right: 15),
+                                  color: Colors.white,
+                                ));
                           },
                         ),
                       ),
@@ -272,6 +285,24 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
         ),
       ),
     );
+  }
+}
+
+class BkashPaymentActivity extends StatefulWidget {
+  @override
+  _BkashPaymentActivityState createState() => _BkashPaymentActivityState();
+}
+
+class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(appBar: AppBar(title: Text("bKash Payment"),),
+      body: SingleChildScrollView(
+        child: Column(
+
+
+        ),
+      ),);
   }
 }
 //
@@ -553,72 +584,73 @@ class _MakePrescriptionRequestState
       body: Scaffold(
         body: SingleChildScrollView(
             child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                "Write your problems in detail and Doctor will send you prescripton",
-                style: TextStyle(
-                    color: Color(0xFF34448c), fontWeight: FontWeight.bold),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                child: TextFormField(
-                  initialValue: "",
-                  validator: (value) {
-                    problem = value;
-                    if (value.isEmpty) {
-                      return 'Write your Problems';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
-                child: SizedBox(
-                    height: 50,
-                    width: double.infinity, // match_parent
-                    child: RaisedButton(
-                      color: Color(0xFF34448c),
-                      onPressed: () async {
-                        // Validate returns true if the form is valid, or false
-                        // otherwise.
-                        if (_formKey.currentState.validate()) {
-                          // If the form is valid, display a Snackbar.
-                          setState(() {
-                            StandbyWid = Text("Please wait");
-                          });
-                          final http.Response response = await http.post(
-                            _baseUrl + 'add-prescription-request',
-                            headers: <String, String>{
-                              'Content-Type': 'application/json; charset=UTF-8',
-                              'Authorization': AUTH_KEY,
-                            },
-                            body: jsonEncode(<String, String>{
-                              'patient_id': USER_ID,
-                              'dr_id': widget.docID,
-                              'payment_status': "1",
-                              'problem': problem,
-                              'payment_details': widget.tranactionID
-                            }),
-                          );
-                          showThisToast(response.statusCode.toString());
-                          //popup count
-
-                          setState(() {
-                            StandbyWid = Text("Prescription request success");
-                          });
-                        } else {}
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    "Write your problems in detail and Doctor will send you prescripton",
+                    style: TextStyle(
+                        color: Color(0xFF34448c), fontWeight: FontWeight.bold),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                    child: TextFormField(
+                      initialValue: "",
+                      validator: (value) {
+                        problem = value;
+                        if (value.isEmpty) {
+                          return 'Write your Problems';
+                        }
+                        return null;
                       },
-                      child: StandbyWid,
-                    )),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
+                    child: SizedBox(
+                        height: 50,
+                        width: double.infinity, // match_parent
+                        child: RaisedButton(
+                          color: Color(0xFF34448c),
+                          onPressed: () async {
+                            // Validate returns true if the form is valid, or false
+                            // otherwise.
+                            if (_formKey.currentState.validate()) {
+                              // If the form is valid, display a Snackbar.
+                              setState(() {
+                                StandbyWid = Text("Please wait");
+                              });
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add-prescription-request',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': AUTH_KEY,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': USER_ID,
+                                  'dr_id': widget.docID,
+                                  'payment_status': "1",
+                                  'problem': problem,
+                                  'payment_details': widget.tranactionID
+                                }),
+                              );
+                              showThisToast(response.statusCode.toString());
+                              //popup count
+
+                              setState(() {
+                                StandbyWid =
+                                    Text("Prescription request success");
+                              });
+                            } else {}
+                          },
+                          child: StandbyWid,
+                        )),
+                  ),
+                ],
               ),
-            ],
-          ),
-        )),
+            )),
       ),
     );
   }

@@ -378,7 +378,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       'amount': payable_amount,
                       'ends': endDate,
                     }));
-                    //  showThisToast(response.statusCode.toString());
+                     showThisToast(response.statusCode.toString());
+                     showThisToast(response.body);
                     //popup count
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
