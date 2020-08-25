@@ -38,6 +38,7 @@ import 'myYoutubePlayer.dart';
 
 var OWN_PHOTO;
 String AUTH_KEY;
+String A_KEY;
 String UPHOTO;
 String UEMAIL;
 String UID;
@@ -60,10 +61,8 @@ Map<int, Color> colorCodes = {
 MaterialColor customColor = MaterialColor(0xFF34448c, colorCodes);
 final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
 final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
-var header = <String, String>{
-  'Content-Type': 'application/json; charset=UTF-8',
-  'Authorization': AUTH_KEY,
-};
+var header;
+
 GlobalKey _bottomNavigationKey = GlobalKey();
 Color tColor = Color(0xFF34448c);
 SharedPreferences prefs;
@@ -72,11 +71,16 @@ void mainP() async {
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   prefs = await _prefs;
   AUTH_KEY = prefs.getString("auth");
+  A_KEY = prefs.getString("auth");
   UID = prefs.getString("uid");
   UNAME = prefs.getString("uname");
   UPHOTO = prefs.getString("uphoto");
   UEMAIL = prefs.getString("uemail");
   UPHONE = prefs.getString("uphone");
+  header = <String, String>{
+    'Content-Type': 'application/json; charset=UTF-8',
+    'Authorization': AUTH_KEY,
+  };
   // = prefs.getString("auth");
   runApp(PatientAPP());
 }
@@ -897,13 +901,9 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
 
                               final http.Response response = await http.post(
                                 _baseUrl + 'add_home_appointment_info',
-                                headers: <String, String>{
-                                  'Content-Type':
-                                      'application/json; charset=UTF-8',
-                                  'Authorization': AUTH_KEY,
-                                },
+                                headers: header,
                                 body: jsonEncode(<String, String>{
-                                  'patient_id': USER_ID,
+                                  'patient_id': UID,
                                   'dr_id': widget.data["id"].toString(),
                                   'problems': problems,
                                   'phone': phone,
@@ -1634,11 +1634,13 @@ class BasicProfile extends StatefulWidget {
 
 class _BasicProfileState extends State<BasicProfile> {
   String user_name_from_state = UNAME;
-  String user_picture = USER_PHOTO;
+  String user_picture = UPHOTO;
+
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
+    showThisToast(user_picture);
     return Scaffold(
       appBar: AppBar(
         title: Text("Profile Information"),
@@ -1663,17 +1665,14 @@ class _BasicProfileState extends State<BasicProfile> {
               //contentType: new MediaType('image', 'png'));
 
               request.files.add(multipartFile);
-              request.fields.addAll(<String, String>{'user_id': USER_ID});
-              request.headers.addAll(<String, String>{
-                'Content-Type': 'application/json; charset=UTF-8',
-                'Authorization': AUTH_KEY,
-              });
-              // showThisToast(request.toString());
+              request.fields.addAll(<String, String>{'user_id': UID});
+              request.headers.addAll(header);
+               showThisToast(AUTH_KEY+"/n"+UID);
 
               var response = await request.send();
 
               print(response.statusCode);
-              // showThisToast(response.statusCode.toString());
+               showThisToast(response.statusCode.toString());
 
               response.stream.transform(utf8.decoder).listen((value) {
                 //print(value);
@@ -1681,7 +1680,7 @@ class _BasicProfileState extends State<BasicProfile> {
 
                 var data = jsonDecode(value);
                 //showThisToast(data.t);
-                // showThisToast(data.toString());
+                 showThisToast((data["photo"]).toString());
                 setState(() {
                   user_picture = (data["photo"]).toString();
                   UPHOTO = user_picture;
@@ -1689,7 +1688,7 @@ class _BasicProfileState extends State<BasicProfile> {
               });
             },
             child: Image.network(
-              _baseUrl_image + user_picture,
+              _baseUrl_image + UPHOTO,
               width: 250,
               height: 250,
             ),
@@ -1716,7 +1715,7 @@ class _BasicProfileState extends State<BasicProfile> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     TextFormField(
-                                      initialValue: USER_NAME,
+                                      initialValue: user_name_from_state,
                                       validator: (value) {
                                         newName = value;
                                         if (value.isEmpty) {
@@ -1742,9 +1741,10 @@ class _BasicProfileState extends State<BasicProfile> {
                             child: Text('Update'),
                             onPressed: () {
                               if (_formKey.currentState.validate()) {
-                                var status = updateDisplayName(newName);
+                                var status = updateDisplayName(AUTH_KEY,UID,newName);
                                 USER_NAME = newName;
                                 UNAME = newName;
+                                prefs.setString("uname", newName);
 
                                 setState(() {
                                   user_name_from_state = newName;
@@ -1850,7 +1850,7 @@ class BasicProfileActivity extends StatelessWidget {
                 },
                 subtitle: Padding(
                   padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
-                  child: Text(USER_NAME),
+                  child: Text(UNAME),
                 ),
                 title: Row(
                   children: <Widget>[
@@ -2127,8 +2127,12 @@ Future<void> showNameEditDialog(BuildContext context) async {
             child: Text('Update'),
             onPressed: () {
               if (_formKey.currentState.validate()) {
-                var status = updateDisplayName(newName);
-                status.then((value) => Navigator.of(context).pop());
+                var status = updateDisplayName(AUTH_KEY,UID,newName);
+                status.then((value) => (){
+                  prefs.setString("uname", newName);
+                  Navigator.of(context).pop();
+
+                });
               }
             },
           ),
@@ -2140,7 +2144,7 @@ Future<void> showNameEditDialog(BuildContext context) async {
 
 Widget ChatListWidget(BuildContext context) {
   // String UID = USER_ID;
-  String UID = USER_ID;
+
   // showThisToast("user id " + UID);
 
   // FirebaseDatabase.instance.reference().child("xploreDoc").once()
@@ -2185,7 +2189,7 @@ Widget ChatListWidget(BuildContext context) {
                             parner_photo = lists[index]["sender_photo"];
                           }
 
-                          String own_photo = USER_PHOTO;
+                          String own_photo = UPHOTO;
                           PARTNER_PHOTO = parner_photo;
 
                           String chatRoom = createChatRoomName(
@@ -2196,9 +2200,9 @@ Widget ChatListWidget(BuildContext context) {
                               context,
                               MaterialPageRoute(
                                   builder: (context) => ChatScreen(
-                                      own_id,
-                                      own_name,
-                                      own_photo,
+                                      UID,
+                                      UNAME,
+                                      UPHOTO,
                                       partner_id,
                                       partner_name,
                                       parner_photo,
@@ -2636,13 +2640,10 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
 
                           request.files.add(multipartFile);
                           request.fields
-                              .addAll(<String, String>{'patient_id': USER_ID});
+                              .addAll(<String, String>{'patient_id': UID});
                           request.fields.addAll(
                               <String, String>{'diseases_name': diseaesName});
-                          request.headers.addAll(<String, String>{
-                            'Content-Type': 'application/json; charset=UTF-8',
-                            'Authorization': AUTH_KEY,
-                          });
+                          request.headers.addAll(header);
                           //     showThisToast(request.toString());
 
                           var response = await request.send();

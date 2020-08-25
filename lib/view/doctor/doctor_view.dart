@@ -33,7 +33,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'myYoutubePlayer.dart';
 
 var OWN_PHOTO;
-String AUTH_KEY ;
+String AUTH_KEY;
+
 String UPHOTO;
 String UEMAIL;
 String UID;
@@ -64,9 +65,9 @@ var header = <String, String>{
 GlobalKey _bottomNavigationKey = GlobalKey();
 Color tColor = Color(0xFF34448c);
 SharedPreferences prefs;
-void mainD()async {
-  Future<SharedPreferences> _prefs =
-  SharedPreferences.getInstance();
+
+void mainD() async {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   prefs = await _prefs;
   AUTH_KEY = prefs.getString("auth");
   UID = prefs.getString("uid");
@@ -692,7 +693,11 @@ class _MyEarningsWidgetState extends State<MyEarningsWidget> {
           ),
         ),
         body: TabBarView(
-          children: [MySubscription((data)), NewSubscription(), NewSubscription()],
+          children: [
+            MySubscription((data)),
+            NewSubscription(),
+            NewSubscription()
+          ],
         ),
       ),
     );
@@ -2901,7 +2906,6 @@ class DeptOnlineActivity extends StatelessWidget {
 //          ),
         ],
       ),
-
     );
   }
 }
@@ -3069,15 +3073,18 @@ class _BasicProfileState extends State<BasicProfile> {
                             child: Text('Update'),
                             onPressed: () {
                               if (_formKey.currentState.validate()) {
-                                var status = updateDisplayName(newName);
+                                var status =
+                                    updateDisplayName(AUTH_KEY, UID, newName);
                                 USER_NAME = newName;
-                                UNAME =newName;
+                                UNAME = newName;
 
                                 setState(() {
                                   user_name_from_state = newName;
                                 });
-                                status.then(
-                                    (value) => Navigator.of(context).pop());
+                                status.then((value) => () {
+                                      prefs.setString("uname", newName);
+                                      Navigator.of(context).pop();
+                                    });
                               }
                             },
                           ),
@@ -3260,149 +3267,149 @@ class _BlogActivityWithStateState extends State<BlogActivityWithState> {
           height: 50,
           child: (blogCategoryList.length > 0)
               ? ListView.builder(
-            scrollDirection: Axis.horizontal,
-            shrinkWrap: true,
-            itemCount:
-            blogCategoryList == null ? 0 : blogCategoryList.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Container(
-                height: 50,
-                child: InkWell(
-                    onTap: () async {
-                      setState(() {
-                        _value = index;
-                      });
-                      final http.Response response = await http.post(
-                        _baseUrl + 'all-blog-info',
-                        headers: <String, String>{
-                          'Content-Type':
-                          'application/json; charset=UTF-8',
-                          'Authorization': AUTH_KEY,
-                        },
-                        body: jsonEncode(<String, String>{
-                          'blog_category':
-                          (blogCategoryList[_value]["id"]).toString()
-                        }),
-                      );
-                      this.setState(() {
-                        blogList = json.decode(response.body);
-                        //    showThisToast("blog size " + (blogList.length).toString());
-                      });
-                    },
-                    child: _value == index
-                        ? Card(
-                      color: Color(0xFF34448c),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(0),
-                        child: Padding(
-                          padding:
-                          EdgeInsets.fromLTRB(10, 0, 10, 0),
-                          child: Center(
-                            child: Text(
-                              blogCategoryList[index]["name"],
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                        : Card(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(0),
-                        child: Padding(
-                          padding:
-                          EdgeInsets.fromLTRB(10, 0, 10, 0),
-                          child: Center(
-                            child: Text(
-                              blogCategoryList[index]["name"],
-                              style: TextStyle(
-                                  color: Color(0xFF34448c)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )),
-              );
-            },
-          )
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  itemCount:
+                      blogCategoryList == null ? 0 : blogCategoryList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Container(
+                      height: 50,
+                      child: InkWell(
+                          onTap: () async {
+                            setState(() {
+                              _value = index;
+                            });
+                            final http.Response response = await http.post(
+                              _baseUrl + 'all-blog-info',
+                              headers: <String, String>{
+                                'Content-Type':
+                                    'application/json; charset=UTF-8',
+                                'Authorization': AUTH_KEY,
+                              },
+                              body: jsonEncode(<String, String>{
+                                'blog_category':
+                                    (blogCategoryList[_value]["id"]).toString()
+                              }),
+                            );
+                            this.setState(() {
+                              blogList = json.decode(response.body);
+                              //    showThisToast("blog size " + (blogList.length).toString());
+                            });
+                          },
+                          child: _value == index
+                              ? Card(
+                                  color: Color(0xFF34448c),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(0),
+                                    child: Padding(
+                                      padding:
+                                          EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                      child: Center(
+                                        child: Text(
+                                          blogCategoryList[index]["name"],
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Card(
+                                  color: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(0),
+                                    child: Padding(
+                                      padding:
+                                          EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                      child: Center(
+                                        child: Text(
+                                          blogCategoryList[index]["name"],
+                                          style: TextStyle(
+                                              color: Color(0xFF34448c)),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )),
+                    );
+                  },
+                )
               : Text("No Category"),
         ),
         (blogList.length > 0)
             ? ListView.builder(
-          shrinkWrap: true,
-          itemCount: blogList == null ? 0 : blogList.length,
-          itemBuilder: (BuildContext context, int index) {
-            return Container(
-              height: 300,
-              child: InkWell(
-                  onTap: () {
-                    LinkToPlay =
-                        (blogList[index]["youtube_video"].toString())
-                            .replaceAll("https://youtu.be/", "");
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                BlogDetailsWidget(blogList[index])));
-                  },
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0.0),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(0),
-                      child: Column(
-                        children: <Widget>[
-                          ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                  (_baseUrl_image +
-                                      (blogList[index]["dr_info"]
-                                      ["photo"])
-                                          .toString())),
-                            ),
-                            title: new Text(
-                              blogList[index]["title"],
-                              style:
-                              TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: new Text(
-                              (blogList[index]["dr_info"]["name"])
-                                  .toString(),
-                              style:
-                              TextStyle(fontWeight: FontWeight.bold),
+                shrinkWrap: true,
+                itemCount: blogList == null ? 0 : blogList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Container(
+                    height: 300,
+                    child: InkWell(
+                        onTap: () {
+                          LinkToPlay =
+                              (blogList[index]["youtube_video"].toString())
+                                  .replaceAll("https://youtu.be/", "");
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      BlogDetailsWidget(blogList[index])));
+                        },
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(0.0),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(0),
+                            child: Column(
+                              children: <Widget>[
+                                ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundImage: NetworkImage(
+                                        (_baseUrl_image +
+                                            (blogList[index]["dr_info"]
+                                                    ["photo"])
+                                                .toString())),
+                                  ),
+                                  title: new Text(
+                                    blogList[index]["title"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: new Text(
+                                    (blogList[index]["dr_info"]["name"])
+                                        .toString(),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                new Expanded(
+                                  child: new Image.network(
+                                    (_baseUrl_image +
+                                        (blogList[index]["photo_info"][0]
+                                                ["photo"])
+                                            .toString()),
+                                    fit: BoxFit.fitWidth,
+                                    height: 250,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          new Expanded(
-                            child: new Image.network(
-                              (_baseUrl_image +
-                                  (blogList[index]["photo_info"][0]
-                                  ["photo"])
-                                      .toString()),
-                              fit: BoxFit.fitWidth,
-                              height: 250,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )),
-            );
-          },
-        )
+                        )),
+                  );
+                },
+              )
             : Container(
-          height: 200,
-          child: Center(
-            child: Text("No Blog Post"),
-          ),
-        )
+                height: 200,
+                child: Center(
+                  child: Text("No Blog Post"),
+                ),
+              )
       ],
     );
   }
@@ -3453,8 +3460,11 @@ Future<void> showNameEditDialog(BuildContext context) async {
             child: Text('Update'),
             onPressed: () {
               if (_formKey.currentState.validate()) {
-                var status = updateDisplayName(newName);
-                status.then((value) => Navigator.of(context).pop());
+                var status = updateDisplayName(AUTH_KEY, UID, newName);
+                status.then((value) => () {
+                      Navigator.of(context).pop();
+                      prefs.setString("uname", newName);
+                    });
               }
             },
           ),

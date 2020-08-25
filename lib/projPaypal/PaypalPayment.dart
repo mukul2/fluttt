@@ -22,10 +22,10 @@ import 'config.dart';
 
 final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
 String AUTH_KEY;
+
 class PaypalPayment extends StatefulWidget {
   final Function onFinish;
-  String TYPE ;
-
+  String TYPE;
 
   PaypalPayment(this.TYPE, {this.onFinish});
 
@@ -34,7 +34,6 @@ class PaypalPayment extends StatefulWidget {
     return PaypalPaymentState();
   }
 }
-
 
 class PaypalPaymentState extends State<PaypalPayment> {
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -58,10 +57,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
   String cancelURL = 'cancel.example.com';
 
   @override
-  void initState()  {
+  void initState() {
     super.initState();
-
-
 
     Future.delayed(Duration.zero, () async {
       try {
@@ -164,7 +161,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
 
   @override
   Widget build(BuildContext context) {
-    showThisToast("from widget "+widget.TYPE);
+    showThisToast("from widget " + widget.TYPE);
     print(checkoutUrl);
 
     if (checkoutUrl != null) {
@@ -187,20 +184,20 @@ class PaypalPaymentState extends State<PaypalPayment> {
                 services
                     .executePayment(executeUrl, payerID, accessToken)
                     .then((id) async {
-                      showThisToast("real "+id);
+                  showThisToast("real " + id);
                   //  widget.onFinish(id);
                   //  Navigator.of(context).pop();
                   Future<SharedPreferences> _prefs =
-                  SharedPreferences.getInstance();
+                      SharedPreferences.getInstance();
                   prefs = await _prefs;
-                  AUTH_KEY =  prefs.getString("auth");
+                  AUTH_KEY = prefs.getString("auth");
                   if (widget.TYPE == 'Prescription Service') {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => MakePrescriptionRequestWidget(
                                 id, payable_amount, docID)));
-                  } else if (widget.TYPE  == '1 Month Subscription') {
+                  } else if (widget.TYPE == '1 Month Subscription') {
                     DateTime selectedDate = DateTime.now();
                     String startDate = (selectedDate.year).toString() +
                         "-" +
@@ -245,7 +242,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
                     // Navigator.of(context).pop();
-                  } else if (widget.TYPE  == '3 Month Subscription') {
+                  } else if (widget.TYPE == '3 Month Subscription') {
                     DateTime selectedDate = DateTime.now();
                     String startDate = (selectedDate.year).toString() +
                         "-" +
@@ -289,7 +286,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
                     //  Navigator.of(context).pop();
-                  } else if (widget.TYPE  == '6 Month Subscription') {
+                  } else if (widget.TYPE == '6 Month Subscription') {
                     DateTime selectedDate = DateTime.now();
                     String startDate = (selectedDate.year).toString() +
                         "-" +
@@ -332,7 +329,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
                     //Navigator.of(context).pop();
-                  } else if (widget.TYPE  == '1 Year Subscription') {
+                  } else if (widget.TYPE == '1 Year Subscription') {
                     DateTime selectedDate = DateTime.now();
                     String startDate = (selectedDate.year).toString() +
                         "-" +
@@ -378,8 +375,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       'amount': payable_amount,
                       'ends': endDate,
                     }));
-                     showThisToast(response.statusCode.toString());
-                     showThisToast(response.body);
+                    showThisToast(response.statusCode.toString());
+                    showThisToast(response.body);
                     //popup count
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
@@ -387,12 +384,12 @@ class PaypalPaymentState extends State<PaypalPayment> {
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
                     // Navigator.of(context).pop();
-                  } else if (widget.TYPE  == 'Chat') {
+                  } else if (widget.TYPE == 'Chat') {
                     final http.Response response = await http.post(
                       _baseUrl + 'add_chat_appointment_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization':AUTH_KEY,
+                        'Authorization': AUTH_KEY,
                       },
                       body: jsonEncode(<String, String>{
                         'patient_id': USER_ID,
@@ -529,20 +526,19 @@ class PaypalPaymentState extends State<PaypalPayment> {
                                 docNAME,
                                 docPhoto,
                                 chatRoom)));
-                  }else if (widget.TYPE  == "Video Call") {
+                  } else if (widget.TYPE == "Video Call") {
                     showThisToast("video");
                     // Navigator.of(context).pop();
-                  }else {
-                    showThisToast("Not mathc "+widget.TYPE);
+                  } else {
+                    showThisToast("Not mathc " + widget.TYPE);
                   }
                 });
-              } else{
+              } else {
                 showThisToast("No Payer id found");
               }
               //  Navigator.of(context).pop();
-            }else{
+            } else {
               showThisToast("probl here 1");
-              
             }
             if (request.url.contains(cancelURL)) {
               Navigator.of(context).pop();
@@ -692,6 +688,7 @@ class _MakePrescriptionRequestState
     );
   }
 }
+
 void showThisToast(String s) {
   Fluttertoast.showToast(
       msg: s,
