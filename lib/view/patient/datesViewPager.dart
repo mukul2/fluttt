@@ -10,6 +10,7 @@ import 'dart:async';
 import 'dart:convert';
 import '../login_view.dart';
 import 'package:http/http.dart' as http;
+final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
 
 List skill_info;
 List education_info;
@@ -257,7 +258,7 @@ Widget chamberBooking(chamber_info) {
                       height: 60,
                       child: Expanded(
                         child: Image.network(
-                          "http://telemedicine.drshahidulislam.com/" + photo_,
+                          _baseUrl_image + photo_,
                           width: 60,
                           height: 60,
                         ),
@@ -296,7 +297,6 @@ Widget printAllDates() {
  // showThisToast((now.month).toString() + ' starts');
   showThisToast(now.toString());
   now = now.add(new Duration(days: 10));
-  showThisToast((now.month).toString() + 'month starts');
   showThisToast(now.toString());
   int i = 0;
 //  while ((now.weekday) == monday) {

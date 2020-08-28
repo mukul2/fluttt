@@ -273,7 +273,7 @@ SPEC CHECKSUMS:
   agora_rtc_engine: e45c7d4fd42f3f679195a56c5c9cdc61f6818ea1
   AgoraRtcEngine_iOS: b2eedd8f9ab47b71163f3285e836bd23feb43fff
   Firebase: 57957c8d6eb3d8b80a560b1dc58be24724b89ff2
-  firebase_auth: 00d6e1ab6d890cd6d3c624df61702e3a7072d1e3
+  firebase_auth: d99b993c1405096e66c58211b1cd956c23eed1c5
   firebase_core: 335c02abd48672b7c83c683df833d0488a72e73e
   firebase_core_web: d501d8b946b60c8af265428ce483b0fff5ad52d1
   firebase_database: 88085c38a41ad0b5c3c611ede7205831a2ece844

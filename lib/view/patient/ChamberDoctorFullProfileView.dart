@@ -381,7 +381,7 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
 
     for (int i = 0; i < datesList.length; i++) {
       tabBarView.children.add(Padding(
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.all(0),
         child: Card(
           child: Column(
             children: <Widget>[
@@ -422,16 +422,16 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(10),
+                padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child:
-                Text("Chamber Opening Time " + startTimesList[datesListWeekMap[i]]),
+                Text("Opening Time " + startTimesList[datesListWeekMap[i]]),
               ),
               Padding(
-                padding: EdgeInsets.all(10),
-                child: Text("Chamber Closing Time " + endTimesList[datesListWeekMap[i]]),
+                padding: EdgeInsets.fromLTRB(0,0,0,15),
+                child: Text("Closing Time " + endTimesList[datesListWeekMap[i]]),
               ),
               Padding(
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(0),
                 child: Center(
                   child: RaisedButton(
                     color: Colors.pink,

@@ -4,6 +4,7 @@ import 'dart:io' show File, Platform;
 import 'package:appxplorebd/projPaypal/config.dart';
 import 'package:appxplorebd/utils/mySharedPreffManager.dart';
 import 'package:appxplorebd/view/login_view.dart';
+import 'package:appxplorebd/view/patient/sharedActivitys.dart';
 import 'package:appxplorebd/view/patient/sharedData.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
@@ -101,7 +102,7 @@ class PatientAPP extends StatelessWidget {
       onWillPop: _onWillpop,
       child: MaterialApp(
         title: 'Flutter Demo',
-        theme: ThemeData(primarySwatch: customColor),
+        theme: ThemeData(fontFamily: 'SF Pro Display Regular'),
         home: MyHomePage(title: 'Flutter Demo Home Page'),
       ),
     );
@@ -502,7 +503,7 @@ class _HomeState extends State<Home> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => SubscriptionViewPatient()));
+                          builder: (context) => SubscriptionViewPatient(AUTH_KEY,UID)));
                 },
                 child: Card(
                   margin: EdgeInsets.all(0.5),
@@ -637,6 +638,49 @@ class _HomeState extends State<Home> {
                             padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
                             child: Text(
                               "Home Visits",
+                              style: TextStyle(color: Color(0xFF34448c)),
+                            ))
+                      ],
+                    ),
+                  ),
+                )),
+            InkWell(
+                onTap: () {
+//                  Navigator.push(
+//                      context,
+//                      MaterialPageRoute(
+//                          builder: (context) => HomeVisitsDoctorsList()));
+
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              VideoAppointmentListActivityPatient(A_KEY, UID)));
+                },
+                child: Container(
+                  height: 110,
+                  child: Card(
+                    margin: EdgeInsets.all(0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(0.0),
+                    ),
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Container(
+                          height: 48,
+                          width: 48,
+                          child: Image.asset(
+                            "assets/help.png",
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Padding(
+                            padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+                            child: Text(
+                              "Online Appointment",
                               style: TextStyle(color: Color(0xFF34448c)),
                             ))
                       ],
@@ -937,6 +981,142 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
                 ],
               ),
             )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+BoxDecoration myBoxDecoration() {
+  return BoxDecoration(
+    borderRadius:
+        BorderRadius.all(Radius.circular(5.0) //         <--- border radius here
+            ),
+    border: Border.all(
+      color: Colors.blue,
+    ),
+  );
+}
+
+class AddDiseasesActivity extends StatefulWidget {
+  Function function;
+
+  //ChooseDeptActivity(this.deptList__, this.function);
+  AddDiseasesActivity({Key key, this.function}) : super(key: key);
+
+//  final Map<String, dynamic> data =
+//  new Map<String, dynamic>();
+//  data['id'] = widget.deptList__[index]["id"].toString();
+//  data['name'] =
+//  widget.deptList__[index]["name"].toString();
+//  widget.function(data);
+//  Navigator.of(context).pop(true);
+  @override
+  _AddDiseasesActivityState createState() => _AddDiseasesActivityState();
+}
+
+class _AddDiseasesActivityState extends State<AddDiseasesActivity> {
+  final _formKey = GlobalKey<FormState>();
+  String diseaesName, currentStatus, firstNoticeDate;
+  DateTime selectedDate = DateTime.now();
+  String selctedDate_ = DateTime.now().toIso8601String();
+  String dateToUpdate = (DateTime.now().year).toString() +
+      "-" +
+      (DateTime.now().month).toString() +
+      "-" +
+      (DateTime.now().day).toString();
+
+  //String dateToUpdate = "Choose First Notice Date";
+  Future<Null> _selectDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(2015, 8),
+        lastDate: DateTime(2101));
+    if (picked != null && picked != selectedDate)
+      setState(() {
+        selectedDate = picked;
+        selctedDate_ = selectedDate.toIso8601String();
+        dateToUpdate = (picked.year).toString() +
+            "-" +
+            (picked.month).toString() +
+            "-" +
+            (picked.day).toString();
+      });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // errr
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Add New Diseases"),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: TextFormField(
+                initialValue: "",
+                validator: (value) {
+                  diseaesName = value;
+                  if (value.isEmpty) {
+                    return 'Please enter Diseases Name';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.pink)),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue)),
+                    labelText: "Diseases Name"),
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+              ),
+            ),
+            Text("First notice date"),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
+              child: Container(
+                decoration: myBoxDecoration(),
+                child: ListTile(
+                  onTap: () {
+                    _selectDate(context);
+                  },
+                  trailing: Icon(Icons.arrow_downward),
+                  title: Text(dateToUpdate),
+                  subtitle: Text("First Notice Date"),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: TextFormField(
+                initialValue: "",
+                validator: (value) {
+                  currentStatus = value;
+                  if (value.isEmpty) {
+                    return 'Please enter current status';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.pink)),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue)),
+                    labelText: "Current status"),
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+              ),
+            ),
           ],
         ),
       ),
@@ -1636,11 +1816,10 @@ class _BasicProfileState extends State<BasicProfile> {
   String user_name_from_state = UNAME;
   String user_picture = UPHOTO;
 
-
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    showThisToast(user_picture);
+    //this one is ok
     return Scaffold(
       appBar: AppBar(
         title: Text("Profile Information"),
@@ -1667,12 +1846,12 @@ class _BasicProfileState extends State<BasicProfile> {
               request.files.add(multipartFile);
               request.fields.addAll(<String, String>{'user_id': UID});
               request.headers.addAll(header);
-               showThisToast(AUTH_KEY+"/n"+UID);
+              showThisToast(AUTH_KEY + "/n" + UID);
 
               var response = await request.send();
 
               print(response.statusCode);
-               showThisToast(response.statusCode.toString());
+              showThisToast(response.statusCode.toString());
 
               response.stream.transform(utf8.decoder).listen((value) {
                 //print(value);
@@ -1680,21 +1859,23 @@ class _BasicProfileState extends State<BasicProfile> {
 
                 var data = jsonDecode(value);
                 //showThisToast(data.t);
-                 showThisToast((data["photo"]).toString());
+                showThisToast((data["photo"]).toString());
                 setState(() {
                   user_picture = (data["photo"]).toString();
                   UPHOTO = user_picture;
                 });
               });
             },
-            child: Image.network(
-              _baseUrl_image + UPHOTO,
-              width: 250,
-              height: 250,
+            child: Padding(
+              padding: EdgeInsets.all(15),
+              child: CircleAvatar(
+                radius: 100,
+                backgroundImage: NetworkImage(_baseUrl_image + UPHOTO),
+              ),
             ),
           )),
           Padding(
-            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+            padding: EdgeInsets.fromLTRB(10, 10, 10, 00),
             child: Card(
               child: ListTile(
                 onTap: () {
@@ -1741,7 +1922,8 @@ class _BasicProfileState extends State<BasicProfile> {
                             child: Text('Update'),
                             onPressed: () {
                               if (_formKey.currentState.validate()) {
-                                var status = updateDisplayName(AUTH_KEY,UID,newName);
+                                var status =
+                                    updateDisplayName(AUTH_KEY, UID, newName);
                                 USER_NAME = newName;
                                 UNAME = newName;
                                 prefs.setString("uname", newName);
@@ -1783,7 +1965,7 @@ class _BasicProfileState extends State<BasicProfile> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+            padding: EdgeInsets.fromLTRB(10, 00, 10, 00),
             child: Card(
               child: ListTile(
                 subtitle: Padding(
@@ -1802,7 +1984,7 @@ class _BasicProfileState extends State<BasicProfile> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+            padding: EdgeInsets.fromLTRB(10, 00, 10, 10),
             child: Card(
               child: ListTile(
                 subtitle: Padding(
@@ -2127,12 +2309,11 @@ Future<void> showNameEditDialog(BuildContext context) async {
             child: Text('Update'),
             onPressed: () {
               if (_formKey.currentState.validate()) {
-                var status = updateDisplayName(AUTH_KEY,UID,newName);
-                status.then((value) => (){
-                  prefs.setString("uname", newName);
-                  Navigator.of(context).pop();
-
-                });
+                var status = updateDisplayName(AUTH_KEY, UID, newName);
+                status.then((value) => () {
+                      prefs.setString("uname", newName);
+                      Navigator.of(context).pop();
+                    });
               }
             },
           ),
@@ -2307,7 +2488,7 @@ class _DiseasesWidgetState extends State<DiseasesWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'patient_id': USER_ID}),
+      body: jsonEncode(<String, String>{'patient_id': UID}),
     );
     this.setState(() {
       diseasesList = json.decode(response.body);
@@ -2367,6 +2548,16 @@ class _DiseasesWidgetState extends State<DiseasesWidget> {
               )),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          // error
+
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => AddDiseasesActivity(function: (data) {
+                        //  showThisToast("im hit hit hit wioth "+data);
+                        setState(() {});
+                      })));
+/*
           final _formKey = GlobalKey<FormState>();
           String diseaesName, currentStatus, firstNoticeDate;
           return showDialog<void>(
@@ -2445,6 +2636,7 @@ class _DiseasesWidgetState extends State<DiseasesWidget> {
               );
             },
           );
+          */
         },
       ),
     );

@@ -59,7 +59,7 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
       body: Container(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               children: [
@@ -71,28 +71,15 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
                       });
                     },
                     child: Card(
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Image.asset("assets/riad.png"),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(0, 15, 0, 15),
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value:
-                                        widget.userType == "p" ? true : false,
-                                  ),
-                                  Text(
-                                    "Patient",
-                                    style: TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.bold),
-                                  )
-                                ],
-                              ),
-                            )
-                          ],
+                      child: ListTile(
+                        leading: Checkbox(
+                          value: widget.userType == "p" ? true : false,
+                        ),
+                        trailing: Icon(Icons.face),
+                        title: Text(
+                          "Patient",
+                          style: TextStyle(
+                              color: Colors.blue, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -106,30 +93,18 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
                       });
                     },
                     child: Card(
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Image.asset("assets/doc_female.jpg"),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(0, 15, 0, 15),
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value:
-                                        widget.userType == "d" ? true : false,
-                                  ),
-                                  Text(
-                                    "Doctor",
-                                    style: TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.bold),
-                                  )
-                                ],
-                              ),
-                            )
-                          ],
+                      child:  ListTile(
+                        trailing: Icon(Icons.face),
+                        leading: Checkbox(
+                          value: widget.userType == "d" ? true : false,
                         ),
-                      ),
+                        title: Text(
+                          "Doctor",
+                          style: TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      )
                     ),
                   ),
                 )
@@ -279,12 +254,12 @@ class MyCustomFormState extends State<MyCustomForm> {
                       });
                       if (loginResponse.status) {
                         setLoginStatus(true);
-                       // AUTH_KEY = "Bearer " + loginResponse.accessToken;
+                        // AUTH_KEY = "Bearer " + loginResponse.accessToken;
                         USER_ID = loginResponse.userInfo.id.toString();
                         setUserType(loginResponse.userInfo.userType);
 
                         Future<SharedPreferences> _prefs =
-                        SharedPreferences.getInstance();
+                            SharedPreferences.getInstance();
                         SharedPreferences prefs = await _prefs;
                         prefs.setString(
                             "uid", loginResponse.userInfo.id.toString());
@@ -296,15 +271,11 @@ class MyCustomFormState extends State<MyCustomForm> {
                             "uphoto", loginResponse.userInfo.photo.toString());
                         prefs.setString(
                             "uemail", loginResponse.userInfo.email.toString());
-                        prefs.setString(
-                            "utype", loginResponse.userInfo.userType.toString());
+                        prefs.setString("utype",
+                            loginResponse.userInfo.userType.toString());
                         prefs.setString(
                             "auth", "Bearer " + loginResponse.accessToken);
-                        prefs.setBool(
-                            "isLoggedIn", true);
-
-
-
+                        prefs.setBool("isLoggedIn", true);
 
                         if (loginResponse.userInfo.userType.contains("d")) {
                           //  showThisToast("doctor");
@@ -647,22 +618,18 @@ class _SignupActivityPatientState extends State<SignupActivityPatient> {
                         print(resp);
                         if (resp["status"]) {
                           Future<SharedPreferences> _prefs =
-                          SharedPreferences.getInstance();
+                              SharedPreferences.getInstance();
                           SharedPreferences prefs = await _prefs;
                           prefs.setString(
                               "uid", resp["user_info"]["id"].toString());
                           prefs.setString(
                               "uname", resp["user_info"]["name"].toString());
-                          prefs.setString(
-                              "utype", resp["user_info"]["user_type"].toString());
+                          prefs.setString("utype",
+                              resp["user_info"]["user_type"].toString());
                           prefs.setString(
                               "auth", "Bearer " + resp["access_token"]);
-                          prefs.setBool(
-                              "isLoggedIn", true);
+                          prefs.setBool("isLoggedIn", true);
                           mainP();
-
-
-
 
                           setState(() {
                             StandbyWid = Text(
@@ -985,7 +952,6 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
                         print("check response");
                         print(resp);
                         if (resp["status"]) {
-
                           Future<SharedPreferences> _prefs =
                               SharedPreferences.getInstance();
                           SharedPreferences prefs = await _prefs;
@@ -994,12 +960,11 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
                               "uid", resp["user_info"]["id"].toString());
                           prefs.setString(
                               "uname", resp["user_info"]["name"].toString());
-                          prefs.setString(
-                              "utype", resp["user_info"]["user_type"].toString());
+                          prefs.setString("utype",
+                              resp["user_info"]["user_type"].toString());
                           prefs.setString(
                               "auth", "Bearer " + resp["access_token"]);
-                          prefs.setBool(
-                              "isLoggedIn", true);
+                          prefs.setBool("isLoggedIn", true);
 
                           setState(() {
                             StandbyWid = Text(
@@ -1009,7 +974,6 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
                           });
 
                           mainD();
-
                         } else {
                           // showThisToast("User Allreasy registered");
                           setState(() {

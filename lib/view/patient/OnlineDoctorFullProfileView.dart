@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 List skill_info;
 List education_info;
 String AUTH_KEY;
+String UID;
 String type = "";
 
 final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
@@ -64,6 +65,7 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
     SharedPreferences prefs;
     prefs = await _prefs;
     AUTH_KEY = prefs.getString("auth");
+    UID = prefs.getString("uid");
     final http.Response response = await http.get(
       "http://telemedicine.drshahidulislam.com/api/" +
           'get_payment_methods_list',
@@ -224,7 +226,6 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
                                                 if (widget.paymentMethods[
                                                 index_]["name"] ==
                                                     "Paypal") {
-                                                  showThisToast(type);
                                                   Navigator.push(
                                                       context,
                                                       MaterialPageRoute(

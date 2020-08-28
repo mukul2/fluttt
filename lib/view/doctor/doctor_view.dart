@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:appxplorebd/utils/mySharedPreffManager.dart';
 import 'package:appxplorebd/view/login_view.dart';
+import 'package:appxplorebd/view/patient/sharedActivitys.dart';
 import 'package:autocomplete_textfield/autocomplete_textfield.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
@@ -95,7 +96,7 @@ class DoctorAPP extends StatelessWidget {
       onWillPop: _onWillpop,
       child: MaterialApp(
         title: 'Flutter Demo',
-        theme: ThemeData(),
+        theme: ThemeData(fontFamily: 'SF Pro Display Regular'),
         home: MyHomePage(title: 'Flutter Demo Home Page'),
       ),
     );
@@ -644,7 +645,7 @@ class _MyEarningsWidgetState extends State<MyEarningsWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'user_type': 'doctor', 'id': USER_ID}),
+      body: jsonEncode(<String, String>{'user_type': 'doctor', 'id': UID}),
     );
     this.setState(() {
       appointments = json.decode(response.body);
@@ -725,7 +726,7 @@ class _HomeVisitWidgetState extends State<HomeVisitWidget> {
         'Authorization': AUTH_KEY,
       },
       body: jsonEncode(
-          <String, String>{'id': USER_ID, 'status': DOC_HOME_VISIT.toString()}),
+          <String, String>{'id': UID, 'status': DOC_HOME_VISIT.toString()}),
     );
     dynamic data = jsonEncode(response.body);
     print((response.body).toString());
@@ -741,7 +742,7 @@ class _HomeVisitWidgetState extends State<HomeVisitWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'user_type': 'doctor', 'id': USER_ID}),
+      body: jsonEncode(<String, String>{'user_type': 'doctor', 'id': UID}),
     );
     this.setState(() {
       appointments = json.decode(response.body);
@@ -875,7 +876,7 @@ class _HomeVisitWidgetState extends State<HomeVisitWidget> {
               'lat': latitude.toString(),
               'log': longitude.toString(),
               'address': address,
-              'id': USER_ID
+              'id': UID
             }),
           );
         },
@@ -901,7 +902,7 @@ class _ConfirmedListWidgetState extends State<ConfirmedListWidget> {
       },
       body: jsonEncode(<String, String>{
         'user_type': "doctor",
-        'id': USER_ID,
+        'id': UID,
         'status': "1"
       }),
     );
@@ -1023,7 +1024,7 @@ class _PendingListWidgetState extends State<PendingListWidget> {
       },
       body: jsonEncode(<String, String>{
         'user_type': "doctor",
-        'id': USER_ID,
+        'id': UID,
         'status': "0"
       }),
     );
@@ -1155,7 +1156,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
       },
       body: jsonEncode(<String, String>{
         'user_type': "doctor",
-        'id': USER_ID,
+        'id': UID,
       }),
     );
     this.setState(() {
@@ -1191,7 +1192,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                       ListTile(
                         onTap: () {
                           String chatRoom = createChatRoomName(
-                              int.parse(USER_ID),
+                              int.parse(UID),
                               int.parse(VideoCallListList[index]["patient_info"]
                                       ["id"]
                                   .toString()));
@@ -1208,9 +1209,9 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                                           ["name"],
                                       VideoCallListList[index]["patient_info"]
                                           ["photo"],
-                                      USER_ID,
-                                      USER_NAME,
-                                      USER_PHOTO,
+                                      UID,
+                                      UNAME,
+                                      UPHOTO,
                                       chatRoom)));
                         },
                         trailing: Icon(Icons.call),
@@ -1303,7 +1304,7 @@ class _PrescriptionRequestWidState extends State<PrescriptionRequestWid> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'id': USER_ID, 'user_type': 'doctor'}),
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'doctor'}),
     );
     print(response.body);
     this.setState(() {
@@ -1395,7 +1396,7 @@ class _ChamberAppointmentPrescriptionWriteWidgetState
   bool noon = true;
   bool evening = false;
   bool checkedValue = false;
-  String dr_id = USER_ID;
+  String dr_id = UID;
   String patient_id;
 
   @override
@@ -1435,10 +1436,10 @@ class _ChamberAppointmentPrescriptionWriteWidgetState
                     },
                     body: jsonEncode(<String, String>{
                       'patient_id': patient_id,
-                      'dr_id': USER_ID,
+                      'dr_id': UID,
                       'diseases_name': diseases,
                       'medicine_info': jsonEncode(medicineList),
-                      'dr_name': USER_NAME,
+                      'dr_name': UNAME,
                       'service_id': "5",
                       'appointment_id': widget.confirmedList["id"].toString(),
                       'dr_name': widget.confirmedList["dr_info"]["name"],
@@ -1590,7 +1591,7 @@ class _PrescriptionWriteWidgettState extends State<PrescriptionWriteWidget> {
   bool noon = true;
   bool evening = false;
   bool checkedValue = false;
-  String dr_id = USER_ID;
+  String dr_id = UID;
   String patient_id;
 
   @override
@@ -1609,7 +1610,7 @@ class _PrescriptionWriteWidgettState extends State<PrescriptionWriteWidget> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Create Prescription",
+          "Create Prescription - ",
         ),
         actions: <Widget>[
           Padding(
@@ -1618,42 +1619,37 @@ class _PrescriptionWriteWidgettState extends State<PrescriptionWriteWidget> {
                 onTap: () async {
                   if (_formKey_.currentState.validate()) {
                     setState(() {});
+
+                    final http.Response response = await http.post(
+                      _baseUrl + 'reply-prescription-request',
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Authorization': AUTH_KEY,
+                      },
+                      body: jsonEncode(<String, String>{
+                        'patient_id': patient_id,
+                        'dr_id': UID,
+                        'diseases_name': diseases,
+                        'medicine_info': jsonEncode(medicineList),
+                        'dr_name': UNAME,
+                        'service_id': "5",
+                      }),
+                    );
+
+                    showThisToast(response.body.toString());
+                    print((jsonDecode(response.body))["message"]);
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                    if (response.statusCode == 200) {
+                      mainD();
+                    } else {
+                      showThisToast("Error occured");
+                    }
+
+
                   }
 
-                  final http.Response response = await http.post(
-                    _baseUrl + 'reply-prescription-request',
-                    headers: <String, String>{
-                      'Content-Type': 'application/json; charset=UTF-8',
-                      'Authorization': AUTH_KEY,
-                    },
-                    body: jsonEncode(<String, String>{
-                      'patient_id': patient_id,
-                      'dr_id': USER_ID,
-                      'diseases_name': diseases,
-                      'medicine_info': jsonEncode(medicineList),
-                      'dr_name': USER_NAME,
-                      'service_id': "5",
-                    }),
-                  );
-                  print(jsonEncode(<String, String>{
-                    'patient_id': patient_id,
-                    'dr_id': USER_ID,
-                    'diseases_name': diseases,
-                    'medicine_info': jsonEncode(medicineList),
-                    'dr_name': USER_NAME,
-                    'service_id': "5",
-                  }.toString()));
-                  showThisToast(response.body.toString());
-                  print((jsonDecode(response.body))["message"]);
-                  if (response.statusCode == 200) {
-                    data_Confirmd = json.decode(response.body);
 
-                    return json.decode(response.body);
-                    Navigator.of(context).pop(true);
-                    // return LoginResponse.fromJson(json.decode(response.body));
-                  } else {
-                    throw Exception('Failed to load album');
-                  }
                 },
                 child: Icon(
                   Icons.send,
@@ -1892,17 +1888,7 @@ class prescriptionModel {
       this.isAfterMeal});
 }
 
-class myServicesWidget extends StatefulWidget {
-  @override
-  _myServicesWidgetState createState() => _myServicesWidgetState();
-}
 
-class _myServicesWidgetState extends State<myServicesWidget> {
-  @override
-  Widget build(BuildContext context) {
-    return Text("Services");
-  }
-}
 
 class SettingsWidState extends StatefulWidget {
   @override
@@ -1910,6 +1896,7 @@ class SettingsWidState extends StatefulWidget {
 }
 
 class _SettingsWidStateState extends State<SettingsWidState> {
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1933,7 +1920,7 @@ class _SettingsWidStateState extends State<SettingsWidState> {
         ),
         body: TabBarView(
           children: [
-            myServicesWidget(),
+            myServicesWidget(AUTH_KEY,UID),
             Center(child: Text("Documents")),
           ],
         ),
@@ -2456,25 +2443,24 @@ class _ProfileState extends State<Profile> {
           Divider(),
           ListTile(
             onTap: () {
+              //SkillsActivity
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => DiseasesWidget()));
+                  MaterialPageRoute(builder: (context) => EducationsActivity(AUTH_KEY,UID)));
             },
             trailing: Icon(Icons.keyboard_arrow_right),
-            title: Text("Disease History"),
-            subtitle: Text("Add/View your diseases history"),
+            title: Text("Education"),
+            subtitle: Text("Add/View your education history"),
             leading: Icon(Icons.supervised_user_circle),
           ),
           Divider(),
           ListTile(
             onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => PrescriptionsWidget()));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => SkillsActivity(AUTH_KEY,UID)));
             },
             trailing: Icon(Icons.keyboard_arrow_right),
-            title: Text("Prescriptions"),
-            subtitle: Text("Add/View your prescriptions"),
+            title: Text("Skills"),
+            subtitle: Text("Add/View your skills"),
             leading: Icon(Icons.supervised_user_circle),
           ),
           Divider(),
@@ -2484,11 +2470,11 @@ class _ProfileState extends State<Profile> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => PrescriptionsReviewWidget()));
+                      builder: (context) => ChamberActivity(AUTH_KEY,UID)));
             },
             trailing: Icon(Icons.keyboard_arrow_right),
-            title: Text("Prescription Review"),
-            subtitle: Text("View your prescription request and responses"),
+            title: Text("Chamber"),
+            subtitle: Text("Add/View your chamber"),
             leading: Icon(Icons.supervised_user_circle),
           ),
         ],
@@ -2634,7 +2620,7 @@ Future<dynamic> fetchConfirmed() async {
       'Authorization': AUTH_KEY,
     },
     body: jsonEncode(
-        <String, String>{'user_type': "patient", 'id': USER_ID, 'status': "1"}),
+        <String, String>{'user_type': "patient", 'id': UID, 'status': "1"}),
   );
 
   if (response.statusCode == 200) {
@@ -2657,7 +2643,7 @@ Future<dynamic> fetchPeding() async {
       'Authorization': AUTH_KEY,
     },
     body: jsonEncode(
-        <String, String>{'user_type': "patient", 'id': USER_ID, 'status': "0"}),
+        <String, String>{'user_type': "patient", 'id': UID, 'status': "0"}),
   );
 
   if (response.statusCode == 200) {
@@ -2679,7 +2665,7 @@ Future<dynamic> fetchNotices() async {
       'Content-Type': 'application/json; charset=UTF-8',
       'Authorization': AUTH_KEY,
     },
-    body: jsonEncode(<String, String>{'user_id': USER_ID}),
+    body: jsonEncode(<String, String>{'user_id': UID}),
   );
 
   if (response.statusCode == 200) {
@@ -2742,13 +2728,13 @@ Widget myDrawer() {
                     child: CircleAvatar(
                       radius: 50,
                       backgroundImage:
-                          NetworkImage(_baseUrl_image + USER_PHOTO),
+                          NetworkImage(_baseUrl_image + UPHOTO),
                     )),
                 Padding(
                     padding: EdgeInsets.fromLTRB(0, 10, 0, 25),
                     child: new Center(
                       child: Text(
-                        USER_NAME,
+                        UNAME,
                         style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -2969,64 +2955,60 @@ class _BasicProfileState extends State<BasicProfile> {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        title: Text("Profile Information State"),
+        title: Text("Profile Information"),
       ),
-      body: ListView(
+      body:  ListView(
         children: <Widget>[
           Center(
               child: InkWell(
-            onTap: () async {
-              File image =
+                onTap: () async {
+                  File image =
                   await ImagePicker.pickImage(source: ImageSource.gallery);
-              var stream =
+                  var stream =
                   new http.ByteStream(DelegatingStream.typed(image.openRead()));
-              var length = await image.length();
+                  var length = await image.length();
 
-              var uri = Uri.parse(_baseUrl + "update-user-info");
+                  var uri = Uri.parse(_baseUrl + "update-user-info");
 
-              var request = new http.MultipartRequest("POST", uri);
-              var multipartFile = new http.MultipartFile(
-                  'photo', stream, length,
-                  filename: basename(image.path));
-              //contentType: new MediaType('image', 'png'));
+                  var request = new http.MultipartRequest("POST", uri);
+                  var multipartFile = new http.MultipartFile(
+                      'photo', stream, length,
+                      filename: basename(image.path));
+                  //contentType: new MediaType('image', 'png'));
 
-              request.files.add(multipartFile);
-              request.fields.addAll(<String, String>{'user_id': UID});
-              request.headers.addAll(<String, String>{
-                'Content-Type': 'application/json; charset=UTF-8',
-                'Authorization': AUTH_KEY,
-              });
-              // showThisToast(request.toString());
+                  request.files.add(multipartFile);
+                  request.fields.addAll(<String, String>{'user_id': UID});
+                  request.headers.addAll(header);
+                  //showThisToast(AUTH_KEY+"/n"+UID);
 
-              var response = await request.send();
+                  var response = await request.send();
 
-              print(response.statusCode);
-              // showThisToast(response.statusCode.toString());
+                  print(response.statusCode);
+                  //showThisToast(response.statusCode.toString());
 
-              response.stream.transform(utf8.decoder).listen((value) {
-                //print(value);
-                //showThisToast(value);
+                  response.stream.transform(utf8.decoder).listen((value) {
+                    //print(value);
+                    //showThisToast(value);
 
-                var data = jsonDecode(value);
-                //showThisToast(data.t);
-                // showThisToast(data.toString());
-                UPHOTO = user_picture;
-
-                setState(() {
-                  user_picture = (data["photo"]).toString();
-                  USER_PHOTO = user_picture;
-                  UPHOTO = user_picture;
-                });
-              });
-            },
-            child: Image.network(
-              _baseUrl_image + UPHOTO,
-              width: 250,
-              height: 250,
-            ),
-          )),
+                    var data = jsonDecode(value);
+                    //showThisToast(data.t);
+                    showThisToast((data["photo"]).toString());
+                    setState(() {
+                      user_picture = (data["photo"]).toString();
+                      UPHOTO = user_picture;
+                    });
+                  });
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(15),
+                  child: CircleAvatar(
+                    radius: 100,
+                    backgroundImage: NetworkImage( _baseUrl_image + UPHOTO),
+                  ),
+                ),
+              )),
           Padding(
-            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+            padding: EdgeInsets.fromLTRB(10, 10, 10, 00),
             child: Card(
               child: ListTile(
                 onTap: () {
@@ -3047,7 +3029,7 @@ class _BasicProfileState extends State<BasicProfile> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     TextFormField(
-                                      initialValue: USER_NAME,
+                                      initialValue: user_name_from_state,
                                       validator: (value) {
                                         newName = value;
                                         if (value.isEmpty) {
@@ -3073,18 +3055,16 @@ class _BasicProfileState extends State<BasicProfile> {
                             child: Text('Update'),
                             onPressed: () {
                               if (_formKey.currentState.validate()) {
-                                var status =
-                                    updateDisplayName(AUTH_KEY, UID, newName);
-                                USER_NAME = newName;
+                                var status = updateDisplayName(AUTH_KEY,UID,newName);
                                 UNAME = newName;
+                                prefs.setString("uname", newName);
 
                                 setState(() {
                                   user_name_from_state = newName;
+                                  UNAME = newName;
                                 });
-                                status.then((value) => () {
-                                      prefs.setString("uname", newName);
-                                      Navigator.of(context).pop();
-                                    });
+                                status.then(
+                                        (value) => Navigator.of(context).pop());
                               }
                             },
                           ),
@@ -3116,12 +3096,12 @@ class _BasicProfileState extends State<BasicProfile> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+            padding: EdgeInsets.fromLTRB(10, 00, 10, 00),
             child: Card(
               child: ListTile(
                 subtitle: Padding(
                   padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
-                  child: Text(USER_MOBILE),
+                  child: Text(UPHONE),
                 ),
                 title: Row(
                   children: <Widget>[
@@ -3135,7 +3115,7 @@ class _BasicProfileState extends State<BasicProfile> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+            padding: EdgeInsets.fromLTRB(10, 00, 10, 10),
             child: Card(
               child: ListTile(
                 subtitle: Padding(
@@ -3158,6 +3138,9 @@ class _BasicProfileState extends State<BasicProfile> {
     );
   }
 }
+
+
+
 
 class BasicProfileActivity extends StatelessWidget {
   @override
@@ -3183,7 +3166,7 @@ class BasicProfileActivity extends StatelessWidget {
                 },
                 subtitle: Padding(
                   padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
-                  child: Text(USER_NAME),
+                  child: Text(UNAME),
                 ),
                 title: Row(
                   children: <Widget>[
@@ -3434,7 +3417,7 @@ Future<void> showNameEditDialog(BuildContext context) async {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     TextFormField(
-                      initialValue: USER_NAME,
+                      initialValue: UNAME,
                       validator: (value) {
                         newName = value;
                         if (value.isEmpty) {
@@ -3476,8 +3459,6 @@ Future<void> showNameEditDialog(BuildContext context) async {
 
 Widget ChatListWidget(BuildContext context) {
   // String UID = USER_ID;
-  String UID = USER_ID;
-  showThisToast("user id " + UID);
 
   // FirebaseDatabase.instance.reference().child("xploreDoc").once()
   return Scaffold(
@@ -3505,8 +3486,8 @@ Widget ChatListWidget(BuildContext context) {
                       return InkWell(
                         onTap: () {
                           String own_id = UID;
-                          String own_name = USER_NAME;
-                          OWN_PHOTO = USER_PHOTO;
+                          String own_name = UNAME;
+                          OWN_PHOTO = UPHOTO;
                           String partner_id = "";
                           String partner_name = "";
                           String parner_photo = "";
@@ -3521,7 +3502,7 @@ Widget ChatListWidget(BuildContext context) {
                             parner_photo = lists[index]["sender_photo"];
                           }
 
-                          String own_photo = USER_PHOTO;
+                          String own_photo = UPHOTO;
                           PARTNER_PHOTO = parner_photo;
 
                           String chatRoom = createChatRoomName(
@@ -3638,7 +3619,7 @@ class _DiseasesWidgetState extends State<DiseasesWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'patient_id': USER_ID}),
+      body: jsonEncode(<String, String>{'patient_id': UID}),
     );
     this.setState(() {
       diseasesList = json.decode(response.body);
@@ -3765,7 +3746,7 @@ class _DiseasesWidgetState extends State<DiseasesWidget> {
                     child: Text('Update'),
                     onPressed: () {
                       if (_formKey.currentState.validate()) {
-                        var status = addDiseasesHistory(
+                        var status = addDiseasesHistory(AUTH_KEY,UID,
                             diseaesName, dateToUpdate, currentStatus);
 
                         status.then((value) => this.closeAndUpdate(context));
@@ -3797,7 +3778,7 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'id': USER_ID, 'user_type': 'patient'}),
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
     );
     this.setState(() {
       prescriptionList = json.decode(response.body);
@@ -3928,7 +3909,7 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
 
                           request.files.add(multipartFile);
                           request.fields
-                              .addAll(<String, String>{'patient_id': USER_ID});
+                              .addAll(<String, String>{'patient_id': UID});
                           request.fields.addAll(
                               <String, String>{'diseases_name': diseaesName});
                           request.headers.addAll(<String, String>{
@@ -3974,7 +3955,7 @@ class _PrescriptionsBodyWidgetState extends State<PrescriptionsodyWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'id': USER_ID, 'user_type': 'patient'}),
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
     );
     this.setState(() {
       prescriptionList = json.decode(response.body);
@@ -4023,7 +4004,7 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'id': USER_ID, 'user_type': 'patient'}),
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
     );
     this.setState(() {
       prescriptionReviewList = json.decode(response.body);

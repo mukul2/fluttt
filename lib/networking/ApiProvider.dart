@@ -224,16 +224,16 @@ Future<dynamic> updateDisplayName(
   }
 }
 
-Future<dynamic> addDiseasesHistory(
+Future<dynamic> addDiseasesHistory(String auth,String uid,
     String name, String startdate, String status) async {
   final http.Response response = await http.post(
     _baseUrl + 'add-disease-record',
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': AUTH_KEY,
+      'Authorization': auth,
     },
     body: jsonEncode(<String, String>{
-      'patient_id': USER_ID,
+      'patient_id': uid,
       'disease_name': name,
       'first_notice_date': startdate,
       'status': status

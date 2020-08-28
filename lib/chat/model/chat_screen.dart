@@ -14,18 +14,12 @@ import 'package:appxplorebd/chat/service/authentication.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
+
 String CLIEND_ID = "xploreDoc";
 
 class ChatScreen extends StatefulWidget {
-  ChatScreen( this.partner_id,
-      this.partner_name,
-      this.partner_photo,
-      this.own_id,
-      this.own_name,
-      this.own_photo,
-      this.chatRoom);
-
-
+  ChatScreen(this.partner_id, this.partner_name, this.partner_photo,
+      this.own_id, this.own_name, this.own_photo, this.chatRoom);
 
   String partner_id = "";
   String partner_name = "";
@@ -52,7 +46,6 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final DatabaseReference _messageDatabaseReference_last;
   final StorageReference _photoStorageReference;
 
-
   bool _isComposing = false;
 
   ChatScreenState()
@@ -60,19 +53,26 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         _isComposing = false,
         _messages = <ChatMessage>[],
         _textController = TextEditingController(),
-        _messageDatabaseReference =FirebaseDatabase.instance.reference().child(CLIEND_ID).child("chatHistory"),
-        _messageDatabaseReference_last =FirebaseDatabase.instance.reference().child(CLIEND_ID).child("lastChatHistory"),
-        _photoStorageReference =
-        FirebaseStorage.instance.ref().child("chat_photos",
-        ) {
-    _messageDatabaseReference.child(CHAT_ROOM).onChildAdded.listen(_onMessageAdded);
+        _messageDatabaseReference = FirebaseDatabase.instance
+            .reference()
+            .child(CLIEND_ID)
+            .child("chatHistory"),
+        _messageDatabaseReference_last = FirebaseDatabase.instance
+            .reference()
+            .child(CLIEND_ID)
+            .child("lastChatHistory"),
+        _photoStorageReference = FirebaseStorage.instance.ref().child(
+              "chat_photos",
+            ) {
+    _messageDatabaseReference
+        .child(CHAT_ROOM)
+        .onChildAdded
+        .listen(_onMessageAdded);
   }
 
   Widget _buildTextComposer() {
     return IconTheme(
-        data: IconThemeData(color: Theme
-            .of(context)
-            .accentColor),
+        data: IconThemeData(color: Theme.of(context).accentColor),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Row(
@@ -87,7 +87,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   },
                   onSubmitted: _handleSubmitted,
                   decoration:
-                  InputDecoration.collapsed(hintText: "Send a message"),
+                      InputDecoration.collapsed(hintText: "Send a message"),
                 ),
               ),
               Container(
@@ -102,21 +102,19 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                         icon: Icon(Icons.image),
                         onPressed: _sendImageFromGallery,
                       ),
-                      Theme
-                          .of(context)
-                          .platform == TargetPlatform.iOS
+                      Theme.of(context).platform == TargetPlatform.iOS
                           ? CupertinoButton(
-                        child: Text("Send"),
-                        onPressed: _isComposing
-                            ? () => _handleSubmitted(_textController.text)
-                            : null,
-                      )
+                              child: Text("Send"),
+                              onPressed: _isComposing
+                                  ? () => _handleSubmitted(_textController.text)
+                                  : null,
+                            )
                           : IconButton(
-                        icon: Icon(Icons.send),
-                        onPressed: _isComposing
-                            ? () => _handleSubmitted(_textController.text)
-                            : null,
-                      ),
+                              icon: Icon(Icons.send),
+                              onPressed: _isComposing
+                                  ? () => _handleSubmitted(_textController.text)
+                                  : null,
+                            ),
                     ],
                   ))
             ],
@@ -134,7 +132,8 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 //        ? _createMessageFromText(text)
 //        : _createMessageFromImage(imageUrl);
 
-    ChatMessage message = _createMessageFromText(message_body,message_type,recever_id,sender_id,time);
+    ChatMessage message = _createMessageFromText(
+        message_body, message_type, recever_id, sender_id, time);
 
     setState(() {
       _messages.insert(0, message);
@@ -149,28 +148,105 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       _isComposing = false;
     });
 
-    final ChatMessage message = _createMessageFromText(text,"TYPE_TEXT",widget.partner_id,widget.own_id,new DateTime.now().toUtc().toIso8601String());
+    final ChatMessage message = _createMessageFromText(
+        text,
+        "TYPE_TEXT",
+        widget.partner_id,
+        widget.own_id,
+        new DateTime.now().toUtc().toIso8601String());
     _messageDatabaseReference.child(CHAT_ROOM).push().set(message.toMap());
 
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("message_body").set(text);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("message_type").set("TYPE_TEXT");
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("receiver_name").set(widget.partner_name);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("receiver_photo").set(widget.partner_photo);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("recever_id").set((widget.partner_id));
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("sender_id").set(widget.own_id);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("sender_name").set(widget.own_name);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("sender_photo").set(widget.own_name);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("time").set(new DateTime.now().toUtc().toIso8601String());
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("message_body")
+        .set(text);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("message_type")
+        .set("TYPE_TEXT");
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("receiver_name")
+        .set(widget.partner_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("receiver_photo")
+        .set(widget.partner_photo);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("recever_id")
+        .set((widget.partner_id));
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_id")
+        .set(widget.own_id);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_name")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_photo")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("time")
+        .set(new DateTime.now().toUtc().toIso8601String());
 
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("message_body").set(text);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("message_type").set("TYPE_TEXT");
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("receiver_name").set(widget.partner_name);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("receiver_photo").set(widget.partner_photo);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("recever_id").set((widget.partner_id));
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("sender_id").set(widget.own_id);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("sender_name").set(widget.own_name);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("sender_photo").set(widget.own_name);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("time").set(new DateTime.now().toUtc().toIso8601String());
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("message_body")
+        .set(text);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("message_type")
+        .set("TYPE_TEXT");
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("receiver_name")
+        .set(widget.partner_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("receiver_photo")
+        .set(widget.partner_photo);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("recever_id")
+        .set((widget.partner_id));
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_id")
+        .set(widget.own_id);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_name")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_photo")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("time")
+        .set(new DateTime.now().toUtc().toIso8601String());
   }
 
   void _sendImage(ImageSource imageSource) async {
@@ -179,31 +255,106 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     StorageReference photoRef = _photoStorageReference.child(fileName);
     final StorageUploadTask uploadTask = photoRef.putFile(image);
     final StorageTaskSnapshot downloadUrl = await uploadTask.onComplete;
-    String img_Link=await downloadUrl.ref.getDownloadURL() ;
+    String img_Link = await downloadUrl.ref.getDownloadURL();
     final ChatMessage message = _createMessageFromImage(
-        img_Link, "TYPE_IMAGE", widget.partner_id, widget.own_id, new DateTime.now().toUtc().toIso8601String()
-    );
+        img_Link,
+        "TYPE_IMAGE",
+        widget.partner_id,
+        widget.own_id,
+        new DateTime.now().toUtc().toIso8601String());
     _messageDatabaseReference.child(CHAT_ROOM).push().set(message.toMap());
 
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("message_body").set(img_Link);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("message_type").set("TYPE_IMAGE");
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("receiver_name").set(widget.partner_name);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("receiver_photo").set(widget.partner_photo);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("recever_id").set((widget.partner_id));
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("sender_id").set(widget.own_id);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("sender_name").set(widget.own_name);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("sender_photo").set(widget.own_name);
-    _messageDatabaseReference_last.child(widget.own_id).child(widget.partner_id).child("time").set(new DateTime.now().toUtc().toIso8601String());
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("message_body")
+        .set(img_Link);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("message_type")
+        .set("TYPE_IMAGE");
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("receiver_name")
+        .set(widget.partner_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("receiver_photo")
+        .set(widget.partner_photo);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("recever_id")
+        .set((widget.partner_id));
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_id")
+        .set(widget.own_id);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_name")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_photo")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("time")
+        .set(new DateTime.now().toUtc().toIso8601String());
 
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("message_body").set(img_Link);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("message_type").set("TYPE_IMAGE");
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("receiver_name").set(widget.partner_name);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("receiver_photo").set(widget.partner_photo);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("recever_id").set((widget.partner_id));
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("sender_id").set(widget.own_id);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("sender_name").set(widget.own_name);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("sender_photo").set(widget.own_name);
-    _messageDatabaseReference_last.child(widget.partner_id).child(widget.own_id).child("time").set(new DateTime.now().toUtc().toIso8601String());
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("message_body")
+        .set(img_Link);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("message_type")
+        .set("TYPE_IMAGE");
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("receiver_name")
+        .set(widget.partner_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("receiver_photo")
+        .set(widget.partner_photo);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("recever_id")
+        .set((widget.partner_id));
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_id")
+        .set(widget.own_id);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_name")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_photo")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("time")
+        .set(new DateTime.now().toUtc().toIso8601String());
   }
 
   void _sendImageFromCamera() async {
@@ -214,10 +365,11 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _sendImage(ImageSource.gallery);
   }
 
-  ChatMessage _createMessageFromText(String message_body, String message_type,String recever_id,String sender_id,String time) =>
+  ChatMessage _createMessageFromText(String message_body, String message_type,
+          String recever_id, String sender_id, String time) =>
       ChatMessage(
         message_body: message_body,
-        sender_id:sender_id,
+        sender_id: sender_id,
         recever_id: recever_id,
         message_type: message_type,
         time: time,
@@ -227,7 +379,8 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         ),
       );
 
-  ChatMessage _createMessageFromImage(String message_body, String message_type,String recever_id,String sender_id,String time) =>
+  ChatMessage _createMessageFromImage(String message_body, String message_type,
+          String recever_id, String sender_id, String time) =>
       ChatMessage(
         message_body: message_body,
         sender_id: sender_id,
@@ -258,23 +411,19 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     context,
                     MaterialPageRoute(
                       builder: (context) => CallPage(
-                        channelName:widget.chatRoom,
+                        channelName: widget.chatRoom,
                         role: _role,
                       ),
                     ),
                   );
-
                 },
                 child: Icon(
                   Icons.call,
                   size: 26.0,
                 ),
-              )
-          ),
+              )),
         ],
-        elevation: Theme
-            .of(context)
-            .platform == TargetPlatform.iOS ? 0.0 : 4.0,
+        elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
       ),
       body: Container(
         child: Column(
@@ -289,20 +438,16 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             ),
             Divider(height: 1.0),
             Container(
-              decoration: BoxDecoration(color: Theme
-                  .of(context)
-                  .cardColor),
+              decoration: BoxDecoration(color: Theme.of(context).cardColor),
               child: _buildTextComposer(),
             ),
           ],
         ),
-        decoration: Theme
-            .of(context)
-            .platform == TargetPlatform.iOS
+        decoration: Theme.of(context).platform == TargetPlatform.iOS
             ? BoxDecoration(
-            border: Border(
-              top: BorderSide(color: Colors.grey[200]),
-            ))
+                border: Border(
+                top: BorderSide(color: Colors.grey[200]),
+              ))
             : null,
       ),
     );
@@ -318,18 +463,18 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _select(Choice choice) {
     switch (choice.title) {
       case 'Sign out':
-       // _signOut();
+        // _signOut();
         break;
     }
   }
-
-
 }
+
 Future<void> _handleCameraAndMic() async {
   await PermissionHandler().requestPermissions(
     [PermissionGroup.camera, PermissionGroup.microphone],
   );
 }
+
 class Choice {
   const Choice(this.title);
 

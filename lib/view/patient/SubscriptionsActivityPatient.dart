@@ -14,7 +14,8 @@ List data = [];
 String AUTH_KEY;
 
 class SubscriptionViewPatient extends StatefulWidget {
-  SubscriptionViewPatient();
+  String AUTH,UID ;
+  SubscriptionViewPatient(this.AUTH,this.UID);
 
   @override
   HomePageState createState() => new HomePageState();
@@ -30,13 +31,14 @@ class HomePageState extends State<SubscriptionViewPatient> {
       "http://telemedicine.drshahidulislam.com/api/" + 'get_subscription_list',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': AUTH_KEY,
+        'Authorization': widget.AUTH,
       },
       body:
-          jsonEncode(<String, String>{'uid': USER_ID, 'user_type': "patient"}),
+          jsonEncode(<String, String>{'uid': widget.UID, 'user_type': "patient"}),
     );
 
     this.setState(() {
+      showThisToast(response.statusCode.toString());
       data = json.decode(response.body);
       // showThisToast("subsc size "+ (data.length).toString());
     });

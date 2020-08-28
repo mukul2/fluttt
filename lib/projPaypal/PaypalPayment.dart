@@ -3,6 +3,7 @@ import 'dart:core';
 import 'package:appxplorebd/chat/model/chat_screen.dart';
 import 'package:appxplorebd/networking/ApiProvider.dart';
 import 'package:appxplorebd/view/doctor/doctor_view.dart';
+import 'package:appxplorebd/view/patient/sharedActivitys.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -21,7 +22,16 @@ import 'package:http/http.dart' as http;
 import 'config.dart';
 
 final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
-String AUTH_KEY;
+String A_KEY;
+String UID;
+
+String createChatRoomName(int one, int two) {
+  if (one > two) {
+    return (one.toString() + "-" + two.toString());
+  } else {
+    return (two.toString() + "-" + one.toString());
+  }
+}
 
 class PaypalPayment extends StatefulWidget {
   final Function onFinish;
@@ -161,7 +171,6 @@ class PaypalPaymentState extends State<PaypalPayment> {
 
   @override
   Widget build(BuildContext context) {
-    showThisToast("from widget " + widget.TYPE);
     print(checkoutUrl);
 
     if (checkoutUrl != null) {
@@ -190,7 +199,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
                   Future<SharedPreferences> _prefs =
                       SharedPreferences.getInstance();
                   prefs = await _prefs;
-                  AUTH_KEY = prefs.getString("auth");
+                  A_KEY = prefs.getString("auth");
+                  UID = prefs.getString("uid");
                   if (widget.TYPE == 'Prescription Service') {
                     Navigator.push(
                         context,
@@ -221,10 +231,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_subscription_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': AUTH_KEY,
+                        'Authorization': A_KEY,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': USER_ID,
+                        'patient_id': UID,
                         'dr_id': docID,
                         'payment_status': "1",
                         'number_of_months': "1",
@@ -265,10 +275,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_subscription_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': AUTH_KEY,
+                        'Authorization': A_KEY,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': USER_ID,
+                        'patient_id': UID,
                         'dr_id': docID,
                         'payment_status': "1",
                         'number_of_months': "3",
@@ -308,10 +318,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_subscription_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': AUTH_KEY,
+                        'Authorization': A_KEY,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': USER_ID,
+                        'patient_id': UID,
                         'dr_id': docID,
                         'payment_status': "1",
                         'number_of_months': "6",
@@ -352,10 +362,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_subscription_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': AUTH_KEY,
+                        'Authorization': A_KEY,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': USER_ID,
+                        'patient_id': UID,
                         'dr_id': docID,
                         'payment_status': "1",
                         'number_of_months': "12",
@@ -366,7 +376,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       }),
                     );
                     print(jsonEncode(<String, String>{
-                      'patient_id': USER_ID,
+                      'patient_id': UID,
                       'dr_id': docID,
                       'payment_status': "1",
                       'number_of_months': "12",
@@ -389,10 +399,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_chat_appointment_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': AUTH_KEY,
+                        'Authorization': A_KEY,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': USER_ID,
+                        'patient_id': UID,
                         'dr_id': docID,
                         'amount': payable_amount,
                         'payment_details': id
@@ -527,10 +537,32 @@ class PaypalPaymentState extends State<PaypalPayment> {
                                 docPhoto,
                                 chatRoom)));
                   } else if (widget.TYPE == "Video Call") {
-                    showThisToast("video");
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                VideoAppointmentListActivityPatient(
+                                    A_KEY, UID)));
                     // Navigator.of(context).pop();
-                  } else {
-                    showThisToast("Not mathc " + widget.TYPE);
+                  }else if (widget.TYPE == "Prescription Review") {
+//                    var body = jsonEncode(<String, String>{
+//                      'patient_id': UID,
+//                      'dr_id': widget.docID,
+//                      'amount': "1",
+//                      'problem': problem,
+//                      'payment_details': widget.tranactionID
+//                    });
+//                    makePostReq("add_payment_info_only", A_KEY, body);
+
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                ChoosePrescriptionForPrescriptionreview(
+                                    A_KEY, UID)));
+                    // Navigator.of(context).pop();
+                  }  else {
+                    showThisToast("Unknwon service " + widget.TYPE);
                   }
                 });
               } else {
@@ -650,20 +682,16 @@ class _MakePrescriptionRequestState
                             StandbyWid = Text("Please wait",
                                 style: TextStyle(color: Colors.white));
                           });
-                          final http.Response response = await http.post(
-                            _baseUrl + 'add-prescription-request',
-                            headers: <String, String>{
-                              'Content-Type': 'application/json; charset=UTF-8',
-                              'Authorization': AUTH_KEY,
-                            },
-                            body: jsonEncode(<String, String>{
-                              'patient_id': USER_ID,
-                              'dr_id': widget.docID,
-                              'payment_status': "1",
-                              'problem': problem,
-                              'payment_details': widget.tranactionID
-                            }),
-                          );
+
+                          var body = jsonEncode(<String, String>{
+                            'patient_id': UID,
+                            'dr_id': widget.docID,
+                            'payment_status': "1",
+                            'problem': problem,
+                            'payment_details': widget.tranactionID
+                          });
+
+                          makePostReq('add-prescription-request', A_KEY, body);
                           //  showThisToast(response.statusCode.toString());
                           //popup count
 
@@ -687,6 +715,21 @@ class _MakePrescriptionRequestState
       ),
     );
   }
+}
+
+Future<String> makePostReq(String url, String auth, body_) async {
+  final http.Response response = await http.post(
+    _baseUrl + url,
+    headers: <String, String>{
+      'Authorization': auth,
+    },
+    body: body_,
+  );
+  if (response.statusCode == 200) {
+  } else {
+    showThisToast(response.statusCode.toString());
+  }
+  return response.body;
 }
 
 void showThisToast(String s) {
