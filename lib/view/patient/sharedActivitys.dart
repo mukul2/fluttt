@@ -127,9 +127,9 @@ class _VideoAppointmentListActivityPatientState
 }
 
 class ChoosePrescriptionForPrescriptionreview extends StatefulWidget {
-  String AUTH, USER_ID;
+  String AUTH, USER_ID,TRANS_ID,PAYPAL_ID,DR_ID;
 
-  ChoosePrescriptionForPrescriptionreview(this.AUTH, this.USER_ID);
+  ChoosePrescriptionForPrescriptionreview(this.AUTH, this.USER_ID,this.DR_ID,this.TRANS_ID,this.PAYPAL_ID);
 
   @override
   _ChoosePrescriptionForPrescriptionreviewState createState() =>
@@ -158,7 +158,7 @@ class _ChoosePrescriptionForPrescriptionreviewState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Choose a Prescription"),
+        title: Text("-Choose a Prescription for Review"),
       ),
       body: data.length > 0
           ? ListView.builder(
@@ -170,9 +170,16 @@ class _ChoosePrescriptionForPrescriptionreviewState
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ChooseCommentForPresRecheckAndPublish(widget.AUTH,
-                                widget.USER_ID,
-                                "dr id","old pres id ","payment details","paypal id","amount","type")));
+                            builder: (context) =>
+                                ChooseCommentForPresRecheckAndPublish(
+                                    widget.AUTH,
+                                    widget.USER_ID,
+                                    widget.DR_ID,
+                                    data[index]["id"].toString(),
+                                    widget.TRANS_ID,
+                                    widget.PAYPAL_ID,
+                                    payable_amount,
+                                    "1")));
 
 //                    String chatRoom = createChatRoomName(
 //                        int.parse(widget.USER_ID),
@@ -299,39 +306,57 @@ class _EducationsActivityState extends State<EducationsActivity> {
     );
   }
 }
+
 class ChooseCommentForPresRecheckAndPublish extends StatefulWidget {
-  String AUTH, USER_ID,dr_id,old_pres_id,payment_details,paypal_id,amount,type;
+  String AUTH,
+      USER_ID,
+      dr_id,
+      old_pres_id,
+      payment_details,
+      paypal_id,
+      amount,
+      payment_status;
 
-
-  ChooseCommentForPresRecheckAndPublish(this.AUTH, this.USER_ID,this.dr_id,this.old_pres_id,this.payment_details,this.paypal_id,this.amount,this.type);
+  ChooseCommentForPresRecheckAndPublish(
+      this.AUTH,
+      this.USER_ID,
+      this.dr_id,
+      this.old_pres_id,
+      this.payment_details,
+      this.paypal_id,
+      this.amount,
+      this.payment_status);
 
   @override
-  _ChooseCommentForPresRecheckAndPublishState createState() => _ChooseCommentForPresRecheckAndPublishState();
+  _ChooseCommentForPresRecheckAndPublishState createState() =>
+      _ChooseCommentForPresRecheckAndPublishState();
 }
 
-class _ChooseCommentForPresRecheckAndPublishState extends State<EducationsActivity> {
+class _ChooseCommentForPresRecheckAndPublishState
+    extends State<ChooseCommentForPresRecheckAndPublish> {
   String user_name_from_state = UNAME;
   String user_picture = UPHOTO;
 
   List data = [];
   dynamic respo;
+  final _formKey = GlobalKey<FormState>();
+  String problem;
+  String myMessage = "Submit";
 
+  Widget StandbyWid = Text(
+    "Submit",
+    style: TextStyle(color: Colors.white),
+  );
   Future getData() async {
     body = <String, String>{'dr_id': widget.USER_ID};
-    String apiResponse =
-        await makePostReq("doctor-education-chamber-info", widget.AUTH, body);
-    this.setState(() {
-      respo = json.decode(apiResponse);
-      data = respo["education_info"];
-      //showThisToast("edu row found "+data.length.toString());
-    });
+
   }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    this.getData();
+   // this.getData();
     //doctor-education-chamber-info
   }
 
@@ -341,6 +366,115 @@ class _ChooseCommentForPresRecheckAndPublishState extends State<EducationsActivi
     return Scaffold(
       appBar: AppBar(
         title: Text(""),
+      ),
+      body:  Scaffold(
+        body: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
+                    child: TextFormField(
+                      minLines: 3,
+                      maxLines: 5,
+                      validator: (value) {
+                        problem = value;
+                        if (value.isEmpty) {
+                          return 'Please write your problem';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                          alignLabelWithHint: true,
+                          labelStyle: TextStyle(color: Colors.blue),
+                          fillColor: Colors.white10,
+                          border: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.pink)),
+                          enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue)),
+                          labelText: "Write write your problem"),
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
+                    child: SizedBox(
+                        height: 50,
+                        width: double.infinity, // match_parent
+                        child: RaisedButton(
+                          color: Colors.blue,
+                          onPressed: () async {
+                            // Validate returns true if the form is valid, or false
+                            // otherwise.
+                            if (_formKey.currentState.validate()) {
+                              // If the form is valid, display a Snackbar.
+                              setState(() {
+                                StandbyWid = Text("Please wait",
+                                    style: TextStyle(color: Colors.white));
+                              });
+                              var body_ = jsonEncode(<String, String>{
+                                'patient_id': UID,
+                                'dr_id': widget.dr_id,
+                                'old_prescription_id': widget.old_pres_id,
+                                'patient_comment': problem,
+                                'payment_status': "1",
+                                'payment_details': widget.payment_details,
+                                'amount': widget.amount,
+                                'paypal_id': widget.paypal_id
+                              });
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add-prescription-recheck-request',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': A_KEY,
+                                },
+                                body: body_,
+                              );
+
+                              print(body_);
+                              if (response.statusCode == 200) {
+                                dynamic jsonRes = jsonDecode(response.body);
+                                if (jsonRes["status"]) {
+                                  setState(() {
+                                    StandbyWid = Text(
+                                        "Prescription Review request success",
+                                        style: TextStyle(color: Colors.white));
+                                  });
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  showThisToast(jsonRes["message"]);
+                                } else {
+                                  setState(() {
+                                    StandbyWid = Text("Error occured",
+                                        style: TextStyle(color: Colors.white));
+                                  });
+                                  showThisToast("Error occured");
+                                }
+                              } else {
+                                showThisToast(response.statusCode.toString());
+
+                              }
+
+                              //  showThisToast(response.statusCode.toString());
+                              //popup count
+
+                            } else {}
+                          },
+                          child: StandbyWid,
+                        )),
+                  ),
+                ],
+              ),
+            )),
       ),
     );
   }
@@ -712,9 +846,8 @@ class _myServicesWidgetState extends State<myServicesWidget> {
                     padding: EdgeInsets.all(0),
                     child: ListTile(
                       trailing: Checkbox(
-                        onChanged: (newvalue){
+                        onChanged: (newvalue) {
                           showThisToast(newvalue.toString());
-
                         },
                         value: getvalueBool(data[index]["id"], data_doc),
                       ),
@@ -776,14 +909,13 @@ bool getvalueBool(int serviceId, List data) {
       print(serviceId.toString() +
           "   " +
           data[i]["online_service_id"].toString());
-      if (serviceId == data[i]["online_service_id"] &&
-          data[i]["status"] == 1) {
+      if (serviceId == data[i]["online_service_id"] && data[i]["status"] == 1) {
         value = true;
-      }else{
-       // showThisToast("No match");
+      } else {
+        // showThisToast("No match");
       }
     }
-  }else{
+  } else {
     showThisToast("No data");
   }
 

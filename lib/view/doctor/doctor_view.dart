@@ -25,6 +25,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../main.dart';
+import 'PatientsFullProfileView.dart';
 import 'SubscriptionsActivityPatient.dart';
 import 'Widgets.dart';
 
@@ -490,6 +491,10 @@ class _HomeState extends State<Home> {
               )), //pres request
           InkWell(
               onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PrescriptionsReviewWidget()));
                 // _controller.jumpTo(_controller.position.maxScrollExtent);
               },
               child: Card(
@@ -929,7 +934,20 @@ class _ConfirmedListWidgetState extends State<ConfirmedListWidget> {
               itemCount: confirmedList == null ? 0 : confirmedList.length,
               itemBuilder: (BuildContext context, int index) {
                 return new InkWell(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => PatientFullProfileView(AUTH_KEY,
+                                  confirmedList[index]["patient_info"]
+                                  ["id"]
+                                      .toString(),
+                                  confirmedList[index]["patient_info"]
+                                  ["name"],
+                                  confirmedList[index]["patient_info"]
+                                  ["photo"])));
+
+                    },
                     child: Card(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(00.0),
@@ -1079,7 +1097,21 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                               RaisedButton(
                                 color: Colors.white,
                                 elevation: 0,
-                                onPressed: () async {},
+                                onPressed: ()  {
+                                  //PatientFullProfileView
+                                  //error
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => PatientFullProfileView(AUTH_KEY,
+                                              pendingList[index]["patient_info"]
+                                              ["id"]
+                                                  .toString(),
+                                              pendingList[index]["patient_info"]
+                                              ["name"],
+                                              pendingList[index]["patient_info"]
+                                              ["photo"])));
+                                },
                                 child: Text("View Profile"),
                               ),
                               RaisedButton(
@@ -3978,12 +4010,12 @@ class _PrescriptionsBodyWidgetState extends State<PrescriptionsodyWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Prescription Body"),
+        title: Text("Prescription Body 0 "),
       ),
       body: (widget.prescriptionBody["attachment"] != null
           ? Image.network(
               _baseUrl_image + widget.prescriptionBody["attachment"][0]["file"])
-          : Text("Digital Prescription")),
+          : Text(widget.prescriptionBody.toString())),
     );
   }
 }
@@ -4004,7 +4036,7 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'doctor'}),
     );
     this.setState(() {
       prescriptionReviewList = json.decode(response.body);
@@ -4038,11 +4070,14 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
               itemBuilder: (BuildContext context, int index) {
                 return new InkWell(
                     onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => PrescriptionsodyWidget(
-                                  prescriptionReviewList[index])));
+                      if(prescriptionReviewList[index]["is_reviewed"] == 0) {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    PrescriptionsodyWidget(
+                                        prescriptionReviewList[index])));
+                      }
                     },
                     child: Card(
                       shape: RoundedRectangleBorder(

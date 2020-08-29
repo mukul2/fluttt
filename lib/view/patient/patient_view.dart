@@ -2858,6 +2858,7 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
 Widget medicinesListOfAPrescriptionWidget(medicineList) {
   return medicineList != null
       ? ListView.builder(
+    physics: ClampingScrollPhysics(),
           shrinkWrap: true,
           itemCount: medicineList["medicine_info"] == null
               ? 0
@@ -3018,7 +3019,7 @@ class _PrescriptionsReviedBodyState
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'id': USER_ID, 'user_type': 'patient'}),
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
     );
     this.setState(() {
       prescriptionReviewList = json.decode(response.body);
@@ -3061,8 +3062,7 @@ class _PrescriptionsReviedBodyState
     this.setState(() {
       print("Single Prescriptin");
       newPrescription = json.decode(response.body);
-      showThisToast(
-          "length " + newPrescription["medicine_info"].length.toString());
+
 
       print(newPrescription);
     });
@@ -3093,7 +3093,8 @@ class _PrescriptionsReviedBodyState
           title: Text("Review Request"),
         ),
         body: SingleChildScrollView(
-          child: Column(
+          child: ListView(
+            shrinkWrap: true,
             children: <Widget>[
               Padding(
                 padding: EdgeInsets.all(0),
@@ -3133,6 +3134,7 @@ class _PrescriptionsReviedBodyState
                 padding: EdgeInsets.all(0),
                 child: Card(
                   child: ListView(
+                    physics: ClampingScrollPhysics(),
                     shrinkWrap: true,
                     children: <Widget>[
                       Container(
@@ -3185,8 +3187,10 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{'id': USER_ID, 'user_type': 'patient'}),
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
     );
+    showThisToast(response.statusCode.toString());
+    showThisToast(response.body);
     this.setState(() {
       prescriptionReviewList = json.decode(response.body);
       // showThisToast(prescriptionReviewList.toString());

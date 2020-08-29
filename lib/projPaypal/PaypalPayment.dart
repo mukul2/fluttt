@@ -202,11 +202,44 @@ class PaypalPaymentState extends State<PaypalPayment> {
                   A_KEY = prefs.getString("auth");
                   UID = prefs.getString("uid");
                   if (widget.TYPE == 'Prescription Service') {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => MakePrescriptionRequestWidget(
-                                id, payable_amount, docID)));
+                    final http.Response response = await http.post(
+                      _baseUrl + 'add_payment_info_only',
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Authorization': A_KEY,
+                      },
+                      body: jsonEncode(<String, String>{
+                        'patient_id': UID,
+                        'dr_id': docID,
+                        'amount': payable_amount,
+                        'status': "1",
+                        'reason': "Prescription request",
+                        'transID': id,
+                      }),
+                    );
+
+                    if (response.statusCode == 200) {
+                      print(response.body.toLowerCase());
+                      dynamic jsonResponse = jsonDecode(response.body);
+                      print(jsonResponse.toString());
+                      print(jsonResponse["message"].toString());
+                      // dynamic jsonresponse = jsonDecode(response.body);
+                      if (true) {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    MakePrescriptionRequestWidget(
+                                        id,
+                                        payable_amount,
+                                        docID,
+                                        jsonResponse["message"].toString())));
+                      } else {
+                        showThisToast("Failed to insert data");
+                      }
+                    } else {
+                      showThisToast("Api error");
+                    }
                   } else if (widget.TYPE == '1 Month Subscription') {
                     DateTime selectedDate = DateTime.now();
                     String startDate = (selectedDate.year).toString() +
@@ -544,24 +577,43 @@ class PaypalPaymentState extends State<PaypalPayment> {
                                 VideoAppointmentListActivityPatient(
                                     A_KEY, UID)));
                     // Navigator.of(context).pop();
-                  }else if (widget.TYPE == "Prescription Review") {
-//                    var body = jsonEncode(<String, String>{
-//                      'patient_id': UID,
-//                      'dr_id': widget.docID,
-//                      'amount': "1",
-//                      'problem': problem,
-//                      'payment_details': widget.tranactionID
-//                    });
-//                    makePostReq("add_payment_info_only", A_KEY, body);
+                  } else if (widget.TYPE == "Prescription Review") {
+                    final http.Response response = await http.post(
+                      _baseUrl + 'add_payment_info_only',
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Authorization': A_KEY,
+                      },
+                      body: jsonEncode(<String, String>{
+                        'patient_id': UID,
+                        'dr_id': docID,
+                        'amount': payable_amount,
+                        'status': "1",
+                        'reason': "Prescription review",
+                        'transID': id,
+                      }),
+                    );
 
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                ChoosePrescriptionForPrescriptionreview(
-                                    A_KEY, UID)));
-                    // Navigator.of(context).pop();
-                  }  else {
+                    if (response.statusCode == 200) {
+                      print(response.body.toLowerCase());
+                      dynamic jsonResponse = jsonDecode(response.body);
+                      print(jsonResponse.toString());
+                      print(jsonResponse["message"].toString());
+                      // dynamic jsonresponse = jsonDecode(response.body);
+                      if (true) {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    ChoosePrescriptionForPrescriptionreview(A_KEY,UID, docID,id,
+                                        jsonResponse["message"].toString())));
+                      } else {
+                        showThisToast("Failed to insert data");
+                      }
+                    } else {
+                      showThisToast("Api error");
+                    }
+                  } else {
                     showThisToast("Unknwon service " + widget.TYPE);
                   }
                 });
@@ -603,8 +655,10 @@ class MakePrescriptionRequestWidget extends StatefulWidget {
   String fees;
 
   String docID;
+  String paypalID;
 
-  MakePrescriptionRequestWidget(this.tranactionID, this.fees, this.docID);
+  MakePrescriptionRequestWidget(
+      this.tranactionID, this.fees, this.docID, this.paypalID);
 
   @override
   _MakePrescriptionRequestState createState() =>
@@ -642,7 +696,7 @@ class _MakePrescriptionRequestState
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Padding(
-                padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
                 child: TextFormField(
                   minLines: 3,
                   maxLines: 5,
@@ -672,7 +726,7 @@ class _MakePrescriptionRequestState
                     height: 50,
                     width: double.infinity, // match_parent
                     child: RaisedButton(
-                      color: Color(0xFF34448c),
+                      color: Colors.blue,
                       onPressed: () async {
                         // Validate returns true if the form is valid, or false
                         // otherwise.
@@ -682,28 +736,56 @@ class _MakePrescriptionRequestState
                             StandbyWid = Text("Please wait",
                                 style: TextStyle(color: Colors.white));
                           });
-
-                          var body = jsonEncode(<String, String>{
+                          var body_ = jsonEncode(<String, String>{
                             'patient_id': UID,
                             'dr_id': widget.docID,
                             'payment_status': "1",
                             'problem': problem,
-                            'payment_details': widget.tranactionID
+                            'payment_status': "1",
+                            'amount': payable_amount,
+                            'payment_details': widget.tranactionID,
+                            'paypal_id': widget.paypalID
                           });
+                          final http.Response response = await http.post(
+                            _baseUrl + 'add-prescription-request',
+                            headers: <String, String>{
+                              'Content-Type': 'application/json; charset=UTF-8',
+                              'Authorization': A_KEY,
+                            },
+                            body: body_,
+                          );
 
-                          makePostReq('add-prescription-request', A_KEY, body);
+                          print(body_);
+                          if (response.statusCode == 200) {
+                            dynamic jsonRes = jsonDecode(response.body);
+                            if (jsonRes["status"]) {
+                              setState(() {
+                                StandbyWid = Text(
+                                    "Prescription request success",
+                                    style: TextStyle(color: Colors.white));
+                              });
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              showThisToast(jsonRes["message"]);
+                            } else {
+                              setState(() {
+                                StandbyWid = Text("Error occured",
+                                    style: TextStyle(color: Colors.white));
+                              });
+                              showThisToast("Error occured");
+                            }
+                          } else {
+                            showThisToast(response.statusCode.toString());
+
+                          }
+
                           //  showThisToast(response.statusCode.toString());
                           //popup count
 
-                          setState(() {
-                            StandbyWid = Text("Prescription request success",
-                                style: TextStyle(color: Colors.white));
-                          });
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
                         } else {}
                       },
                       child: StandbyWid,
@@ -726,10 +808,12 @@ Future<String> makePostReq(String url, String auth, body_) async {
     body: body_,
   );
   if (response.statusCode == 200) {
+    return response.body;
   } else {
     showThisToast(response.statusCode.toString());
+    return "";
+    showThisToast(response.statusCode.toString());
   }
-  return response.body;
 }
 
 void showThisToast(String s) {
