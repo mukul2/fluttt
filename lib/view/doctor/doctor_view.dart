@@ -641,11 +641,14 @@ class MyEarningsWidget extends StatefulWidget {
 }
 
 class _MyEarningsWidgetState extends State<MyEarningsWidget> {
-  List appointments = [];
+  String totalBill = "";
+  String allWidthdraw = "";
+  List billDetails = [];
+  List widthdrawDetails = [];
 
   Future<String> getData() async {
     final http.Response response = await http.post(
-      _baseUrl + 'get_home_visit_list',
+      _baseUrl + 'get_payment_list',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
@@ -653,8 +656,11 @@ class _MyEarningsWidgetState extends State<MyEarningsWidget> {
       body: jsonEncode(<String, String>{'user_type': 'doctor', 'id': UID}),
     );
     this.setState(() {
-      appointments = json.decode(response.body);
-      print(appointments.toString());
+      dynamic jsonResponse = json.decode(response.body);
+      totalBill = jsonResponse["total_bill"].toString();
+      allWidthdraw = jsonResponse["all_widthdraw"].toString();
+      billDetails = jsonResponse["bill_details"];
+      //print(appointments.toString());
     });
     return "Success!";
   }
@@ -700,13 +706,202 @@ class _MyEarningsWidgetState extends State<MyEarningsWidget> {
         ),
         body: TabBarView(
           children: [
-            MySubscription((data)),
-            NewSubscription(),
-            NewSubscription()
+            EarningSummeryWidget(totalBill, allWidthdraw),
+            EarningCollectionsWidget(billDetails),
+            EarningWidthDrawWidget(widthdrawDetails),
           ],
         ),
       ),
     );
+  }
+}
+
+class EarningSummeryWidget extends StatefulWidget {
+  String totalBill;
+
+  String allWidthdraw;
+
+  EarningSummeryWidget(this.totalBill, this.allWidthdraw);
+
+  @override
+  _EarningSummeryWidgetState createState() => _EarningSummeryWidgetState();
+}
+
+class _EarningSummeryWidgetState extends State<EarningSummeryWidget> {
+  @override
+  void initState() {
+    // TODO: implement initState
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
+                    child: Text(
+                      "All Collections",
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
+                    child: Text(widget.totalBill + " BDT",
+                        textAlign: TextAlign.justify),
+                  ),
+                )
+              ],
+            ),
+            Divider(
+              height: 1,
+              color: Colors.grey,
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
+                    child: Text(
+                      "All Widthdrawn",
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
+                    child: Text(widget.allWidthdraw + " BDT",
+                        textAlign: TextAlign.justify),
+                  ),
+                )
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class EarningCollectionsWidget extends StatefulWidget {
+  List billDetails = [];
+
+  EarningCollectionsWidget(this.billDetails);
+
+  @override
+  _EarningCollectionsWidgetState createState() =>
+      _EarningCollectionsWidgetState();
+}
+
+class _EarningCollectionsWidgetState extends State<EarningCollectionsWidget> {
+  @override
+  void initState() {
+    // TODO: implement initState
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: (widget.billDetails.length > 0)
+        ? new ListView.builder(
+      shrinkWrap: true,
+      itemCount: widget.billDetails == null ? 0 : widget.billDetails.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(0.0),
+          ),
+          child: Padding(
+              padding: EdgeInsets.all(0),
+              child: Column(
+                children: <Widget>[
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(_baseUrl_image +
+                          widget.billDetails[index]["patient_info"]["photo"]),
+                    ),
+                    title: new Text(
+                      widget.billDetails[index]["service_details"],
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: new Text(
+                      widget.billDetails[index]["fees"],
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+
+                ],
+              )),
+        );
+      },
+    )
+        : Center(
+      child: Text("No Data"),
+
+    ));
+  }
+}
+
+class EarningWidthDrawWidget extends StatefulWidget {
+  List billDetails = [];
+
+  EarningWidthDrawWidget(this.billDetails);
+
+  @override
+  _EarningWidthDrawWidgetState createState() =>
+      _EarningWidthDrawWidgetState();
+}
+
+class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
+  @override
+  void initState() {
+    // TODO: implement initState
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: (widget.billDetails.length > 0)
+        ? new ListView.builder(
+      shrinkWrap: true,
+      itemCount: widget.billDetails == null ? 0 : widget.billDetails.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(0.0),
+          ),
+          child: Padding(
+              padding: EdgeInsets.all(0),
+              child: Column(
+                children: <Widget>[
+                  ListTile(
+                    leading: Text(widget.billDetails[index]["amount"].toString()),
+                    title: new Text(
+                      widget.billDetails[index]["created_at"].toString(),
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: new Text(
+                      widget.billDetails[index]["status"].toString(),
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+
+                ],
+              )),
+        );
+      },
+    )
+        : Center(
+      child: Text("No Data"),
+
+    ));
   }
 }
 
@@ -905,11 +1100,8 @@ class _ConfirmedListWidgetState extends State<ConfirmedListWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{
-        'user_type': "doctor",
-        'id': UID,
-        'status': "1"
-      }),
+      body: jsonEncode(
+          <String, String>{'user_type': "doctor", 'id': UID, 'status': "1"}),
     );
     this.setState(() {
       confirmedList = json.decode(response.body);
@@ -938,15 +1130,13 @@ class _ConfirmedListWidgetState extends State<ConfirmedListWidget> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => PatientFullProfileView(AUTH_KEY,
-                                  confirmedList[index]["patient_info"]
-                                  ["id"]
+                              builder: (context) => PatientFullProfileView(
+                                  AUTH_KEY,
+                                  confirmedList[index]["patient_info"]["id"]
                                       .toString(),
+                                  confirmedList[index]["patient_info"]["name"],
                                   confirmedList[index]["patient_info"]
-                                  ["name"],
-                                  confirmedList[index]["patient_info"]
-                                  ["photo"])));
-
+                                      ["photo"])));
                     },
                     child: Card(
                       shape: RoundedRectangleBorder(
@@ -1040,11 +1230,8 @@ class _PendingListWidgetState extends State<PendingListWidget> {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
-      body: jsonEncode(<String, String>{
-        'user_type': "doctor",
-        'id': UID,
-        'status': "0"
-      }),
+      body: jsonEncode(
+          <String, String>{'user_type': "doctor", 'id': UID, 'status': "0"}),
     );
     this.setState(() {
       pendingList = json.decode(response.body);
@@ -1097,20 +1284,23 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                               RaisedButton(
                                 color: Colors.white,
                                 elevation: 0,
-                                onPressed: ()  {
+                                onPressed: () {
                                   //PatientFullProfileView
                                   //error
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => PatientFullProfileView(AUTH_KEY,
-                                              pendingList[index]["patient_info"]
-                                              ["id"]
-                                                  .toString(),
-                                              pendingList[index]["patient_info"]
-                                              ["name"],
-                                              pendingList[index]["patient_info"]
-                                              ["photo"])));
+                                          builder: (context) =>
+                                              PatientFullProfileView(
+                                                  AUTH_KEY,
+                                                  pendingList[index]
+                                                          ["patient_info"]["id"]
+                                                      .toString(),
+                                                  pendingList[index]
+                                                      ["patient_info"]["name"],
+                                                  pendingList[index]
+                                                          ["patient_info"]
+                                                      ["photo"])));
                                 },
                                 child: Text("View Profile"),
                               ),
@@ -1677,11 +1867,7 @@ class _PrescriptionWriteWidgettState extends State<PrescriptionWriteWidget> {
                     } else {
                       showThisToast("Error occured");
                     }
-
-
                   }
-
-
                 },
                 child: Icon(
                   Icons.send,
@@ -1920,15 +2106,12 @@ class prescriptionModel {
       this.isAfterMeal});
 }
 
-
-
 class SettingsWidState extends StatefulWidget {
   @override
   _SettingsWidStateState createState() => _SettingsWidStateState();
 }
 
 class _SettingsWidStateState extends State<SettingsWidState> {
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1952,7 +2135,7 @@ class _SettingsWidStateState extends State<SettingsWidState> {
         ),
         body: TabBarView(
           children: [
-            myServicesWidget(AUTH_KEY,UID),
+            myServicesWidget(AUTH_KEY, UID),
             Center(child: Text("Documents")),
           ],
         ),
@@ -2476,8 +2659,10 @@ class _ProfileState extends State<Profile> {
           ListTile(
             onTap: () {
               //SkillsActivity
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => EducationsActivity(AUTH_KEY,UID)));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => EducationsActivity(AUTH_KEY, UID)));
             },
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Education"),
@@ -2487,8 +2672,10 @@ class _ProfileState extends State<Profile> {
           Divider(),
           ListTile(
             onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => SkillsActivity(AUTH_KEY,UID)));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => SkillsActivity(AUTH_KEY, UID)));
             },
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Skills"),
@@ -2502,7 +2689,7 @@ class _ProfileState extends State<Profile> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => ChamberActivity(AUTH_KEY,UID)));
+                      builder: (context) => ChamberActivity(AUTH_KEY, UID)));
             },
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Chamber"),
@@ -2759,8 +2946,7 @@ Widget myDrawer() {
                     padding: EdgeInsets.fromLTRB(0, 50, 0, 5),
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundImage:
-                          NetworkImage(_baseUrl_image + UPHOTO),
+                      backgroundImage: NetworkImage(_baseUrl_image + UPHOTO),
                     )),
                 Padding(
                     padding: EdgeInsets.fromLTRB(0, 10, 0, 25),
@@ -2989,56 +3175,56 @@ class _BasicProfileState extends State<BasicProfile> {
       appBar: AppBar(
         title: Text("Profile Information"),
       ),
-      body:  ListView(
+      body: ListView(
         children: <Widget>[
           Center(
               child: InkWell(
-                onTap: () async {
-                  File image =
+            onTap: () async {
+              File image =
                   await ImagePicker.pickImage(source: ImageSource.gallery);
-                  var stream =
+              var stream =
                   new http.ByteStream(DelegatingStream.typed(image.openRead()));
-                  var length = await image.length();
+              var length = await image.length();
 
-                  var uri = Uri.parse(_baseUrl + "update-user-info");
+              var uri = Uri.parse(_baseUrl + "update-user-info");
 
-                  var request = new http.MultipartRequest("POST", uri);
-                  var multipartFile = new http.MultipartFile(
-                      'photo', stream, length,
-                      filename: basename(image.path));
-                  //contentType: new MediaType('image', 'png'));
+              var request = new http.MultipartRequest("POST", uri);
+              var multipartFile = new http.MultipartFile(
+                  'photo', stream, length,
+                  filename: basename(image.path));
+              //contentType: new MediaType('image', 'png'));
 
-                  request.files.add(multipartFile);
-                  request.fields.addAll(<String, String>{'user_id': UID});
-                  request.headers.addAll(header);
-                  //showThisToast(AUTH_KEY+"/n"+UID);
+              request.files.add(multipartFile);
+              request.fields.addAll(<String, String>{'user_id': UID});
+              request.headers.addAll(header);
+              //showThisToast(AUTH_KEY+"/n"+UID);
 
-                  var response = await request.send();
+              var response = await request.send();
 
-                  print(response.statusCode);
-                  //showThisToast(response.statusCode.toString());
+              print(response.statusCode);
+              //showThisToast(response.statusCode.toString());
 
-                  response.stream.transform(utf8.decoder).listen((value) {
-                    //print(value);
-                    //showThisToast(value);
+              response.stream.transform(utf8.decoder).listen((value) {
+                //print(value);
+                //showThisToast(value);
 
-                    var data = jsonDecode(value);
-                    //showThisToast(data.t);
-                    showThisToast((data["photo"]).toString());
-                    setState(() {
-                      user_picture = (data["photo"]).toString();
-                      UPHOTO = user_picture;
-                    });
-                  });
-                },
-                child: Padding(
-                  padding: EdgeInsets.all(15),
-                  child: CircleAvatar(
-                    radius: 100,
-                    backgroundImage: NetworkImage( _baseUrl_image + UPHOTO),
-                  ),
-                ),
-              )),
+                var data = jsonDecode(value);
+                //showThisToast(data.t);
+                showThisToast((data["photo"]).toString());
+                setState(() {
+                  user_picture = (data["photo"]).toString();
+                  UPHOTO = user_picture;
+                });
+              });
+            },
+            child: Padding(
+              padding: EdgeInsets.all(15),
+              child: CircleAvatar(
+                radius: 100,
+                backgroundImage: NetworkImage(_baseUrl_image + UPHOTO),
+              ),
+            ),
+          )),
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 00),
             child: Card(
@@ -3087,7 +3273,8 @@ class _BasicProfileState extends State<BasicProfile> {
                             child: Text('Update'),
                             onPressed: () {
                               if (_formKey.currentState.validate()) {
-                                var status = updateDisplayName(AUTH_KEY,UID,newName);
+                                var status =
+                                    updateDisplayName(AUTH_KEY, UID, newName);
                                 UNAME = newName;
                                 prefs.setString("uname", newName);
 
@@ -3096,7 +3283,7 @@ class _BasicProfileState extends State<BasicProfile> {
                                   UNAME = newName;
                                 });
                                 status.then(
-                                        (value) => Navigator.of(context).pop());
+                                    (value) => Navigator.of(context).pop());
                               }
                             },
                           ),
@@ -3170,9 +3357,6 @@ class _BasicProfileState extends State<BasicProfile> {
     );
   }
 }
-
-
-
 
 class BasicProfileActivity extends StatelessWidget {
   @override
@@ -3778,7 +3962,7 @@ class _DiseasesWidgetState extends State<DiseasesWidget> {
                     child: Text('Update'),
                     onPressed: () {
                       if (_formKey.currentState.validate()) {
-                        var status = addDiseasesHistory(AUTH_KEY,UID,
+                        var status = addDiseasesHistory(AUTH_KEY, UID,
                             diseaesName, dateToUpdate, currentStatus);
 
                         status.then((value) => this.closeAndUpdate(context));
@@ -4070,13 +4254,12 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
               itemBuilder: (BuildContext context, int index) {
                 return new InkWell(
                     onTap: () {
-                      if(prescriptionReviewList[index]["is_reviewed"] == 0) {
+                      if (prescriptionReviewList[index]["is_reviewed"] == 0) {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    PrescriptionsodyWidget(
-                                        prescriptionReviewList[index])));
+                                builder: (context) => PrescriptionsodyWidget(
+                                    prescriptionReviewList[index])));
                       }
                     },
                     child: Card(

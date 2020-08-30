@@ -600,6 +600,15 @@ class _ChamberActivityState extends State<ChamberActivity> {
       appBar: AppBar(
         title: Text("Chamber Info"),
       ),
+      floatingActionButton: FloatingActionButton.extended(onPressed: (){
+
+
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => ChamberAddctivity(widget.AUTH,
+                    widget.USER_ID)));
+      }, label: Text("Add a Chamber")),
       body: data.length > 0
           ? ListView.builder(
               shrinkWrap: true,
@@ -726,6 +735,156 @@ class _ChamberActivityState extends State<ChamberActivity> {
     );
   }
 }
+
+//==
+class ChamberAddctivity extends StatefulWidget {
+  String AUTH, USER_ID;
+
+  ChamberAddctivity(this.AUTH, this.USER_ID);
+
+  @override
+  _ChamberAddctivityState createState() => _ChamberAddctivityState();
+}
+
+class _ChamberAddctivityState extends State<ChamberAddctivity> {
+  final _formKey = GlobalKey<FormState>();
+  String cname, caddress,fees,ffees;
+  String myMessage = "Submit";
+
+  Widget StandbyWid = Text(
+    "Add",
+    style: TextStyle(color: Colors.white),
+  );
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //this.getData();
+    //doctor-education-chamber-info
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Add New Chamber"),
+      ),
+
+      body: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              "Telemedicine",
+              style: TextStyle(
+                  color: Color(0xFF34448c),
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
+              child: TextFormField(
+                initialValue: "",
+                validator: (value) {
+                  cname = value;
+                  if (value.isEmpty) {
+                    return 'Please write chamber name';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.pink)),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue)),
+                    labelText: "Chamber Name"),
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: TextFormField(
+                initialValue: "",
+                validator: (value) {
+                  caddress = value;
+                  if (value.isEmpty) {
+                    return 'Please write chamber address';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.pink)),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue)),
+                    labelText: "Chamber Address"),
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: TextFormField(
+                initialValue: "",
+                validator: (value) {
+                  caddress = value;
+                  if (value.isEmpty) {
+                    return 'Please write chamber address';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.pink)),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue)),
+                    labelText: "Chamber Address"),
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
+              child: SizedBox(
+                  height: 50,
+                  width: double.infinity, // match_parent
+                  child: RaisedButton(
+                    color: Color(0xFF34448c),
+                    onPressed: () async {
+                      // Validate returns true if the form is valid, or false
+                      // otherwise.
+                      if (_formKey.currentState.validate()) {
+                        // If the form is valid, display a Snackbar.
+                        setState(() {
+                          StandbyWid = Text("Please wait");
+                        });
+
+
+                      }
+                    },
+                    child: StandbyWid,
+                  )),
+            ),
+
+          ],
+        ),
+      ),
+
+
+    );
+  }
+}
+//==
+
+
 
 String getDayName(int day) {
   String returnDay = "Error";
