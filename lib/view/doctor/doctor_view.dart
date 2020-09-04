@@ -1008,7 +1008,7 @@ class _HomeVisitWidgetState extends State<HomeVisitWidget> {
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: new Text(
-                              appointments[index]["home_address"],
+                              appointments[index]["home_address"]+" , "+appointments[index]["phone"],
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -1331,7 +1331,27 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                               RaisedButton(
                                 color: Colors.white,
                                 elevation: 0,
-                                onPressed: () async {},
+                                onPressed: ()  {
+
+
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => GiveTestRecomdActivity(
+                                            pendingList[index]
+                                            ["patient_info"]["id"],
+                                            function: (data) {
+                                              //  showThisToast("im hit hit hit wioth "+data);
+                                              setState(() {
+//                                                selectedDepartment =
+//                                                    data["id"].toString();
+//                                                txtSelectDepartment =
+//                                                    data["name"].toString();
+                                              });
+                                            },
+                                          )));
+
+                                },
                                 child: Text("Test Recommendation"),
                               )
                             ],
@@ -1347,6 +1367,84 @@ class _PendingListWidgetState extends State<PendingListWidget> {
     );
   }
 }
+
+//start
+class GiveTestRecomdActivity extends StatefulWidget {
+  String  patient_id ;
+  Function function;
+
+  //ChooseDeptActivity(this.deptList__, this.function);
+  GiveTestRecomdActivity(this.patient_id, {Key key, this.function})
+      : super(key: key);
+
+  @override
+  _GiveTestRecomdActivityState createState() => _GiveTestRecomdActivityState();
+}
+
+class _GiveTestRecomdActivityState extends State<GiveTestRecomdActivity> {
+  List deptList = [];
+
+  getData() async {
+    String da = await getDepartmentsData();
+    setState(() async {
+      widget.deptList__ = json.decode(da);
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    //  this.getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Choose Tests"),
+      ),
+      body: true
+          ? ListView.builder(
+        itemCount:
+        widget.deptList__ == null ? 0 : widget.deptList__.length,
+        itemBuilder: (BuildContext context, int index) {
+          return new InkWell(
+              onTap: () {
+                final Map<String, dynamic> data =
+                new Map<String, dynamic>();
+                data['id'] = widget.deptList__[index]["id"].toString();
+                data['name'] =
+                    widget.deptList__[index]["name"].toString();
+                widget.function(data);
+                Navigator.of(context).pop(true);
+              },
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(0),
+                  child: ListTile(
+                    trailing: Icon(Icons.keyboard_arrow_right),
+                    leading: Icon(Icons.add),
+                    title: new Text(
+                      widget.deptList__[index]["name"],
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ));
+        },
+      )
+          : Center(
+        child: Text(widget.deptList__.toString()),
+      ),
+    );
+  }
+}
+//ends
+
+
 
 class LocationSelectionWidget extends StatefulWidget {
   @override
@@ -1492,8 +1590,38 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                               child: RaisedButton(
                                 color: Colors.white,
                                 elevation: 0,
-                                onPressed: () async {},
+                                onPressed: ()  {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              PatientFullProfileView(
+                                                  AUTH_KEY,
+                                                  VideoCallListList[index]
+                                                  ["patient_info"]["id"]
+                                                      .toString(),
+                                                  VideoCallListList[index]
+                                                  ["patient_info"]["name"],
+                                                  VideoCallListList[index]
+                                                  ["patient_info"]
+                                                  ["photo"])));
+                                },
                                 child: Text("View Profile"),
+                              ),
+                            ),
+                            Flexible(
+                              child: RaisedButton(
+                                color: Colors.white,
+                                elevation: 0,
+                                onPressed: ()  {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              VideoAppointmentPrescriptionWriteWidget(
+                                                  VideoCallListList[index])));
+                                },
+                                child: Text("Give Prescription"),
                               ),
                             ),
                           ],
@@ -1788,6 +1916,204 @@ class _ChamberAppointmentPrescriptionWriteWidgetState
                           });
                         },
                       )));
+        },
+      ),
+    );
+  }
+}
+
+
+class VideoAppointmentPrescriptionWriteWidget extends StatefulWidget {
+  dynamic confirmedList;
+
+  VideoAppointmentPrescriptionWriteWidget(this.confirmedList);
+
+  @override
+  _VideoAppointmentPrescriptionWriteWidgetState createState() =>
+      _VideoAppointmentPrescriptionWriteWidgetState();
+}
+
+class _VideoAppointmentPrescriptionWriteWidgetState
+    extends State<VideoAppointmentPrescriptionWriteWidget> {
+  final _formKey_ = GlobalKey<FormState>();
+  String choice;
+  int mealTime = 0;
+  String diseases = "no datas";
+  bool morning = false;
+  bool noon = true;
+  bool evening = false;
+  bool checkedValue = false;
+  String dr_id = UID;
+  String patient_id;
+
+  @override
+  void initState() {
+    // showThisToast("patient id "+ widget.prescriptionreqModel["patient_info"]["id"].toString());
+    print("pre model");
+    print(widget.confirmedList);
+    setState(() {
+      patient_id = widget.confirmedList["patient_info"]["id"].toString();
+      medicineList = [];
+      noon = true;
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Provide a Prescription",
+        ),
+        actions: <Widget>[
+          Padding(
+              padding: EdgeInsets.only(right: 20.0),
+              child: GestureDetector(
+                onTap: () async {
+                  if (_formKey_.currentState.validate()) {
+                    setState(() {});
+                  }
+
+                  final http.Response response = await http.post(
+                    _baseUrl + 'add-prescription-info',
+                    headers: <String, String>{
+                      'Content-Type': 'application/json; charset=UTF-8',
+                      'Authorization': AUTH_KEY,
+                    },
+                    body: jsonEncode(<String, String>{
+                      'patient_id': patient_id,
+                      'dr_id': UID,
+                      'diseases_name': diseases,
+                      'medicine_info': jsonEncode(medicineList),
+                      'dr_name': UNAME,
+                      'service_id': "5",
+                      'appointment_id': widget.confirmedList["id"].toString(),
+                      'dr_name': widget.confirmedList["dr_info"]["name"],
+                    }),
+                  );
+
+                  showThisToast(response.body.toString());
+                  print((jsonDecode(response.body))["message"]);
+                  if (response.statusCode == 200) {
+                    data_Confirmd = json.decode(response.body);
+                    Navigator.of(context).pop(true);
+                   // return json.decode(response.body);
+
+                    // return LoginResponse.fromJson(json.decode(response.body));
+                  } else {
+                    Navigator.of(context).pop(true);
+                    throw Exception('Failed to load album');
+                  }
+                },
+                child: Icon(
+                  Icons.send,
+                  color: Colors.white,
+                  size: 26.0,
+                ),
+              )),
+        ],
+      ),
+      body: Column(
+        children: <Widget>[
+          Form(
+            key: _formKey_,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
+              child: TextFormField(
+                minLines: 3,
+                maxLines: 5,
+                validator: (value) {
+                  diseases = value;
+                  if (value.isEmpty) {
+                    return 'Please write detected diseases';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    alignLabelWithHint: true,
+                    labelStyle: TextStyle(color: Colors.blue),
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.pink)),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue)),
+                    labelText: "Write The Diagnosed Diseases"),
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+              ),
+            ),
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            itemCount: medicineList == null ? 0 : medicineList.length,
+            itemBuilder: (BuildContext context, int index) {
+              return new InkWell(
+                  onTap: () {
+//                Navigator.push(
+//                    context,
+//                    MaterialPageRoute(
+//                        builder: (context) => AmbulanceBodyWidget(
+//                            projectSnap.data[index])));
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(00.0),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(0),
+                      child: ListTile(
+                        trailing: Icon(Icons.delete),
+                        leading: Icon(Icons.note_add),
+                        title: new Text(
+                          medicineList[index]["name"],
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Row(
+                          children: <Widget>[
+                            medicineList[index]["morning"] == 1
+                                ? Padding(
+                              padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                              child: Text("Morning"),
+                            )
+                                : Text(""),
+                            medicineList[index]["noon"] == 1
+                                ? Padding(
+                              padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                              child: Text("Noon"),
+                            )
+                                : Text(""),
+                            medicineList[index]["evening"] == 1
+                                ? Padding(
+                              padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                              child: Text("Evening"),
+                            )
+                                : Text(""),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ));
+            },
+          )
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: Icon(Icons.add_circle_outline),
+        label: Text("Add Medicine"),
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => AddMedicineWidget(
+                    function: (data) {
+                      // showThisToast("im hit hit hit");
+                      setState(() {
+                        data["id"] = widget.confirmedList["id"].toString();
+                        medicineList.add(data);
+                      });
+                    },
+                  )));
         },
       ),
     );
@@ -2965,119 +3291,42 @@ Widget myDrawer() {
         ),
         ListTile(
           leading: Icon(Icons.description),
-          title: Text('Logout'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            setLoginStatus(false);
-            runApp(LoginUI());
-          },
-        ),
-        ListTile(
-          leading: Icon(Icons.description),
-          title: Text('Online Doctor'),
-          trailing: Icon(Icons.keyboard_arrow_right),
+          title: Text('Facebook'),
+          trailing: Icon(Icons.format_align_center),
           onTap: () {
             const url = "https://www.facebook.com";
 
-            // launch(url);
+            launch(url);
             //Share.share("https://www.facebook.com");
           },
         ),
         ListTile(
           leading: Icon(Icons.description),
-          title: Text('Chamber Doctor'),
+          title: Text('Youtube'),
           trailing: Icon(Icons.keyboard_arrow_right),
           onTap: () {
             const url = "https://www.youtube.com";
 
-            // launch(url);
+            launch(url);
             //Share.share("https://www.youtube.com");
           },
         ),
+
         ListTile(
           leading: Icon(
             Icons.archive,
             color: Colors.deepOrange,
           ),
-          title: Text('Subscriptions'),
+          title: Text('Twitter'),
           trailing: Icon(Icons.keyboard_arrow_right),
           onTap: () {
             const url = "https://www.twitter.com";
 
-            // launch(url);
+            launch(url);
             // Share.share("https://www.twitter.com");
           },
         ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Chat'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
 
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Ambulance'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Blood Bank'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Pharmacey'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Hospitals'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
         ListTile(
           leading: Icon(
             Icons.archive,
@@ -3090,6 +3339,15 @@ Widget myDrawer() {
 
             // launch(url);
             // Share.share("https://www.twitter.com");
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.description),
+          title: Text('Logout'),
+          trailing: Icon(Icons.keyboard_arrow_right),
+          onTap: () {
+            setLoginStatus(false);
+            runApp(LoginUI());
           },
         ),
       ],
@@ -3326,7 +3584,7 @@ class _BasicProfileState extends State<BasicProfile> {
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
-                      child: Text("Phone Name"),
+                      child: Text("Phone"),
                     )
                   ],
                 ),

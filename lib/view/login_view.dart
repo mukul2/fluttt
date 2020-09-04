@@ -1,10 +1,11 @@
 import 'dart:convert';
-
+import 'dart:io';
 import 'package:appxplorebd/models/login_response.dart';
 import 'package:appxplorebd/utils/mySharedPreffManager.dart';
 import 'package:appxplorebd/view/patient/another_map.dart';
 import 'package:appxplorebd/view/patient/myMapViewActivity.dart';
 import 'package:appxplorebd/view/patient/patient_view.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../appPhoneVerification.dart';
@@ -15,6 +16,40 @@ import 'package:appxplorebd/networking/Repsonse.dart';
 import 'package:appxplorebd/networking/ApiProvider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io' show File, Platform;
+import 'package:appxplorebd/projPaypal/config.dart';
+import 'package:appxplorebd/utils/mySharedPreffManager.dart';
+import 'package:appxplorebd/view/login_view.dart';
+import 'package:appxplorebd/view/patient/sharedActivitys.dart';
+import 'package:appxplorebd/view/patient/sharedData.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_webservice/places.dart';
+import 'package:path/path.dart';
+import 'package:async/async.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:appxplorebd/chat/model/chat_screen.dart';
+import 'package:appxplorebd/chat/model/root_page.dart';
+import 'package:appxplorebd/chat/service/authentication.dart';
+import 'package:appxplorebd/networking/ApiProvider.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
 
 void main() => runApp(LoginUI());
 var PHONE_NUMBER_VERIFIED;
@@ -71,15 +106,14 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
                       });
                     },
                     child: Card(
+                      color: widget.userType == "p" ?Colors.blue:Colors.white,
                       child: ListTile(
-                        leading: Checkbox(
-                          value: widget.userType == "p" ? true : false,
-                        ),
-                        trailing: Icon(Icons.face),
+
+                        trailing: Icon(Icons.face, color: widget.userType == "p" ?Colors.white:Colors.blue,),
                         title: Text(
                           "Patient",
                           style: TextStyle(
-                              color: Colors.blue, fontWeight: FontWeight.bold),
+                              color: widget.userType == "p" ?Colors.white:Colors.blue, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -93,15 +127,14 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
                       });
                     },
                     child: Card(
+                      color: widget.userType == "d" ?Colors.blue:Colors.white,
                       child:  ListTile(
-                        trailing: Icon(Icons.face),
-                        leading: Checkbox(
-                          value: widget.userType == "d" ? true : false,
-                        ),
+                        trailing: Icon(Icons.face,color: widget.userType == "d" ?Colors.white:Colors.blue,),
+
                         title: Text(
                           "Doctor",
                           style: TextStyle(
-                              color: Colors.blue,
+                              color: widget.userType == "d" ?Colors.white:Colors.blue,
                               fontWeight: FontWeight.bold),
                         ),
                       )
@@ -744,6 +777,92 @@ class _ChooseDeptActivityState extends State<ChooseDeptActivity> {
   }
 }
 //ends
+//
+// start
+class ChooseDocument extends StatefulWidget {
+  Function function;
+  List<File> fileList = [];
+  //ChooseDeptActivity(this.deptList__, this.function);
+  ChooseDocument(this.fileList, {Key key, this.function})
+      : super(key: key);
+
+  @override
+  _ChooseDocumentState createState() => _ChooseDocumentState();
+}
+
+class _ChooseDocumentState extends State<ChooseDocument> {
+
+
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    //  this.getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("ADD AT LEAST 1 Document"),
+        actions: [
+          GestureDetector(
+            onTap: (){
+               widget.function(widget.fileList);
+               Navigator.of(context).pop(true);
+            },
+            child: Icon(Icons.done),
+          )
+
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(onPressed: () async {
+        File image = await FilePicker.getFile();
+//        final Map<String, File> data =
+//        new Map<String, File>();
+//        data['link'] = image;
+        setState(() {
+          widget. fileList.add(image);
+        });
+
+      }, label: Text("Pick from Device")),
+      body: true
+          ? ListView.builder(
+              itemCount:
+              widget. fileList == null ? 0 :widget. fileList.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new InkWell(
+                    onTap: () {
+
+                     // widget.function(data);
+                     // Navigator.of(context).pop(true);
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(0),
+                        child: ListTile(
+                          trailing: Icon(Icons.keyboard_arrow_right),
+                          leading: Icon(Icons.add),
+                          title: new Text(
+                            widget.fileList[index].path,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ));
+              },
+            )
+          : Center(
+              child: Text(widget.fileList.toString()),
+            ),
+    );
+  }
+}
+//ends
 
 //starts
 
@@ -759,12 +878,14 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<MyCustomFormState>.
   List deptList = [];
+  List<File> fileList = [];
 
   final _formKey = GlobalKey<FormState>();
   String number, name, email, password;
   String myMessage = "Signup";
   String selectedDepartment;
   String txtSelectDepartment = "Select a Department";
+  String selectDocumentHint = "Add Proof of MBBS";
 
   getData() async {
     setState(() async {
@@ -776,7 +897,7 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
   }
 
   Widget StandbyWid = Text(
-    "Verify",
+    "Signup",
     style: TextStyle(color: Colors.white),
   );
 
@@ -839,6 +960,30 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
                   },
                   trailing: Icon(Icons.arrow_downward),
                   title: Text(txtSelectDepartment),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: Container(
+                decoration: myBoxDecoration(),
+                child: ListTile(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ChooseDocument(
+                                fileList,
+                              function: (data) {
+                                //  showThisToast("im hit hit hit wioth "+data);
+                                setState(() {
+                                 selectDocumentHint = ""+data.length.toString()+" documents selected";
+                                });
+                              },
+                            )));
+                  },
+                  trailing: Icon(Icons.arrow_downward),
+                  title: Text(selectDocumentHint),
                 ),
               ),
             ),
@@ -972,8 +1117,56 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
                               style: TextStyle(color: Colors.white),
                             );
                           });
+                          setState(() {
+                            StandbyWid = Text(
+                              "Please wait files are uploading 0/"+fileList.length.toString(),
+                              style: TextStyle(color: Colors.white),
+                            );
+                          });
+                          int start = 0 ;
+                          int current = 0 ;
+                          if(fileList.length>0) {
+                            for (int i = 0; i < fileList.length; i++) {
+                              var uri = Uri.parse(_baseUrl + "add_doctors_documents");
+                              var request = new http.MultipartRequest("POST", uri);
+                              String fileName = fileList[i].path.split("/").last;
+                              var stream = new http.ByteStream(DelegatingStream.typed( fileList[i].openRead()));
+                              var length = await  fileList[i].length(); //imageFile is your image file
+                              var multipartFileSign = new http.MultipartFile('photo', stream, length, filename: fileName);
+                              request.files.add(multipartFileSign);
+                              Map<String, String> headers = {
+                                "Accept": "application/json",
+                                "Authorization": "Bearer " + resp["access_token"]
+                              };
+                              request.headers.addAll(headers);
+                              request.fields['dr_id'] = resp["user_info"]["id"].toString();
+                              request.fields['title'] = "TITLE";
+                              var response = await request.send();
+                              print(response.statusCode);
+                              response.stream.transform(utf8.decoder).listen((value) {
+                                showThisToast(value);
+                                current ++;
 
-                          mainD();
+                                print(value);
+                                setState(() {
+                                  StandbyWid = Text(
+                                    "Please wait files are uploading "+current.toString()+"/"+fileList.length.toString(),
+                                    style: TextStyle(color: Colors.white),
+                                  );
+                                });
+                                if(current== (fileList.length)){
+                                  setState(() {
+                                    StandbyWid = Text(
+                                      "Upload Compleated",
+                                      style: TextStyle(color: Colors.white),
+                                    );
+                                  });mainD();
+                                }
+                              });
+
+                            }
+                          }
+                          //mainD();
                         } else {
                           // showThisToast("User Allreasy registered");
                           setState(() {
@@ -1000,7 +1193,35 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
   }
 }
 //ends
+Future<String> uploadMultipleImage(File file, String userid,String auth) async {
+  final prefs = await SharedPreferences.getInstance();
+  final key = 'token';
+  final value = prefs.get(key) ?? 0;
 
+// string to uri
+
+// create multipart request
+  var uri = Uri.parse(_baseUrl + "add_doctors_documents");
+  var request = new http.MultipartRequest("POST", uri);
+  String fileName = file.path.split("/").last;
+  var stream = new http.ByteStream(DelegatingStream.typed(file.openRead()));
+  var length = await file.length(); //imageFile is your image file
+  var multipartFileSign = new http.MultipartFile('photo', stream, length, filename: fileName);
+  request.files.add(multipartFileSign);
+  Map<String, String> headers = {
+    "Accept": "application/json",
+    "Authorization": auth
+  };
+  request.headers.addAll(headers);
+  request.fields['dr_id'] = userid;
+  request.fields['title'] = "TITLE";
+  var response = await request.send();
+  print(response.statusCode);
+  response.stream.transform(utf8.decoder).listen((value) {
+    showThisToast(value);
+    print(value);
+  });
+}
 void showThisToast(String s) {
   Fluttertoast.showToast(
       msg: s,

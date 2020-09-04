@@ -503,7 +503,8 @@ class _HomeState extends State<Home> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => SubscriptionViewPatient(AUTH_KEY,UID)));
+                          builder: (context) =>
+                              SubscriptionViewPatient(AUTH_KEY, UID)));
                 },
                 child: Card(
                   margin: EdgeInsets.all(0.5),
@@ -797,6 +798,26 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
   final _formKey = GlobalKey<FormState>();
   String problems, homeAddress, date, phone;
   String myMessage = "Submit";
+  DateTime selectedDate = DateTime.now();
+  String selctedDate_ = DateTime.now().year.toString()+"-"+DateTime.now().month.toString()+"-"+DateTime.now().day.toString();
+
+  Future<Null> _selectDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(2015, 8),
+        lastDate: DateTime(2101));
+    if (picked != null && picked != selectedDate)
+      setState(() {
+        selectedDate = picked;
+        selctedDate_ = picked.year.toString()+"-"+picked.month.toString()+"-"+picked.day.toString();
+        setState(() {
+          date = selctedDate_;
+
+        });
+        showThisToast(selctedDate_);
+      });
+  }
 
   Widget StandbyWid = Text(
     "Submit",
@@ -883,25 +904,18 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
                       autocorrect: false,
                     ),
                   ),
+
                   Padding(
                     padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-                    child: TextFormField(
-                      validator: (value) {
-                        date = value;
-                        if (value.isEmpty) {
-                          return 'Please enter Date';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                          fillColor: Colors.white10,
-                          border: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.pink)),
-                          enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blue)),
-                          labelText: "Date"),
-                      keyboardType: TextInputType.emailAddress,
-                      autocorrect: false,
+                    child: Container(
+                      decoration: myBoxDecoration(),
+                      child: ListTile(
+                        onTap: () {
+                          _selectDate(context);
+                        },
+                        trailing: Icon(Icons.arrow_downward),
+                        title: Text(selctedDate_),
+                      ),
                     ),
                   ),
                   Padding(
@@ -921,7 +935,7 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
                           enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(color: Colors.blue)),
                           labelText: "Contact Number"),
-                      keyboardType: TextInputType.emailAddress,
+                      keyboardType: TextInputType.number,
                       autocorrect: false,
                     ),
                   ),
@@ -951,10 +965,11 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
                                   'dr_id': widget.data["id"].toString(),
                                   'problems': problems,
                                   'phone': phone,
-                                  'date': date,
+                                  'date': selctedDate_,
                                   'home_address': homeAddress
                                 }),
                               );
+                              print(response.body);
                               setState(() {
                                 myMessage = response.body;
                               });
@@ -1612,32 +1627,23 @@ Widget myDrawer() {
         ),
         ListTile(
           leading: Icon(Icons.description),
-          title: Text('Logout'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            setLoginStatus(false);
-            runApp(LoginUI());
-          },
-        ),
-        ListTile(
-          leading: Icon(Icons.description),
-          title: Text('Online Doctor'),
-          trailing: Icon(Icons.keyboard_arrow_right),
+          title: Text('Facebook'),
+          trailing: Icon(Icons.format_align_center),
           onTap: () {
             const url = "https://www.facebook.com";
 
-            // launch(url);
+            launch(url);
             //Share.share("https://www.facebook.com");
           },
         ),
         ListTile(
           leading: Icon(Icons.description),
-          title: Text('Chamber Doctor'),
+          title: Text('Youtube'),
           trailing: Icon(Icons.keyboard_arrow_right),
           onTap: () {
             const url = "https://www.youtube.com";
 
-            // launch(url);
+            launch(url);
             //Share.share("https://www.youtube.com");
           },
         ),
@@ -1646,82 +1652,12 @@ Widget myDrawer() {
             Icons.archive,
             color: Colors.deepOrange,
           ),
-          title: Text('Subscriptions'),
+          title: Text('Twitter'),
           trailing: Icon(Icons.keyboard_arrow_right),
           onTap: () {
             const url = "https://www.twitter.com";
 
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Chat'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Ambulance'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Blood Bank'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Pharmacey'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
-            // Share.share("https://www.twitter.com");
-          },
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
-          ),
-          title: Text('Hospitals'),
-          trailing: Icon(Icons.keyboard_arrow_right),
-          onTap: () {
-            const url = "https://www.twitter.com";
-
-            // launch(url);
+            launch(url);
             // Share.share("https://www.twitter.com");
           },
         ),
@@ -1737,6 +1673,15 @@ Widget myDrawer() {
 
             // launch(url);
             // Share.share("https://www.twitter.com");
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.description),
+          title: Text('Logout'),
+          trailing: Icon(Icons.keyboard_arrow_right),
+          onTap: () {
+            setLoginStatus(false);
+            runApp(LoginUI());
           },
         ),
       ],
@@ -1976,7 +1921,7 @@ class _BasicProfileState extends State<BasicProfile> {
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
-                      child: Text("Phone Name"),
+                      child: Text("Phone"),
                     )
                   ],
                 ),
@@ -2858,7 +2803,7 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
 Widget medicinesListOfAPrescriptionWidget(medicineList) {
   return medicineList != null
       ? ListView.builder(
-    physics: ClampingScrollPhysics(),
+          physics: ClampingScrollPhysics(),
           shrinkWrap: true,
           itemCount: medicineList["medicine_info"] == null
               ? 0
@@ -3062,7 +3007,6 @@ class _PrescriptionsReviedBodyState
     this.setState(() {
       print("Single Prescriptin");
       newPrescription = json.decode(response.body);
-
 
       print(newPrescription);
     });

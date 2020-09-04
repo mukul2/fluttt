@@ -4,6 +4,7 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:appxplorebd/myCalling/call.dart';
 import 'package:appxplorebd/networking/ApiProvider.dart';
 import 'package:appxplorebd/projPaypal/config.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -95,12 +96,16 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   child: Row(
                     children: <Widget>[
                       IconButton(
+                        icon: Icon(Icons.attach_file),
+                        onPressed: _sendAnyFile,
+                      ),
+                      IconButton(
                         icon: Icon(Icons.camera_alt),
                         onPressed: _sendImageFromCamera,
                       ),
                       IconButton(
                         icon: Icon(Icons.image),
-                        onPressed: _sendImageFromGallery,
+                        onPressed:_sendImageFromGallery,
                       ),
                       Theme.of(context).platform == TargetPlatform.iOS
                           ? CupertinoButton(
@@ -357,12 +362,120 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         .set(new DateTime.now().toUtc().toIso8601String());
   }
 
-  void _sendImageFromCamera() async {
-    _sendImage(ImageSource.camera);
+  void _sendAnyFile() async {
+    File image = await FilePicker.getFile();
+    final String fileName = Uuid().v4();
+
+    StorageReference photoRef = _photoStorageReference.child(fileName);
+    final StorageUploadTask uploadTask = photoRef.putFile(image);
+    final StorageTaskSnapshot downloadUrl = await uploadTask.onComplete;
+    String img_Link = await downloadUrl.ref.getDownloadURL();
+    final ChatMessage message = _createMessageFromFILE(
+        img_Link,
+        "TYPE_FILE",
+        widget.partner_id,
+        widget.own_id,
+        new DateTime.now().toUtc().toIso8601String());
+    _messageDatabaseReference.child(CHAT_ROOM).push().set(message.toMap());
+
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("message_body")
+        .set(img_Link);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("message_type")
+        .set("TYPE_FILE");
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("receiver_name")
+        .set(widget.partner_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("receiver_photo")
+        .set(widget.partner_photo);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("recever_id")
+        .set((widget.partner_id));
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_id")
+        .set(widget.own_id);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_name")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("sender_photo")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.own_id)
+        .child(widget.partner_id)
+        .child("time")
+        .set(new DateTime.now().toUtc().toIso8601String());
+
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("message_body")
+        .set(img_Link);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("message_type")
+        .set("TYPE_FILE");
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("receiver_name")
+        .set(widget.partner_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("receiver_photo")
+        .set(widget.partner_photo);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("recever_id")
+        .set((widget.partner_id));
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_id")
+        .set(widget.own_id);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_name")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("sender_photo")
+        .set(widget.own_name);
+    _messageDatabaseReference_last
+        .child(widget.partner_id)
+        .child(widget.own_id)
+        .child("time")
+        .set(new DateTime.now().toUtc().toIso8601String());
   }
 
   void _sendImageFromGallery() async {
     _sendImage(ImageSource.gallery);
+  }
+  void _sendImageFromCamera() async {
+    _sendImage(ImageSource.camera);
   }
 
   ChatMessage _createMessageFromText(String message_body, String message_type,
@@ -385,7 +498,21 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         message_body: message_body,
         sender_id: sender_id,
         recever_id: recever_id,
-        message_type: "TYPE_IMAGE",
+        message_type: message_type,
+        time: time,
+        animationController: AnimationController(
+          duration: Duration(milliseconds: 1000),
+          vsync: this,
+        ),
+      );
+
+  ChatMessage _createMessageFromFILE(String message_body, String message_type,
+          String recever_id, String sender_id, String time) =>
+      ChatMessage(
+        message_body: message_body,
+        sender_id: sender_id,
+        recever_id: recever_id,
+        message_type:message_type,
         time: time,
         animationController: AnimationController(
           duration: Duration(milliseconds: 1000),
@@ -413,12 +540,37 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       builder: (context) => CallPage(
                         channelName: widget.chatRoom,
                         role: _role,
+                        isCameraOn: false,
                       ),
                     ),
                   );
                 },
                 child: Icon(
                   Icons.call,
+                  size: 26.0,
+                ),
+              )),
+          Padding(
+              padding: EdgeInsets.only(right: 20.0),
+              child: GestureDetector(
+                onTap: () async {
+                  ClientRole _role = ClientRole.Broadcaster;
+                  // await for camera and mic permissions before pushing video page
+                  await _handleCameraAndMic();
+                  // push video page with given channel name
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CallPage(
+                        channelName: widget.chatRoom,
+                        role: _role,
+                        isCameraOn: true,
+                      ),
+                    ),
+                  );
+                },
+                child: Icon(
+                  Icons.video_call,
                   size: 26.0,
                 ),
               )),

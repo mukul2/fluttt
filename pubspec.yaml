@@ -52,6 +52,7 @@ dependencies:
   # Map markers clustering
   fluster: ^1.1.2
   autocomplete_textfield: ^1.7.3
+  file_picker: ^1.13.3
 
 
   # Cache manager

@@ -7,12 +7,13 @@ import 'package:flutter/material.dart';
 class CallPage extends StatefulWidget {
   /// non-modifiable channel name of the page
   final String channelName;
+  final bool isCameraOn;
 
   /// non-modifiable client role of the page
   final ClientRole role;
 
   /// Creates a call page with given channel name.
-  const CallPage({Key key, this.channelName, this.role}) : super(key: key);
+  const CallPage({Key key, this.channelName, this.role,this.isCameraOn}) : super(key: key);
 
   @override
   _CallPageState createState() => _CallPageState();
@@ -63,7 +64,12 @@ class _CallPageState extends State<CallPage> {
   /// Create agora sdk instance and initialize
   Future<void> _initAgoraRtcEngine() async {
     await AgoraRtcEngine.create(APP_ID);
-    await AgoraRtcEngine.enableVideo();
+    if(widget.isCameraOn){
+      await AgoraRtcEngine.enableVideo();
+
+    }else{
+
+    }
     await AgoraRtcEngine.setChannelProfile(ChannelProfile.LiveBroadcasting);
     await AgoraRtcEngine.setClientRole(widget.role);
   }

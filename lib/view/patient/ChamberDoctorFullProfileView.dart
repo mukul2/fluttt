@@ -1,3 +1,4 @@
+
 import 'package:appxplorebd/networking/ApiProvider.dart';
 import 'package:appxplorebd/networking/Const.dart';
 import 'package:appxplorebd/projPaypal/PaypalPayment.dart';
@@ -250,7 +251,7 @@ Widget Educations(List education_info) {
     },
   );
 }
-
+//this is real
 Widget chamberBooking(chamber_info, BuildContext context) {
   return Scaffold(
     appBar: AppBar(
@@ -258,49 +259,79 @@ Widget chamberBooking(chamber_info, BuildContext context) {
     ),
     body: SingleChildScrollView(
         child: new Column(
+
           children: <Widget>[
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      width: 60,
-                      height: 60,
-                      child: Expanded(
-                        child: Image.network(
-                          "http://telemedicine.drshahidulislam.com/" + photo_,
-                          width: 60,
-                          height: 60,
-                        ),
-                      ),
+          Card(
+
+            child:   ListTile(
+              leading:  Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 00, 0),
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  child: Expanded(
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage( "http://telemedicine.drshahidulislam.com/" + photo_),
                     ),
-                    Expanded(
-                      child: ListTile(
-                        title: Text(name_),
-                        subtitle: Text(designation_title_),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
+              trailing: Text((chamber_info["fee"]).toString()+" BDT"),
+              title:Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Your Doctor",style: TextStyle(fontSize: 12),),
+                  Text(name_,style: TextStyle(color: Colors.black),),
+                  Text(designation_title_,style: TextStyle(fontSize: 12),)
+                ],
+              ) ,
             ),
-            Card(
-              child: Expanded(
-                child: ListTile(
-                  title: Text((chamber_info["chamber_name"]).toString()),
-                  subtitle: Text((chamber_info["address"]).toString()),
-                ),
-              ),
-            ),
+          ),
+//
+//            ListTile(
+//              title: Text("Chamber Name"),
+//              subtitle: Text((chamber_info["address"]).toString()),
+//            ),
+//            Divider(
+//              color: Colors.grey,
+//              height: 1,
+//            ),
+//            ListTile(
+//              title: Text("Chamber address"),
+//              subtitle: Text((chamber_info["address"]).toString()),
+//            ),
+//            Divider(
+//              color: Colors.grey,
+//              height: 1,
+//            ),
+//            ListTile(
+//              title: Text("Chamber Fees"),
+//              subtitle: Text((chamber_info["fee"]).toString()),
+//            ),
+//            Divider(
+//              color: Colors.grey,
+//              height: 1,
+//            ),
+//            ListTile(
+//              title: Text("Followup Fees"),
+//              subtitle: Text((chamber_info["follow_up_fee"]).toString()),
+//            ),
+//
+//            Divider(
+//              color: Colors.grey,
+//              height: 1,
+//            ),
             printAllDates(chamber_info["chamber_days"], context,
                 (chamber_info["id"]).toString()),
+
           ],
         )),
   );
 }
 
 Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
+  int seelctedPosition = 0;
   showThisToast(chamber_days.length.toString());
 
   TabBarView tabBarView = TabBarView(
@@ -378,11 +409,122 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
         //tabBar.tabs.add(  Tab( text:"ok"));
       }
     }
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: datesList == null ? 0 : datesList.length,
+      itemBuilder: (BuildContext context, int index) {
+        return new InkWell(
+            onTap: () {
+//            Navigator.push(
+//                context,
+//                MaterialPageRoute(builder: (context) => OnlineDoctorList((data[index]["id"]).toString())));
+            },
+            child: SizedBox(
+              height: 100,
+              width: 100,
+              child: Container(
+                width: 100,
+                height: 100,
+                child: Card(
+                  color: Colors.blue,
+                  child: Text(
+                    datesList[index],
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ),
+            ));
+      },
+    );
 
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: datesList == null ? 0 : datesList.length,
+      itemBuilder: (BuildContext context, int index) {
+        return new InkWell(
+            onTap: () {
+//            Navigator.push(
+//                context,
+//                MaterialPageRoute(builder: (context) => OnlineDoctorList((data[index]["id"]).toString())));
+            },
+            child: Card(
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    color: Colors.pink,
+                    child: Padding(
+                      padding: EdgeInsets.all(0),
+                      child: ListTile(
+                        leading: Wrap(
+                          spacing: 0, // space between two icons
+                          children: <Widget>[
+                            Icon(
+                              Icons.navigate_before,
+                              color: Colors.white,
+                            ),
+                            // icon-1
+                            // icon-2
+                          ],
+                        ),
+                        trailing: Wrap(
+                          spacing: 12, // space between two icons
+                          children: <Widget>[
+                            Icon(
+                              Icons.navigate_next,
+                              color: Colors.white,
+                            ),
+                            // icon-1
+                            // icon-2
+                          ],
+                        ),
+                        title: Center(
+                            child: Text(
+                              datesList[index],
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, color: Colors.white),
+                            )),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                    child:
+                    Text("Opening Time " + startTimesList[datesListWeekMap[index]]),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0,0,0,15),
+                    child: Text("Closing Time " + endTimesList[datesListWeekMap[index]]),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(0),
+                    child: Center(
+                      child: RaisedButton(
+                        color: Colors.pink,
+                        child: Text("Book Appointment",
+                            style: TextStyle(color: Colors.white)),
+                        onPressed: () {
+                          SELECTED_DATE = datesList[index];
+                          showThisToast(SELECTED_DATE);
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) =>
+                                  appointmentFormWidget(chamber_id,SELECTED_DATE)));
+                        },
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ));
+      },
+    );
+//now work here
     for (int i = 0; i < datesList.length; i++) {
       tabBarView.children.add(Padding(
         padding: EdgeInsets.all(0),
         child: Card(
+
           child: Column(
             children: <Widget>[
               Container(
