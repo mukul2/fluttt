@@ -97,6 +97,22 @@ Future<String> getDepartmentsData() async {
 //  });
   return response.body;
 }
+Future<String> getTestRecListData(String auth) async {
+  final http.Response response = await http.get(
+    _baseUrl + 'all-diagnosis-test-list',
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': auth,
+    },
+  );
+  //showThisToast(response.statusCode.toString());
+  //showThisToast(response.body.toString());
+//  this.setState(() {
+//    blogCategoryList = json.decode(response.body);
+//    getBlogs();
+//  });
+  return response.body;
+}
 
 Future<dynamic> signupDoctor(String name, String phone, String email,
     String type, String password, String depaertment) async {

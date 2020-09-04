@@ -409,116 +409,159 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
         //tabBar.tabs.add(  Tab( text:"ok"));
       }
     }
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: datesList == null ? 0 : datesList.length,
-      itemBuilder: (BuildContext context, int index) {
-        return new InkWell(
-            onTap: () {
-//            Navigator.push(
-//                context,
-//                MaterialPageRoute(builder: (context) => OnlineDoctorList((data[index]["id"]).toString())));
-            },
-            child: SizedBox(
-              height: 100,
-              width: 100,
-              child: Container(
-                width: 100,
-                height: 100,
-                child: Card(
-                  color: Colors.blue,
-                  child: Text(
-                    datesList[index],
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
-              ),
-            ));
-      },
-    );
+//    return ListView.builder(
+//      shrinkWrap: true,
+//      itemCount: datesList == null ? 0 : datesList.length,
+//      itemBuilder: (BuildContext context, int index) {
+//        return new InkWell(
+//            onTap: () {
+////            Navigator.push(
+////                context,
+////                MaterialPageRoute(builder: (context) => OnlineDoctorList((data[index]["id"]).toString())));
+//            },
+//            child: SizedBox(
+//              height: 100,
+//              width: 100,
+//              child: Container(
+//                width: 100,
+//                height: 100,
+//                child: Card(
+//                  color: Colors.blue,
+//                  child: Text(
+//                    datesList[index],
+//                    style: TextStyle(
+//                        fontWeight: FontWeight.bold, color: Colors.white),
+//                  ),
+//                ),
+//              ),
+//            ));
+//      },
+//    );
 
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: datesList == null ? 0 : datesList.length,
-      itemBuilder: (BuildContext context, int index) {
-        return new InkWell(
-            onTap: () {
-//            Navigator.push(
-//                context,
-//                MaterialPageRoute(builder: (context) => OnlineDoctorList((data[index]["id"]).toString())));
-            },
-            child: Card(
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    color: Colors.pink,
-                    child: Padding(
-                      padding: EdgeInsets.all(0),
-                      child: ListTile(
-                        leading: Wrap(
-                          spacing: 0, // space between two icons
-                          children: <Widget>[
-                            Icon(
-                              Icons.navigate_before,
-                              color: Colors.white,
-                            ),
-                            // icon-1
-                            // icon-2
-                          ],
-                        ),
-                        trailing: Wrap(
-                          spacing: 12, // space between two icons
-                          children: <Widget>[
-                            Icon(
-                              Icons.navigate_next,
-                              color: Colors.white,
-                            ),
-                            // icon-1
-                            // icon-2
-                          ],
-                        ),
-                        title: Center(
-                            child: Text(
-                              datesList[index],
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, color: Colors.white),
-                            )),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                    child:
-                    Text("Opening Time " + startTimesList[datesListWeekMap[index]]),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0,0,0,15),
-                    child: Text("Closing Time " + endTimesList[datesListWeekMap[index]]),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(0),
-                    child: Center(
-                      child: RaisedButton(
-                        color: Colors.pink,
-                        child: Text("Book Appointment",
-                            style: TextStyle(color: Colors.white)),
-                        onPressed: () {
-                          SELECTED_DATE = datesList[index];
-                          showThisToast(SELECTED_DATE);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) =>
-                                  appointmentFormWidget(chamber_id,SELECTED_DATE)));
-                        },
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ));
-      },
-    );
+//
+//    return GridView.builder(
+//        itemCount: 20,
+//        gridDelegate:
+//        new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+//        itemBuilder: (BuildContext context, int index) {
+//          return new GestureDetector(
+//            child: new Card(
+//              elevation: 5.0,
+//              child: new Container(
+//                alignment: Alignment.center,
+//                child: new Text('Item $index'),
+//              ),
+//            ),
+//            onTap: () {
+//              showDialog(
+//                barrierDismissible: false,
+//                context: context,
+//                child: new CupertinoAlertDialog(
+//                  title: new Column(
+//                    children: <Widget>[
+//                      new Text("GridView"),
+//                      new Icon(
+//                        Icons.favorite,
+//                        color: Colors.green,
+//                      ),
+//                    ],
+//                  ),
+//                  content: new Text("Selected Item $index"),
+//                  actions: <Widget>[
+//                    new FlatButton(
+//                        onPressed: () {
+//                          Navigator.of(context).pop();
+//                        },
+//                        child: new Text("OK"))
+//                  ],
+//                ),
+//              );
+//            },
+//          );
+//        });
+
+
+//    return ListView.builder(
+//      shrinkWrap: true,
+//      itemCount: datesList == null ? 0 : datesList.length,
+//      itemBuilder: (BuildContext context, int index) {
+//        return new InkWell(
+//            onTap: () {
+////            Navigator.push(
+////                context,
+////                MaterialPageRoute(builder: (context) => OnlineDoctorList((data[index]["id"]).toString())));
+//            },
+//            child: Card(
+//              child: Column(
+//                children: <Widget>[
+//                  Container(
+//                    color: Colors.pink,
+//                    child: Padding(
+//                      padding: EdgeInsets.all(0),
+//                      child: ListTile(
+//                        leading: Wrap(
+//                          spacing: 0, // space between two icons
+//                          children: <Widget>[
+//                            Icon(
+//                              Icons.navigate_before,
+//                              color: Colors.white,
+//                            ),
+//                            // icon-1
+//                            // icon-2
+//                          ],
+//                        ),
+//                        trailing: Wrap(
+//                          spacing: 12, // space between two icons
+//                          children: <Widget>[
+//                            Icon(
+//                              Icons.navigate_next,
+//                              color: Colors.white,
+//                            ),
+//                            // icon-1
+//                            // icon-2
+//                          ],
+//                        ),
+//                        title: Center(
+//                            child: Text(
+//                              datesList[index],
+//                              style: TextStyle(
+//                                  fontWeight: FontWeight.bold, color: Colors.white),
+//                            )),
+//                      ),
+//                    ),
+//                  ),
+//                  Padding(
+//                    padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+//                    child:
+//                    Text("Opening Time " + startTimesList[datesListWeekMap[index]]),
+//                  ),
+//                  Padding(
+//                    padding: EdgeInsets.fromLTRB(0,0,0,15),
+//                    child: Text("Closing Time " + endTimesList[datesListWeekMap[index]]),
+//                  ),
+//                  Padding(
+//                    padding: EdgeInsets.all(0),
+//                    child: Center(
+//                      child: RaisedButton(
+//                        color: Colors.pink,
+//                        child: Text("Book Appointment",
+//                            style: TextStyle(color: Colors.white)),
+//                        onPressed: () {
+//                          SELECTED_DATE = datesList[index];
+//                          showThisToast(SELECTED_DATE);
+//                          Navigator.push(
+//                              context,
+//                              MaterialPageRoute(builder: (context) =>
+//                                  appointmentFormWidget(chamber_id,SELECTED_DATE)));
+//                        },
+//                      ),
+//                    ),
+//                  )
+//                ],
+//              ),
+//            ));
+//      },
+//    );
 //now work here
     for (int i = 0; i < datesList.length; i++) {
       tabBarView.children.add(Padding(

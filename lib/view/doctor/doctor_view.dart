@@ -425,37 +425,37 @@ class _HomeState extends State<Home> {
                       ],
                     )),
               )), //chat
-          InkWell(
-              onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => AmbulanceWidget()));
-              },
-              child: Card(
-                color: Colors.white,
-                child: Container(
-                  height: 110,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        height: 48,
-                        width: 48,
-                        child: Image.asset(
-                          "assets/ambulance.png",
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Padding(
-                          padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                          child: Text(
-                            "Ambulance",
-                            style: TextStyle(color: Color(0xFF34448c)),
-                          ))
-                    ],
-                  ),
-                ),
-              )), //ambulance
+//          InkWell(
+//              onTap: () {
+//                Navigator.push(context,
+//                    MaterialPageRoute(builder: (context) => AmbulanceWidget()));
+//              },
+//              child: Card(
+//                color: Colors.white,
+//                child: Container(
+//                  height: 110,
+//                  child: Column(
+//                    crossAxisAlignment: CrossAxisAlignment.center,
+//                    mainAxisAlignment: MainAxisAlignment.center,
+//                    children: <Widget>[
+//                      Container(
+//                        height: 48,
+//                        width: 48,
+//                        child: Image.asset(
+//                          "assets/ambulance.png",
+//                          fit: BoxFit.cover,
+//                        ),
+//                      ),
+//                      Padding(
+//                          padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                          child: Text(
+//                            "Ambulance",
+//                            style: TextStyle(color: Color(0xFF34448c)),
+//                          ))
+//                    ],
+//                  ),
+//                ),
+//              )), //ambulance
           InkWell(
               onTap: () {
                 Navigator.push(
@@ -809,43 +809,43 @@ class _EarningCollectionsWidgetState extends State<EarningCollectionsWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: (widget.billDetails.length > 0)
-        ? new ListView.builder(
-      shrinkWrap: true,
-      itemCount: widget.billDetails == null ? 0 : widget.billDetails.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(0.0),
-          ),
-          child: Padding(
-              padding: EdgeInsets.all(0),
-              child: Column(
-                children: <Widget>[
-                  ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: NetworkImage(_baseUrl_image +
-                          widget.billDetails[index]["patient_info"]["photo"]),
+        body: (widget.billDetails.length > 0)
+            ? new ListView.builder(
+                shrinkWrap: true,
+                itemCount:
+                    widget.billDetails == null ? 0 : widget.billDetails.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(0.0),
                     ),
-                    title: new Text(
-                      widget.billDetails[index]["service_details"],
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: new Text(
-                      widget.billDetails[index]["fees"],
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                ],
-              )),
-        );
-      },
-    )
-        : Center(
-      child: Text("No Data"),
-
-    ));
+                    child: Padding(
+                        padding: EdgeInsets.all(0),
+                        child: Column(
+                          children: <Widget>[
+                            ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: NetworkImage(_baseUrl_image +
+                                    widget.billDetails[index]["patient_info"]
+                                        ["photo"]),
+                              ),
+                              title: new Text(
+                                widget.billDetails[index]["service_details"],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: new Text(
+                                widget.billDetails[index]["fees"],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        )),
+                  );
+                },
+              )
+            : Center(
+                child: Text("No Data"),
+              ));
   }
 }
 
@@ -855,8 +855,7 @@ class EarningWidthDrawWidget extends StatefulWidget {
   EarningWidthDrawWidget(this.billDetails);
 
   @override
-  _EarningWidthDrawWidgetState createState() =>
-      _EarningWidthDrawWidgetState();
+  _EarningWidthDrawWidgetState createState() => _EarningWidthDrawWidgetState();
 }
 
 class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
@@ -868,40 +867,41 @@ class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: (widget.billDetails.length > 0)
-        ? new ListView.builder(
-      shrinkWrap: true,
-      itemCount: widget.billDetails == null ? 0 : widget.billDetails.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(0.0),
-          ),
-          child: Padding(
-              padding: EdgeInsets.all(0),
-              child: Column(
-                children: <Widget>[
-                  ListTile(
-                    leading: Text(widget.billDetails[index]["amount"].toString()),
-                    title: new Text(
-                      widget.billDetails[index]["created_at"].toString(),
-                      style: TextStyle(fontWeight: FontWeight.bold),
+        body: (widget.billDetails.length > 0)
+            ? new ListView.builder(
+                shrinkWrap: true,
+                itemCount:
+                    widget.billDetails == null ? 0 : widget.billDetails.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(0.0),
                     ),
-                    subtitle: new Text(
-                      widget.billDetails[index]["status"].toString(),
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                ],
-              )),
-        );
-      },
-    )
-        : Center(
-      child: Text("No Data"),
-
-    ));
+                    child: Padding(
+                        padding: EdgeInsets.all(0),
+                        child: Column(
+                          children: <Widget>[
+                            ListTile(
+                              leading: Text(widget.billDetails[index]["amount"]
+                                  .toString()),
+                              title: new Text(
+                                widget.billDetails[index]["created_at"]
+                                    .toString(),
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: new Text(
+                                widget.billDetails[index]["status"].toString(),
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        )),
+                  );
+                },
+              )
+            : Center(
+                child: Text("No Data"),
+              ));
   }
 }
 
@@ -1008,7 +1008,9 @@ class _HomeVisitWidgetState extends State<HomeVisitWidget> {
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: new Text(
-                              appointments[index]["home_address"]+" , "+appointments[index]["phone"],
+                              appointments[index]["home_address"] +
+                                  " , " +
+                                  appointments[index]["phone"],
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -1331,26 +1333,25 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                               RaisedButton(
                                 color: Colors.white,
                                 elevation: 0,
-                                onPressed: ()  {
-
-
+                                onPressed: () {
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => GiveTestRecomdActivity(
-                                            pendingList[index]
-                                            ["patient_info"]["id"],
-                                            function: (data) {
-                                              //  showThisToast("im hit hit hit wioth "+data);
-                                              setState(() {
+                                          builder: (context) =>
+                                              GiveTestRecomdActivity(
+                                                pendingList[index]
+                                                        ["id"]
+                                                    .toString(),
+                                                function: (data) {
+                                                    //showThisToast("im hit hit hit wioth "+data.length.toString());
+                                                  setState(() {
 //                                                selectedDepartment =
 //                                                    data["id"].toString();
 //                                                txtSelectDepartment =
 //                                                    data["name"].toString();
-                                              });
-                                            },
-                                          )));
-
+                                                  });
+                                                },
+                                              )));
                                 },
                                 child: Text("Test Recommendation"),
                               )
@@ -1370,11 +1371,15 @@ class _PendingListWidgetState extends State<PendingListWidget> {
 
 //start
 class GiveTestRecomdActivity extends StatefulWidget {
-  String  patient_id ;
+  String appp_id;
+
+  List testList = [];
   Function function;
+  List<String> selected = [];
+  List selectedForUp = [];
 
   //ChooseDeptActivity(this.deptList__, this.function);
-  GiveTestRecomdActivity(this.patient_id, {Key key, this.function})
+  GiveTestRecomdActivity(this.appp_id, {Key key, this.function})
       : super(key: key);
 
   @override
@@ -1382,69 +1387,115 @@ class GiveTestRecomdActivity extends StatefulWidget {
 }
 
 class _GiveTestRecomdActivityState extends State<GiveTestRecomdActivity> {
-  List deptList = [];
-
   getData() async {
-    String da = await getDepartmentsData();
-    setState(() async {
-      widget.deptList__ = json.decode(da);
+    String da = await getTestRecListData(AUTH_KEY);
+    widget.testList = json.decode(da);
+    showThisToast("test count " + widget.testList.length.toString());
+    setState(() {
+      widget.testList = json.decode(da);
     });
   }
 
   @override
   void initState() {
     // TODO: implement initState
-    //  this.getData();
+    this.getData();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(0, 0, 15, 0),
+            child: GestureDetector(
+              onTap: ()  async {
+                //widget.function(widget.selected);
+                for(int i = 0 ;i<widget.selected.length;i++){
+                  final Map<String, dynamic> data =
+                  new Map<String, dynamic>();
+                  //data['id'] = widget.testList[index]["id"].toString();
+                  data['test_id'] = widget.testList[i]["test_id"].toString();
+                  widget.selectedForUp.add(data);
+
+                }
+                //add-test-recommendation
+
+                final http.Response response = await http.post(
+                  _baseUrl + 'add-test-recommendation',
+                  headers: <String, String>{
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'Authorization': AUTH_KEY,
+                  },
+                  body: jsonEncode(<String, String>{
+                    'appointment_id': widget.appp_id,
+                    'test_ids': widget.selectedForUp.toString(),
+                  }),
+                );
+
+
+                Navigator.of(context).pop(true);
+              },
+              child: Icon(Icons.done_all),
+            ),
+
+          )
+        ],
         title: Text("Choose Tests"),
       ),
       body: true
           ? ListView.builder(
-        itemCount:
-        widget.deptList__ == null ? 0 : widget.deptList__.length,
-        itemBuilder: (BuildContext context, int index) {
-          return new InkWell(
-              onTap: () {
-                final Map<String, dynamic> data =
-                new Map<String, dynamic>();
-                data['id'] = widget.deptList__[index]["id"].toString();
-                data['name'] =
-                    widget.deptList__[index]["name"].toString();
-                widget.function(data);
-                Navigator.of(context).pop(true);
+              itemCount: widget.testList == null ? 0 : widget.testList.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new InkWell(
+                    onTap: () {
+                      setState(() {
+                        if (widget.selected.contains(
+                            widget.testList[index]["id"].toString())) {
+                          widget.selected
+                              .remove(widget.testList[index]["id"].toString());
+                        } else {
+                          widget.selected
+                              .add(widget.testList[index]["id"].toString());
+                        }
+                      });
+                      final Map<String, dynamic> data =
+                          new Map<String, dynamic>();
+                      //data['id'] = widget.testList[index]["id"].toString();
+                      data['name'] = widget.testList[index]["name"].toString();
+
+                      // Navigator.of(context).pop(true);
+                    },
+                    child: Card(
+                      color: widget.selected
+                              .contains(widget.testList[index]["id"].toString())
+                          ? Colors.blue
+                          : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(0),
+                        child: ListTile(
+                          trailing: Icon(Icons.keyboard_arrow_right),
+                          leading: Icon(Icons.add),
+                          title: new Text(
+                            widget.testList[index]["name"],
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ));
               },
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(0),
-                  child: ListTile(
-                    trailing: Icon(Icons.keyboard_arrow_right),
-                    leading: Icon(Icons.add),
-                    title: new Text(
-                      widget.deptList__[index]["name"],
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ));
-        },
-      )
+            )
           : Center(
-        child: Text(widget.deptList__.toString()),
-      ),
+              child: Text(widget.testList.toString()),
+            ),
     );
   }
 }
 //ends
-
-
 
 class LocationSelectionWidget extends StatefulWidget {
   @override
@@ -1556,7 +1607,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                           children: <Widget>[
                             Flexible(
                               child: CheckboxListTile(
-                                title: Text("Seved"),
+                                title: Text("Served"),
                                 value: VideoCallListList[index]
                                             ["appointment_status"] ==
                                         1
@@ -1590,7 +1641,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                               child: RaisedButton(
                                 color: Colors.white,
                                 elevation: 0,
-                                onPressed: ()  {
+                                onPressed: () {
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -1598,13 +1649,13 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                                               PatientFullProfileView(
                                                   AUTH_KEY,
                                                   VideoCallListList[index]
-                                                  ["patient_info"]["id"]
+                                                          ["patient_info"]["id"]
                                                       .toString(),
                                                   VideoCallListList[index]
-                                                  ["patient_info"]["name"],
+                                                      ["patient_info"]["name"],
                                                   VideoCallListList[index]
-                                                  ["patient_info"]
-                                                  ["photo"])));
+                                                          ["patient_info"]
+                                                      ["photo"])));
                                 },
                                 child: Text("View Profile"),
                               ),
@@ -1613,7 +1664,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                               child: RaisedButton(
                                 color: Colors.white,
                                 elevation: 0,
-                                onPressed: ()  {
+                                onPressed: () {
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -1922,7 +1973,6 @@ class _ChamberAppointmentPrescriptionWriteWidgetState
   }
 }
 
-
 class VideoAppointmentPrescriptionWriteWidget extends StatefulWidget {
   dynamic confirmedList;
 
@@ -1998,7 +2048,7 @@ class _VideoAppointmentPrescriptionWriteWidgetState
                   if (response.statusCode == 200) {
                     data_Confirmd = json.decode(response.body);
                     Navigator.of(context).pop(true);
-                   // return json.decode(response.body);
+                    // return json.decode(response.body);
 
                     // return LoginResponse.fromJson(json.decode(response.body));
                   } else {
@@ -2073,21 +2123,21 @@ class _VideoAppointmentPrescriptionWriteWidgetState
                           children: <Widget>[
                             medicineList[index]["morning"] == 1
                                 ? Padding(
-                              padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
-                              child: Text("Morning"),
-                            )
+                                    padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                                    child: Text("Morning"),
+                                  )
                                 : Text(""),
                             medicineList[index]["noon"] == 1
                                 ? Padding(
-                              padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
-                              child: Text("Noon"),
-                            )
+                                    padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                                    child: Text("Noon"),
+                                  )
                                 : Text(""),
                             medicineList[index]["evening"] == 1
                                 ? Padding(
-                              padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
-                              child: Text("Evening"),
-                            )
+                                    padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                                    child: Text("Evening"),
+                                  )
                                 : Text(""),
                           ],
                         ),
@@ -2106,14 +2156,14 @@ class _VideoAppointmentPrescriptionWriteWidgetState
               context,
               MaterialPageRoute(
                   builder: (context) => AddMedicineWidget(
-                    function: (data) {
-                      // showThisToast("im hit hit hit");
-                      setState(() {
-                        data["id"] = widget.confirmedList["id"].toString();
-                        medicineList.add(data);
-                      });
-                    },
-                  )));
+                        function: (data) {
+                          // showThisToast("im hit hit hit");
+                          setState(() {
+                            data["id"] = widget.confirmedList["id"].toString();
+                            medicineList.add(data);
+                          });
+                        },
+                      )));
         },
       ),
     );
@@ -3311,7 +3361,6 @@ Widget myDrawer() {
             //Share.share("https://www.youtube.com");
           },
         ),
-
         ListTile(
           leading: Icon(
             Icons.archive,
@@ -3326,7 +3375,6 @@ Widget myDrawer() {
             // Share.share("https://www.twitter.com");
           },
         ),
-
         ListTile(
           leading: Icon(
             Icons.archive,
@@ -3483,6 +3531,7 @@ class _BasicProfileState extends State<BasicProfile> {
               ),
             ),
           )),
+
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 00),
             child: Card(

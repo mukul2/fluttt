@@ -221,7 +221,7 @@ class MyCustomFormState extends State<MyCustomForm> {
           Padding(
             padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
             child: TextFormField(
-              initialValue: "p@gmail.com",
+              initialValue: "",
               validator: (value) {
                 email = value;
                 if (value.isEmpty) {
@@ -243,7 +243,7 @@ class MyCustomFormState extends State<MyCustomForm> {
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
             child: TextFormField(
-              initialValue: "123456",
+              initialValue: "",
               validator: (value) {
                 password = value;
                 if (value.isEmpty) {
@@ -257,8 +257,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                       borderSide: BorderSide(color: Colors.pink)),
                   enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.blue)),
-                  labelText: "Email"),
-              keyboardType: TextInputType.emailAddress,
+                  labelText: "Password"),
+              keyboardType: TextInputType.visiblePassword,
               autocorrect: false,
             ),
           ),
