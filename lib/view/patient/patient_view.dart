@@ -1349,6 +1349,20 @@ class _ProfileState extends State<Profile> {
             subtitle: Text("View your prescription request and responses"),
             leading: Icon(Icons.supervised_user_circle),
           ),
+          Divider(),
+          ListTile(
+            //
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => TestRecomendationWidget()));
+            },
+            trailing: Icon(Icons.keyboard_arrow_right),
+            title: Text("Test Recommendations"),
+            subtitle: Text("View your recommended tests from doctors"),
+            leading: Icon(Icons.supervised_user_circle),
+          ),
         ],
       ),
     );
@@ -3112,6 +3126,110 @@ class _PrescriptionsReviedBodyState
             ],
           ),
         ));
+  }
+}
+
+class TestRecomendationWidget extends StatefulWidget {
+  @override
+  _TestRecomendationState createState() =>
+      _TestRecomendationState();
+}
+
+class _TestRecomendationState extends State<TestRecomendationWidget> {
+  List prescriptionReviewList = [];
+
+
+  Future<String> getData() async {
+    showThisToast("user id "+UID);
+    final http.Response response = await http.post(
+      _baseUrl + 'test-recommendation-list',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': AUTH_KEY,
+      },
+      body: jsonEncode(<String, String>{'patient_id': UID}),
+    );
+    showThisToast(response.statusCode.toString());
+    showThisToast(response.body);
+    this.setState(() {
+      prescriptionReviewList = json.decode(response.body);
+      // showThisToast(prescriptionReviewList.toString());
+    });
+    return "Success!";
+  }
+
+  void closeAndUpdate(BuildContext context) {
+    Navigator.of(context).pop();
+    this.getData();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    this.getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("All Test Recommendation"),
+      ),
+      body: (prescriptionReviewList != null &&
+              prescriptionReviewList.length > 0)
+          ? new ListView.builder(
+              itemCount: prescriptionReviewList == null
+                  ? 0
+                  : prescriptionReviewList.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new InkWell(
+                    onTap: () {
+//                      print(prescriptionReviewList[index]);
+//                      if (prescriptionReviewList[index]["is_reviewed"] == 1) {
+//                        Navigator.push(
+//                            context,
+//                            MaterialPageRoute(
+//                                builder: (context) =>
+//                                    PrescriptionsReviedBodyState(
+//                                        prescriptionReviewList[index])));
+//                      } else
+//                        showThisToast("Not Reviewed Yet");
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(00.0),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(05),
+                        child: ListTile(
+                          trailing: Icon(Icons.keyboard_arrow_right),
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(_baseUrl_image +
+                                prescriptionReviewList[index]["dr_info"]
+                                    ["photo"]),
+                          ),
+                          title: new Text(
+                            (prescriptionReviewList[index]["dr_info"] == null
+                                ? "No Doctor Name"
+                                : prescriptionReviewList[index]["dr_info"]
+                                    ["name"]),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: new Text(
+                            prescriptionReviewList[index]["test_recommendation_info"].toString(),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ));
+              },
+            )
+          : Container(
+              height: 200,
+              child: Center(
+                child: Text("No Prescription Review History"),
+              )),
+    );
   }
 }
 
