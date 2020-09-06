@@ -3322,13 +3322,14 @@ Widget myDrawer() {
                     padding: EdgeInsets.fromLTRB(0, 50, 0, 5),
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundImage: NetworkImage(_baseUrl_image + UPHOTO),
+                      backgroundImage:
+                      NetworkImage(_baseUrl_image + USER_PHOTO),
                     )),
                 Padding(
                     padding: EdgeInsets.fromLTRB(0, 10, 0, 25),
                     child: new Center(
                       child: Text(
-                        UNAME,
+                        USER_NAME,
                         style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -3340,9 +3341,13 @@ Widget myDrawer() {
           ),
         ),
         ListTile(
-          leading: Icon(Icons.description),
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/facebook.png"),
+          ),
           title: Text('Facebook'),
-          trailing: Icon(Icons.format_align_center),
+
           onTap: () {
             const url = "https://www.facebook.com";
 
@@ -3351,9 +3356,11 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-          leading: Icon(Icons.description),
-          title: Text('Youtube'),
-          trailing: Icon(Icons.keyboard_arrow_right),
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/youtube.png"),
+          ),          title: Text('Youtube'),
           onTap: () {
             const url = "https://www.youtube.com";
 
@@ -3362,12 +3369,12 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/twitter.png"),
           ),
           title: Text('Twitter'),
-          trailing: Icon(Icons.keyboard_arrow_right),
           onTap: () {
             const url = "https://www.twitter.com";
 
@@ -3376,12 +3383,12 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/info.png"),
           ),
           title: Text('Guidline'),
-          trailing: Icon(Icons.keyboard_arrow_right),
           onTap: () {
             const url = "https://www.twitter.com";
 
@@ -3390,9 +3397,11 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-          leading: Icon(Icons.description),
-          title: Text('Logout'),
-          trailing: Icon(Icons.keyboard_arrow_right),
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/logout.png"),
+          ),          title: Text('Logout'),
           onTap: () {
             setLoginStatus(false);
             runApp(LoginUI());

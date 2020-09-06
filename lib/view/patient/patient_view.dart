@@ -1640,9 +1640,13 @@ Widget myDrawer() {
           ),
         ),
         ListTile(
-          leading: Icon(Icons.description),
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/facebook.png"),
+          ),
           title: Text('Facebook'),
-          trailing: Icon(Icons.format_align_center),
+
           onTap: () {
             const url = "https://www.facebook.com";
 
@@ -1651,9 +1655,11 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-          leading: Icon(Icons.description),
-          title: Text('Youtube'),
-          trailing: Icon(Icons.keyboard_arrow_right),
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/youtube.png"),
+          ),          title: Text('Youtube'),
           onTap: () {
             const url = "https://www.youtube.com";
 
@@ -1662,12 +1668,12 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/twitter.png"),
           ),
           title: Text('Twitter'),
-          trailing: Icon(Icons.keyboard_arrow_right),
           onTap: () {
             const url = "https://www.twitter.com";
 
@@ -1676,12 +1682,12 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-          leading: Icon(
-            Icons.archive,
-            color: Colors.deepOrange,
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/info.png"),
           ),
           title: Text('Guidline'),
-          trailing: Icon(Icons.keyboard_arrow_right),
           onTap: () {
             const url = "https://www.twitter.com";
 
@@ -1690,9 +1696,11 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-          leading: Icon(Icons.description),
-          title: Text('Logout'),
-          trailing: Icon(Icons.keyboard_arrow_right),
+            leading: SizedBox(
+              height: 25,
+              width: 25,
+              child: Image.asset("assets/logout.png"),
+            ),          title: Text('Logout'),
           onTap: () {
             setLoginStatus(false);
             runApp(LoginUI());
@@ -2670,7 +2678,7 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
                                         children: <Widget>[
                                           Expanded(
                                             child: ListTile(
-                                              title: Text("Doctor Comment"),
+                                              title: Text("Doctor's Comment"),
                                               subtitle: Text(
                                                   prescriptionList[index]
                                                       ["diseases_name"]),
@@ -2704,8 +2712,12 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
                       child: Padding(
                         padding: EdgeInsets.all(05),
                         child: ListTile(
-                          trailing: Icon(Icons.keyboard_arrow_right),
-                          leading: Icon(Icons.accessible_forward),
+                          trailing: Icon(Icons.arrow_right),
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(
+                              _baseUrl_image+prescriptionList[index]["dr_info"]["photo"]
+                            ),
+                          ),
                           title: new Text(
                             (prescriptionList[index]["dr_info"] == null
                                 ? "No Doctor Name"

@@ -191,7 +191,6 @@ Future<dynamic> performAppointmentSubmit(
       'type': type,
     }),
   );
-  showThisToast(response.request.headers.toString());
   print(response.body);
 
   if (response.statusCode == 200) {

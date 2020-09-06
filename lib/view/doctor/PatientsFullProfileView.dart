@@ -170,7 +170,7 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
                                         children: <Widget>[
                                           Expanded(
                                             child: ListTile(
-                                              title: Text("Doctor Comment"),
+                                              title: Text("Doctor's Comment"),
                                               subtitle: Text(
                                                   prescriptionList[index]
                                                       ["diseases_name"]),
@@ -204,7 +204,9 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
                         padding: EdgeInsets.all(05),
                         child: ListTile(
                           trailing: Icon(Icons.keyboard_arrow_right),
-                          leading: Icon(Icons.accessible_forward),
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(_baseUrl_image+prescriptionList[index]["dr_info"]["photo"]),
+                          ),
                           title: new Text(
                             (prescriptionList[index]["dr_info"] == null
                                 ? "No Doctor Name"
@@ -247,7 +249,7 @@ Widget medicinesListOfAPrescriptionWidget(medicineList) {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(15, 10, 10, 10),
                 child: ListTile(
-                  leading: Icon(Icons.accessible_forward),
+                 // leading: Icon(Icons.not_interested),
                   title: new Text(medicineList["medicine_info"][index2]
                   ["medicine_name_info"]["name"]),
                   subtitle: createMedicineDoseWid(

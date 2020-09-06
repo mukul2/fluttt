@@ -622,13 +622,21 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
                     color: Colors.pink,
                     child: Text("Book Appointment",
                         style: TextStyle(color: Colors.white)),
-                    onPressed: () {
+                    onPressed: () async{
+
+                      Future<SharedPreferences> _prefs =
+                      SharedPreferences.getInstance();
+                      SharedPreferences prefs;
+                      prefs = await _prefs;
+                      String auth =  prefs.getString("auth");
+                      String uid =  prefs.getString("uid");
+
                       SELECTED_DATE = datesList[i];
                       showThisToast(SELECTED_DATE);
                         Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) =>
-                                appointmentFormWidget(chamber_id,SELECTED_DATE)));
+                                appointmentFormWidget(chamber_id,SELECTED_DATE,auth,uid)));
                     },
                   ),
                 ),
@@ -698,13 +706,13 @@ int getMonthCount(int month) {
 //),
 //)
 
-Widget appointmentFormWidget(String chamberID, String DATE) {
+Widget appointmentFormWidget(String chamberID, String DATE,String auth,String uid) {
   return Scaffold(
     appBar: AppBar(
       title: Text("Confirm Appointment"),
     ),
     body: SingleChildScrollView(
-        child: AppointmentConfirmForm(id_.toString(), chamberID, DATE)),
+        child: AppointmentConfirmForm(id_.toString(), chamberID, DATE,auth,uid)),
   );
 }
 

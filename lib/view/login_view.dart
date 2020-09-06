@@ -89,13 +89,17 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("SIGNUP AS"),
+        title: Text("Sign Up"),
       ),
       body: Container(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 50),
+              child: Image.asset("assets/stet.png"),
+            ),
             Row(
               children: [
                 Expanded(
@@ -109,11 +113,13 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
                       color: widget.userType == "p" ?Colors.blue:Colors.white,
                       child: ListTile(
 
-                        trailing: Icon(Icons.face, color: widget.userType == "p" ?Colors.white:Colors.blue,),
-                        title: Text(
-                          "Patient",
-                          style: TextStyle(
-                              color: widget.userType == "p" ?Colors.white:Colors.blue, fontWeight: FontWeight.bold),
+                       // trailing: Icon(Icons.face, color: widget.userType == "p" ?Colors.white:Colors.blue,),
+                        title: Center(
+                          child: Text(
+                            "Patient",
+                            style: TextStyle(
+                                color: widget.userType == "p" ?Colors.white:Colors.blue, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
@@ -129,13 +135,15 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
                     child: Card(
                       color: widget.userType == "d" ?Colors.blue:Colors.white,
                       child:  ListTile(
-                        trailing: Icon(Icons.face,color: widget.userType == "d" ?Colors.white:Colors.blue,),
+                       // trailing: Icon(Icons.face,color: widget.userType == "d" ?Colors.white:Colors.blue,),
 
-                        title: Text(
-                          "Doctor",
-                          style: TextStyle(
-                              color: widget.userType == "d" ?Colors.white:Colors.blue,
-                              fontWeight: FontWeight.bold),
+                        title: Center(
+                          child: Text(
+                            "Health Care Provider",
+                            style: TextStyle(
+                                color: widget.userType == "d" ?Colors.white:Colors.blue,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
                       )
                     ),
@@ -147,6 +155,7 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
               padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
               child: InkWell(
                 child: Card(
+                  color: Colors.red,
                   child: Padding(
                     padding: EdgeInsets.all(15),
                     child: Padding(
@@ -160,7 +169,7 @@ class _ChooseUserTypeActivityState extends State<ChooseUserTypeActivity> {
                                       CheckPhoneIntegForm(widget.userType))); //
                         },
                         child: Text(
-                          "NEXT",
+                          "NEXT",style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ),
@@ -805,14 +814,17 @@ class _ChooseDocumentState extends State<ChooseDocument> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("ADD AT LEAST 1 Document"),
+        title: Text("Add at least 1 Document"),
         actions: [
           GestureDetector(
             onTap: (){
                widget.function(widget.fileList);
                Navigator.of(context).pop(true);
             },
-            child: Icon(Icons.done),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(0, 0, 20,0),
+              child: Center(child: Text("Done",style: TextStyle(fontSize: 17,fontWeight: FontWeight.bold,color: Colors.white),),),
+            )
           )
 
         ],
@@ -885,7 +897,7 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
   String myMessage = "Signup";
   String selectedDepartment;
   String txtSelectDepartment = "Select a Department";
-  String selectDocumentHint = "Add Proof of MBBS";
+  String selectDocumentHint = "Add Documents/Certificates";
 
   getData() async {
     setState(() async {
@@ -930,10 +942,10 @@ class _SignupActivityDoctorState extends State<SignupActivityDoctor> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              "Signup as Doctor",
+              "Signup as Healthcare Provider",
               style: TextStyle(
                   color: Color(0xFF34448c),
-                  fontSize: 30,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold),
             ),
             Padding(

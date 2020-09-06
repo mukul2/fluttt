@@ -22,7 +22,7 @@ class AppointmentConfirmForm___ extends StatelessWidget {
         appBar: AppBar(
           title: Text(appTitle),
         ),
-        body: AppointmentConfirmForm("", "",""),
+        body: AppointmentConfirmForm("", "","","",""),
       ),
     );
   }
@@ -30,9 +30,9 @@ class AppointmentConfirmForm___ extends StatelessWidget {
 
 // Create a Form widget.
 class AppointmentConfirmForm extends StatefulWidget {
-  String docID_, chamberID_, SELECTED_DATE;
+  String docID_, chamberID_, SELECTED_DATE,auth,uid;
 
-  AppointmentConfirmForm(this.docID_, this.chamberID_, this.SELECTED_DATE);
+  AppointmentConfirmForm(this.docID_, this.chamberID_, this.SELECTED_DATE,this.auth,this.uid);
 
   @override
   MyCustomFormState createState() {
@@ -149,15 +149,10 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
                         );
                       });
 
-                      showThisToast("going to hit appint submit");
-                      Future<SharedPreferences> _prefs =
-                      SharedPreferences.getInstance();
-                      SharedPreferences prefs;
-                      prefs = await _prefs;
-                      AUTH_KEY =  prefs.getString("auth");
+
                       var appointmentSubmitRespons =
-                      await performAppointmentSubmit(AUTH_KEY,
-                          USER_ID,
+                      await performAppointmentSubmit(widget.auth,
+                          widget.uid,
                           widget.docID_,
                           problem,
                           contact,
@@ -166,7 +161,6 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
                           widget.SELECTED_DATE,
                           "0",
                           "n");
-                      showThisToast(appointmentSubmitRespons.toString());
                       if (appointmentSubmitRespons["status"]) {
                         Navigator.of(context).pop(true);
                         Navigator.of(context).pop(true);

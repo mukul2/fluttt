@@ -93,6 +93,13 @@ flutter:
     - assets/examination.png
     - assets/riad.png
     - assets/doc_female.jpg
+    - assets/logo.jpeg
+    - assets/stet.png
+    - assets/facebook.png
+    - assets/youtube.png
+    - assets/info.png
+    - assets/twitter.png
+    - assets/logout.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
