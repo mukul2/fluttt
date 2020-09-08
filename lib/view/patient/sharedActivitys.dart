@@ -51,9 +51,9 @@ class _VideoAppointmentListActivityPatientState
   List data = [];
 
   Future getData() async {
-    body = <String, String>{'user_type': "patient", 'id': widget.USER_ID};
+    body = <String, String>{'user_type': "patient" ,'isFollowup':"0",'id': widget.USER_ID};
     String apiResponse =
-        await makePostReq("get_video_appointment_list", widget.AUTH, body);
+    await makePostReq("get_video_appointment_list", widget.AUTH, body);
     this.setState(() {
       data = json.decode(apiResponse);
     });
@@ -72,59 +72,151 @@ class _VideoAppointmentListActivityPatientState
       ),
       body: data.length > 0
           ? ListView.builder(
-              shrinkWrap: true,
-              itemCount: data == null ? 0 : data.length,
-              itemBuilder: (BuildContext context, int index) {
-                return new InkWell(
-                  onTap: () {
-                    String chatRoom = createChatRoomName(
-                        int.parse(widget.USER_ID),
-                        data[index]["dr_info"]["id"]);
-                    CHAT_ROOM = chatRoom;
-                    showThisToast(chatRoom);
-                    // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ChatScreen(
-                                widget.USER_ID,
-                                UNAME,
-                                _baseUrl_image +
-                                    data[index]["dr_info"]["photo"],
-                                data[index]["dr_info"]["id"].toString(),
-                                data[index]["dr_info"]["name"],
-                                _baseUrl_image +
-                                    data[index]["dr_info"]["photo"],
-                                chatRoom)));
-                  },
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(00.0),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(0),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              _baseUrl_image + data[index]["dr_info"]["photo"]),
-                        ),
-                        title: Text(data[index]["dr_info"]["name"]),
-                        subtitle: Text(
-                          "Send a Message",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ),
-                    ),
+        shrinkWrap: true,
+        itemCount: data == null ? 0 : data.length,
+        itemBuilder: (BuildContext context, int index) {
+          return new InkWell(
+            onTap: () {
+              String chatRoom = createChatRoomName(
+                  int.parse(widget.USER_ID),
+                  data[index]["dr_info"]["id"]);
+              CHAT_ROOM = chatRoom;
+              showThisToast(chatRoom);
+              // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                          widget.USER_ID,
+                          UNAME,
+                          _baseUrl_image +
+                              data[index]["dr_info"]["photo"],
+                          data[index]["dr_info"]["id"].toString(),
+                          data[index]["dr_info"]["name"],
+                          _baseUrl_image +
+                              data[index]["dr_info"]["photo"],
+                          chatRoom)));
+            },
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(00.0),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(0),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(
+                        _baseUrl_image + data[index]["dr_info"]["photo"]),
                   ),
-                );
-              },
-            )
-          : Center(
-              child: Text("No Data"),
+                  title: Text(data[index]["dr_info"]["name"]),
+                  subtitle: Text(
+                    "Send a Message",
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
+              ),
             ),
+          );
+        },
+      )
+          : Center(
+        child: Text("No Data"),
+      ),
     );
   }
 }
+
+class FollowupVideoAppointmentListActivityPatient extends StatefulWidget {
+  String AUTH, USER_ID;
+
+  FollowupVideoAppointmentListActivityPatient(this.AUTH, this.USER_ID);
+
+  @override
+  _FollowupVideoAppointmentListActivityPatientState createState() =>
+      _FollowupVideoAppointmentListActivityPatientState();
+}
+
+class _FollowupVideoAppointmentListActivityPatientState
+    extends State<FollowupVideoAppointmentListActivityPatient> {
+  List data = [];
+
+  Future getData() async {
+    body = <String, String>{'user_type': "patient",'isFollowup':"1", 'id': widget.USER_ID};
+    String apiResponse =
+    await makePostReq("get_video_appointment_list", widget.AUTH, body);
+    this.setState(() {
+      data = json.decode(apiResponse);
+    });
+  }
+
+  @override
+  void initState() {
+    this.getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Followup Video Appointments"),
+      ),
+      body: data.length > 0
+          ? ListView.builder(
+        shrinkWrap: true,
+        itemCount: data == null ? 0 : data.length,
+        itemBuilder: (BuildContext context, int index) {
+          return new InkWell(
+            onTap: () {
+              String chatRoom = createChatRoomName(
+                  int.parse(widget.USER_ID),
+                  data[index]["dr_info"]["id"]);
+              CHAT_ROOM = chatRoom;
+              showThisToast(chatRoom);
+              // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                          widget.USER_ID,
+                          UNAME,
+                          _baseUrl_image +
+                              data[index]["dr_info"]["photo"],
+                          data[index]["dr_info"]["id"].toString(),
+                          data[index]["dr_info"]["name"],
+                          _baseUrl_image +
+                              data[index]["dr_info"]["photo"],
+                          chatRoom)));
+            },
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(00.0),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(0),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(
+                        _baseUrl_image + data[index]["dr_info"]["photo"]),
+                  ),
+                  title: Text(data[index]["dr_info"]["name"]),
+                  subtitle: Text(
+                    "Send a Message",
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      )
+          : Center(
+        child: Text("No Data"),
+      ),
+    );
+  }
+}
+
+
 
 class ChoosePrescriptionForPrescriptionreview extends StatefulWidget {
   String AUTH, USER_ID,TRANS_ID,PAYPAL_ID,DR_ID;
@@ -141,11 +233,13 @@ class _ChoosePrescriptionForPrescriptionreviewState
   List data = [];
 
   Future getData() async {
+
     body = <String, String>{'user_type': "patient", 'id': widget.USER_ID};
     String apiResponse =
-        await makePostReq("get_video_appointment_list", widget.AUTH, body);
+        await makePostReq("get-prescription-info", widget.AUTH, body);
     this.setState(() {
       data = json.decode(apiResponse);
+      showThisToast("total pres found "+data.length.toString());
     });
   }
 
@@ -179,7 +273,7 @@ class _ChoosePrescriptionForPrescriptionreviewState
                                     widget.TRANS_ID,
                                     widget.PAYPAL_ID,
                                     payable_amount,
-                                    "1")));
+                                    "0")));
 
 //                    String chatRoom = createChatRoomName(
 //                        int.parse(widget.USER_ID),
@@ -948,6 +1042,12 @@ String getDayName(int day) {
 //start
 class myServicesWidget extends StatefulWidget {
   String AUTH, UID;
+  Function function;
+
+  function_name() {
+
+
+  }
 
   myServicesWidget(this.AUTH, this.UID);
 
@@ -996,7 +1096,9 @@ class _myServicesWidgetState extends State<myServicesWidget> {
             itemCount: data == null ? 0 : data.length,
             itemBuilder: (BuildContext context, int index) {
               return new InkWell(
-                onTap: () {},
+                onTap: () {
+
+                },
                 child: Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(00.0),
@@ -1005,13 +1107,72 @@ class _myServicesWidgetState extends State<myServicesWidget> {
                     padding: EdgeInsets.all(0),
                     child: ListTile(
                       trailing: Checkbox(
-                        onChanged: (newvalue) {
+                        onChanged: (newvalue) async{
                           showThisToast(newvalue.toString());
+                          if(newvalue){
+
+
+                            var body_ = jsonEncode(<String, String>{
+                              'doctor_id': widget.UID,
+                              'online_service_id': data[index]["id"].toString(),
+                              'fees_per_unit': "00"
+                            });
+                            final http.Response response = await http.post(
+                              _baseUrl + 'add-online-doctor-service',
+                              headers: <String, String>{
+                                'Content-Type': 'application/json; charset=UTF-8',
+                                'Accept': 'application/json',
+                                'Authorization':  widget.AUTH,
+                              },
+                              body: body_,
+                            );
+                            showThisToast(response.body);
+                            print(response.body);
+
+                            if(response.statusCode == 200){
+                              this.getData();
+                              this.getData_doc();
+                            }else{
+                              showThisToast("Error Occured");
+                            }
+
+                          }else{
+                            //delete-online-doctor-service
+                            var body_ = jsonEncode(<String, String>{
+                              'doctor_id': widget.UID,
+                              'online_service_id': data[index]["id"].toString(),
+                            });
+                            final http.Response response = await http.post(
+                              _baseUrl + 'delete-online-doctor-service',
+                              headers: <String, String>{
+                                'Content-Type': 'application/json; charset=UTF-8',
+                                'Accept': 'application/json',
+
+                                'Authorization':  widget.AUTH,
+                              },
+                              body: body_,
+                            );
+                            showThisToast(response.body);
+                            print(response.body);
+
+                            if(response.statusCode == 200){
+                              this.getData();
+                              this.getData_doc();
+                            }else{
+                              showThisToast("Error Occured");
+                            }
+                          }
+
+
+//                          setState(() {
+//                            this.getData();
+//                            this.getData_doc();
+//                          });
                         },
                         value: getvalueBool(data[index]["id"], data_doc),
                       ),
                       title: Text(data[index]["name"]),
-                      subtitle: getfeesAmount(data[index]["id"], data_doc),
+                      subtitle: getfeesAmount(data[index]["id"], data_doc,context,widget.AUTH,widget.UID, widget.function_name)
                     ),
                   ),
                 ),
@@ -1025,7 +1186,7 @@ class _myServicesWidgetState extends State<myServicesWidget> {
 }
 
 //end
-Widget getfeesAmount(int serviceId, List data) {
+Widget getfeesAmount(int serviceId, List data,BuildContext context,String auth, String uid,Function function,) {
   List<Widget> widgests = [];
   String dataFees = "00";
   //&&  data [i]["status"] == 1
@@ -1041,6 +1202,83 @@ Widget getfeesAmount(int serviceId, List data) {
   }
   widgests.add(Text(dataFees + " BDT"));
   InkWell inkWell = InkWell(
+    onTap: (){
+      final _formKey = GlobalKey<FormState>();
+      String fees;
+      return showDialog<void>(
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Add / Update Fees in BDT'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        TextFormField(
+                          initialValue: dataFees,
+                          validator: (value) {
+                            fees = value;
+                            if (value.isEmpty) {
+                              return 'Please enter Fees';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              FlatButton(
+                child: Text('Update'),
+                onPressed: () async{
+                  if (_formKey.currentState.validate()) {
+                    //update-online-doctor-service-fees
+                    var body_ = jsonEncode(<String, String>{
+                      'doctor_id': uid,
+                      'online_service_id': serviceId.toString(),
+                      'fees':fees,
+                    });
+                    final http.Response response = await http.post(
+                      _baseUrl + 'update-online-doctor-service-fees',
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Accept': 'application/json',
+
+                        'Authorization':  auth,
+                      },
+                      body: body_,
+                    );
+                    if(response.statusCode == 200){
+                      Navigator.of(context).pop();
+                      function();
+
+
+                    }else{
+                      showThisToast("Error occured");
+                    }
+
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    },
     child: Padding(
       padding: EdgeInsets.fromLTRB(10, 2, 10, 2),
       child: Text(
@@ -1059,7 +1297,39 @@ Widget getfeesAmount(int serviceId, List data) {
   );
   return row;
 }
+//start
+class SetFeesActivity extends StatefulWidget {
+  List deptList__ = [];
+  Function function;
 
+  //ChooseDeptActivity(this.deptList__, this.function);
+  SetFeesActivity(this.deptList__, {Key key, this.function})
+      : super(key: key);
+
+  @override
+  _SetFeesActivityState createState() => _SetFeesActivityState();
+}
+
+class _SetFeesActivityState extends State<SetFeesActivity> {
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    //  this.getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Set Fees"),
+      ),
+
+    );
+  }
+}
+//ends
 bool getvalueBool(int serviceId, List data) {
   bool value = false;
   //&&  data [i]["status"] == 1
@@ -1075,7 +1345,7 @@ bool getvalueBool(int serviceId, List data) {
       }
     }
   } else {
-    showThisToast("No data");
+   // showThisToast("No data");
   }
 
   return value;

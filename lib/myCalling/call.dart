@@ -169,14 +169,30 @@ class _CallPageState extends State<CallPage> {
             ),
             _videoView(views[0])],
         ));
+//      case 2:
+//        return Container(
+//            child: Column(
+//          children: <Widget>[
+//            _expandedVideoRow([views[1]]),
+//            _expandedVideoRow([views[0]])
+//          ],
+//        ));
       case 2:
-        return Container(
-            child: Column(
-          children: <Widget>[
-            _expandedVideoRow([views[1]]),
-            _expandedVideoRow([views[0]])
-          ],
-        ));
+        return Stack(
+           children: [
+             views[1],
+             Positioned(
+               top: 10,
+               right: 10,
+               child: Container(
+                 width: 100,
+                 height: 180,
+                 child: views[0],
+               ),
+             )
+           ],
+
+        );
       case 3:
         return Container(
             child: Column(
@@ -324,7 +340,7 @@ class _CallPageState extends State<CallPage> {
         child: Stack(
           children: <Widget>[
             _viewRows(),
-//            _panel(),
+           // _panel(),
             _toolbar(),
           ],
         ),

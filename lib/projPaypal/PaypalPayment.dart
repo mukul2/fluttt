@@ -229,11 +229,11 @@ class PaypalPaymentState extends State<PaypalPayment> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    MakePrescriptionRequestWidget(
+                                    MakePrescriptionRequestWidget(A_KEY,UID,
                                         id,
                                         payable_amount,
                                         docID,
-                                        jsonResponse["message"].toString())));
+                                        jsonResponse["message"].toString(),payable_amount)));
                       } else {
                         showThisToast("Failed to insert data");
                       }
@@ -275,6 +275,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'starts': startDate,
                         'amount': payable_amount,
                         'ends': endDate,
+                        'status': "1",
+
                       }),
                     );
                     // showThisToast(response.statusCode.toString());
@@ -319,6 +321,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'starts': startDate,
                         'amount': payable_amount,
                         'ends': endDate,
+                        'status': "1",
+
                       }),
                     );
                     // showThisToast(response.statusCode.toString());
@@ -362,6 +366,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'starts': startDate,
                         'amount': payable_amount,
                         'ends': endDate,
+                        'status': "1",
+
                       }),
                     );
                     //  showThisToast(response.statusCode.toString());
@@ -406,6 +412,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'starts': startDate,
                         'amount': payable_amount,
                         'ends': endDate,
+                        'status': "1",
+
                       }),
                     );
                     print(jsonEncode(<String, String>{
@@ -438,7 +446,9 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'patient_id': UID,
                         'dr_id': docID,
                         'amount': payable_amount,
-                        'payment_details': id
+                        'payment_details': id,
+                        'status': "1"
+
                       }),
                     );
                     // showThisToast(response.statusCode.toString());
@@ -455,6 +465,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
                     CHAT_ROOM = chatRoom;
                     print("chat room " + chatRoom);
                     DatabaseReference _messageDatabaseReference;
+
                     DatabaseReference _messageDatabaseReference_last;
                     _messageDatabaseReference = FirebaseDatabase.instance
                         .reference()
@@ -570,6 +581,24 @@ class PaypalPaymentState extends State<PaypalPayment> {
                                 docPhoto,
                                 chatRoom)));
                   } else if (widget.TYPE == "Video Call") {
+                    final http.Response response = await http.post(
+                      _baseUrl + 'add_video_appointment_info',
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Authorization': A_KEY,
+                      },
+                      body: jsonEncode(<String, String>{
+                        'patient_id': UID,
+                        'doctor_id': docID,
+                        'payment_details': id,
+                        'payment_status': "1",
+                        'amount': payable_amount,
+                        'is_review_appointment': "1",
+
+                      }),
+                    );
+
+
                     Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -613,7 +642,34 @@ class PaypalPaymentState extends State<PaypalPayment> {
                     } else {
                       showThisToast("Api error");
                     }
-                  } else {
+                  }else if (widget.TYPE == "Follow up Video Appointment") {
+                    final http.Response response = await http.post(
+                      _baseUrl + 'add_video_appointment_info',
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Authorization': A_KEY,
+                      },
+                      body: jsonEncode(<String, String>{
+                        'patient_id': UID,
+                        'doctor_id': docID,
+                        'payment_details': id,
+                        'payment_status': "1",
+                        'amount': payable_amount,
+                        'is_review_appointment': "1",
+                      }),
+                    );
+
+
+
+
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                FollowupVideoAppointmentListActivityPatient(
+                                    A_KEY, UID)));
+                    // Navigator.of(context).pop();
+                  }  else {
                     showThisToast("Unknwon service " + widget.TYPE);
                   }
                 });
@@ -656,9 +712,11 @@ class MakePrescriptionRequestWidget extends StatefulWidget {
 
   String docID;
   String paypalID;
+  String auth,uid;
+  String amount ;
 
-  MakePrescriptionRequestWidget(
-      this.tranactionID, this.fees, this.docID, this.paypalID);
+  MakePrescriptionRequestWidget(this.auth,this.uid,
+      this.tranactionID, this.fees, this.docID, this.paypalID,this.amount);
 
   @override
   _MakePrescriptionRequestState createState() =>
@@ -737,7 +795,7 @@ class _MakePrescriptionRequestState
                                 style: TextStyle(color: Colors.white));
                           });
                           var body_ = jsonEncode(<String, String>{
-                            'patient_id': UID,
+                            'patient_id': widget.uid,
                             'dr_id': widget.docID,
                             'payment_status': "1",
                             'problem': problem,
@@ -750,7 +808,7 @@ class _MakePrescriptionRequestState
                             _baseUrl + 'add-prescription-request',
                             headers: <String, String>{
                               'Content-Type': 'application/json; charset=UTF-8',
-                              'Authorization': A_KEY,
+                              'Authorization': widget.auth,
                             },
                             body: body_,
                           );

@@ -142,7 +142,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       BottomNavigationBarItem(
           icon: Icon(
-            Icons.supervised_user_circle,
+            Icons.supervised_user_circle
+            ,
             color: Colors.blue,
           ),
           title: Text(
@@ -161,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       BottomNavigationBarItem(
           icon: Icon(
-            Icons.book,
+            Icons.settings,
             color: Colors.blue,
           ),
           title: Text(
@@ -252,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
             color: Colors.white,
           ),
           Icon(
-            Icons.verified_user,
+            Icons.face,
             size: 20,
             color: Colors.white,
           ),
@@ -262,7 +263,7 @@ class _MyHomePageState extends State<MyHomePage> {
             color: Colors.white,
           ),
           Icon(
-            Icons.library_books,
+            Icons.settings,
             size: 20,
             color: Colors.white,
           ),
@@ -1266,6 +1267,7 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                       child: Column(
                         children: <Widget>[
                           ListTile(
+
                             trailing: Icon(Icons.keyboard_arrow_right),
                             leading: CircleAvatar(
                               backgroundImage: NetworkImage(_baseUrl_image +
@@ -1279,33 +1281,27 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                               pendingList[index]["problems"],
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
+                            onTap: (){
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          PatientFullProfileView(
+                                              AUTH_KEY,
+                                              pendingList[index]
+                                              ["patient_info"]["id"]
+                                                  .toString(),
+                                              pendingList[index]
+                                              ["patient_info"]["name"],
+                                              pendingList[index]
+                                              ["patient_info"]
+                                              ["photo"])));
+                            },
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
-                              RaisedButton(
-                                color: Colors.white,
-                                elevation: 0,
-                                onPressed: () {
-                                  //PatientFullProfileView
-                                  //error
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              PatientFullProfileView(
-                                                  AUTH_KEY,
-                                                  pendingList[index]
-                                                          ["patient_info"]["id"]
-                                                      .toString(),
-                                                  pendingList[index]
-                                                      ["patient_info"]["name"],
-                                                  pendingList[index]
-                                                          ["patient_info"]
-                                                      ["photo"])));
-                                },
-                                child: Text("View Profile"),
-                              ),
+
                               RaisedButton(
                                 color: Colors.white,
                                 elevation: 0,
@@ -1411,16 +1407,18 @@ class _GiveTestRecomdActivityState extends State<GiveTestRecomdActivity> {
             padding: EdgeInsets.fromLTRB(0, 0, 15, 0),
             child: GestureDetector(
               onTap: ()  async {
+                print(widget.selected.toString());
                 //widget.function(widget.selected);
                 for(int i = 0 ;i<widget.selected.length;i++){
                   final Map<String, dynamic> data =
                   new Map<String, dynamic>();
                   //data['id'] = widget.testList[index]["id"].toString();
-                  data['test_id'] = widget.testList[i]["test_id"].toString();
+                  data['test_id'] = widget.selected[i].toString();
                   widget.selectedForUp.add(data);
 
                 }
                 //add-test-recommendation
+
 
                 final http.Response response = await http.post(
                   _baseUrl + 'add-test-recommendation',
@@ -1430,12 +1428,19 @@ class _GiveTestRecomdActivityState extends State<GiveTestRecomdActivity> {
                   },
                   body: jsonEncode(<String, String>{
                     'appointment_id': widget.appp_id,
-                    'test_ids': widget.selectedForUp.toString(),
+                    'test_ids': widget.selected.toString(),
                   }),
                 );
+                print( widget.selected);
+                if(response.statusCode ==200){
+                  Navigator.of(context).pop(true);
+
+                }else{
+                  print(response.body);
+
+                }
 
 
-                Navigator.of(context).pop(true);
               },
               child: Icon(Icons.done_all),
             ),

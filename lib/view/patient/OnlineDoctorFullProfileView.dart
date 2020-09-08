@@ -1,8 +1,14 @@
+import 'dart:math';
+
+import 'package:appxplorebd/chat/model/chat_screen.dart';
 import 'package:appxplorebd/networking/ApiProvider.dart';
 import 'package:appxplorebd/networking/Const.dart';
 import 'package:appxplorebd/projPaypal/PaypalPayment.dart';
 import 'package:appxplorebd/projPaypal/config.dart';
 import 'package:appxplorebd/projPaypal/makePayment.dart';
+import 'package:appxplorebd/view/patient/patient_view.dart';
+import 'package:appxplorebd/view/patient/sharedActivitys.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,6 +22,7 @@ List education_info;
 String AUTH_KEY;
 String UID;
 String type = "";
+String CLIEND_ID = "xploreDoc";
 
 final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
 
@@ -247,7 +254,8 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
                                                       MaterialPageRoute(
                                                         builder: (BuildContext
                                                         context) =>
-                                                            BkashPaymentActivity(),
+                                                            BkashPaymentActivity(widget.paymentMethods[
+                                                            index_],UID,AUTH_KEY,payable_amount,docID,type),
                                                       ));
                                                 }
                                               },
@@ -290,20 +298,584 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
 }
 
 class BkashPaymentActivity extends StatefulWidget {
+  String uid,auth,amount,docid,TYPE;
+  dynamic paymentMethodBody ;
+
+  BkashPaymentActivity(this.paymentMethodBody,this .uid, this.auth, this.amount, this.docid, this.TYPE);
   @override
   _BkashPaymentActivityState createState() => _BkashPaymentActivityState();
 }
 
 class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
+  final _formKey = GlobalKey<FormState>();
+  String transID;
+  Widget StandbyWid = Text(
+    "Submit",
+    style: TextStyle(color: Colors.white),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(appBar: AppBar(title: Text("bKash Payment"),),
       body: SingleChildScrollView(
         child: Column(
+          children: [Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                ListTile(
+                  title: Text("Bkash Marchant"),
+                  subtitle: Text(widget.paymentMethodBody["marchant"]+'\n'+"Make "+widget.paymentMethodBody["name"]+" transfer and add transaction ID here"),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                  child: TextFormField(
+                    initialValue: "",
+                    validator: (value) {
+                      transID = value;
+                      if (value.isEmpty) {
+                        return 'Please enter transaction ID';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                        fillColor: Colors.white10,
+                        border: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.pink)),
+                        enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue)),
+                        labelText: "Transaction ID"),
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                  child: SizedBox(
+                      height: 50,
+                      width: double.infinity, // match_parent
+                      child: RaisedButton(
+                        color: Color(0xFF34448c),
+                        onPressed: () async {
+                          // Validate returns true if the form is valid, or false
+                          // otherwise.
+                          if (_formKey.currentState.validate()) {
+                            // If the form is valid, display a Snackbar.
+
+                            if (widget.TYPE == 'Prescription Service') {
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_payment_info_only',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'dr_id': widget.docid,
+                                  'amount': payable_amount,
+                                  'status': "0",
+                                  'reason': "Prescription request",
+                                  'transID': transID,
+                                }),
+                              );
+
+                              if (response.statusCode == 200) {
+                                print(response.body.toLowerCase());
+                                dynamic jsonResponse = jsonDecode(response.body);
+                                print(jsonResponse.toString());
+                                print(jsonResponse["message"].toString());
+                                // dynamic jsonresponse = jsonDecode(response.body);
+                                if (true) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              MakePrescriptionRequestWidget(widget.auth,widget.uid,
+                                                  transID,
+                                                  payable_amount,
+                                                  widget.docid,
+                                                  jsonResponse["message"].toString(),widget.amount)));
+                                } else {
+                                  showThisToast("Failed to insert data");
+                                }
+                              } else {
+                                showThisToast("Api error");
+                              }
+                            } else if (widget.TYPE == '1 Month Subscription') {
+                              DateTime selectedDate = DateTime.now();
+                              String startDate = (selectedDate.year).toString() +
+                                  "-" +
+                                  (selectedDate.month).toString() +
+                                  "-" +
+                                  (selectedDate.day).toString();
+                              DateTime endDate_ =
+                              DateTime.now().add((Duration(days: 30)));
+                              endDate_.add((Duration(days: 30)));
+                              String endDate =
+                                  (DateTime.now().add((Duration(days: 30))).year)
+                                      .toString() +
+                                      "-" +
+                                      (DateTime.now().add((Duration(days: 30))).month)
+                                          .toString() +
+                                      "-" +
+                                      (DateTime.now().add((Duration(days: 30))).day)
+                                          .toString();
+
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_subscription_info',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'dr_id': widget.docid,
+                                  'payment_status': "0",
+                                  'number_of_months': "1",
+                                  'payment_details': transID,
+                                  'starts': startDate,
+                                  'amount': widget.amount,
+                                  'ends': endDate,
+                                  'status': "0",
+                                }),
+                              );
+                              if(response.statusCode == 200){
+                                Navigator.of(context).pop();
+                                Navigator.of(context).pop();
+                                Navigator.of(context).pop();
+                                Navigator.of(context).pop();
+                                Navigator.of(context).pop();
+                              }else{
+                                print(response.body);
+                                showThisToast("Error occured");
+                              }
+                              // showThisToast(response.statusCode.toString());
+                              //popup count
+
+                              // Navigator.of(context).pop();
+                            } else if (widget.TYPE == '3 Month Subscription') {
+                              DateTime selectedDate = DateTime.now();
+                              String startDate = (selectedDate.year).toString() +
+                                  "-" +
+                                  (selectedDate.month).toString() +
+                                  "-" +
+                                  (selectedDate.day).toString();
+
+                              selectedDate.add((Duration(days: 90)));
+                              String endDate =
+                                  (DateTime.now().add((Duration(days: 90))).year)
+                                      .toString() +
+                                      "-" +
+                                      (DateTime.now().add((Duration(days: 90))).month)
+                                          .toString() +
+                                      "-" +
+                                      (DateTime.now().add((Duration(days: 90))).day)
+                                          .toString();
+
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_subscription_info',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'dr_id': widget.docid,
+                                  'payment_status': "0",
+                                  'number_of_months': "3",
+                                  'payment_details': transID,
+                                  'starts': startDate,
+                                  'amount': widget.amount,
+                                  'ends': endDate,
+                                  'status': "0",
+
+                                }),
+                              );
+                              // showThisToast(response.statusCode.toString());
+                              //popup count
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              //  Navigator.of(context).pop();
+                            } else if (widget.TYPE == '6 Month Subscription') {
+                              DateTime selectedDate = DateTime.now();
+                              String startDate = (selectedDate.year).toString() +
+                                  "-" +
+                                  (selectedDate.month).toString() +
+                                  "-" +
+                                  (selectedDate.day).toString();
+
+                              selectedDate.add((Duration(days: 180)));
+                              String endDate =
+                                  (DateTime.now().add((Duration(days: 180))).year)
+                                      .toString() +
+                                      "-" +
+                                      (DateTime.now().add((Duration(days: 180))).month)
+                                          .toString() +
+                                      "-" +
+                                      (DateTime.now().add((Duration(days: 180))).day)
+                                          .toString();
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_subscription_info',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'dr_id': widget.docid,
+                                  'payment_status': "1",
+                                  'number_of_months': "6",
+                                  'payment_details': transID,
+                                  'starts': startDate,
+                                  'amount': widget.amount,
+                                  'ends': endDate,
+                                  'status': "0",
+
+                                }),
+                              );
+                              //  showThisToast(response.statusCode.toString());
+                              //popup count
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              //Navigator.of(context).pop();
+                            } else if (widget.TYPE == '1 Year Subscription') {
+                              DateTime selectedDate = DateTime.now();
+                              String startDate = (selectedDate.year).toString() +
+                                  "-" +
+                                  (selectedDate.month).toString() +
+                                  "-" +
+                                  (selectedDate.day).toString();
+
+                              selectedDate.add((Duration(days: 360)));
+                              String endDate =
+                                  (DateTime.now().add((Duration(days: 360))).year)
+                                      .toString() +
+                                      "-" +
+                                      (DateTime.now().add((Duration(days: 360))).month)
+                                          .toString() +
+                                      "-" +
+                                      (DateTime.now().add((Duration(days: 360))).day)
+                                          .toString();
+
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_subscription_info',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'dr_id': widget.docid,
+                                  'payment_status': "1",
+                                  'number_of_months': "12",
+                                  'payment_details': transID,
+                                  'starts': startDate,
+                                  'amount': widget.amount,
+                                  'ends': endDate,
+                                  'status': "0",
+
+                                }),
+                              );
+
+                              showThisToast(response.statusCode.toString());
+                              showThisToast(response.body);
+                              //popup count
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              // Navigator.of(context).pop();
+                            } else if (widget.TYPE == 'Chat') {
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_chat_appointment_info',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'dr_id': widget.docid,
+                                  'amount': widget.amount,
+                                  'payment_details': transID,
+                                  'status': "0"
+                                }),
+                              );
+                              // showThisToast(response.statusCode.toString());
+                              //popup count
+                              if(response.statusCode == 200){
+
+
+
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              //Navigator.of(context).pop();
+                              String chatRoom = createChatRoomName(
+                                  int.parse(widget.uid), int.parse(widget.docid));
+                              CHAT_ROOM = chatRoom;
+                              print("chat room " + chatRoom);
+                              DatabaseReference _messageDatabaseReference;
+                              DatabaseReference _messageDatabaseReference_last;
+                              _messageDatabaseReference = FirebaseDatabase.instance
+                                  .reference()
+                                  .child(CLIEND_ID)
+                                  .child("chatHistory")
+                                  .child(CHAT_ROOM);
+
+
+                              _messageDatabaseReference_last = FirebaseDatabase.instance
+                                  .reference()
+                                  .child(CLIEND_ID)
+                                  .child("lastChatHistory");
+
+                              USER_ID = widget.uid;
+                              docID = widget.docid;
+
+
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("message_body")
+                                  .set("Chat service payment is compleated");
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("message_type")
+                                  .set("TYPE_TEXT");
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("receiver_name")
+                                  .set(docNAME);
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("receiver_photo")
+                                  .set(docPhoto);
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("recever_id")
+                                  .set((docID));
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("sender_id")
+                                  .set(USER_ID);
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("sender_name")
+                                  .set(USER_NAME);
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("sender_photo")
+                                  .set(USER_PHOTO);
+                              _messageDatabaseReference_last
+                                  .child(USER_ID)
+                                  .child(docID)
+                                  .child("time")
+                                  .set(new DateTime.now().toUtc().toIso8601String());
+
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("message_body")
+                                  .set("Chat service payment is compleated");
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("message_type")
+                                  .set("TYPE_TEXT");
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("receiver_name")
+                                  .set(docNAME);
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("receiver_photo")
+                                  .set(docPhoto);
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("recever_id")
+                                  .set((docID));
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("sender_id")
+                                  .set(USER_ID);
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("sender_name")
+                                  .set(USER_NAME);
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("sender_photo")
+                                  .set(USER_PHOTO);
+                              _messageDatabaseReference_last
+                                  .child(docID)
+                                  .child(USER_ID)
+                                  .child("time")
+                                  .set(new DateTime.now().toUtc().toIso8601String());
+                              mainP();
+                            //  showThisToast("Please wait while your pending transaction gets approved");
+
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ChatScreen(
+                                          widget.uid,
+                                          USER_NAME,
+                                          USER_PHOTO,
+                                          widget.docid,
+                                          docNAME,
+                                          docPhoto,
+                                          chatRoom)));
+                              }else{
+                                print(response.body);
+                                showThisToast(response.body);
+                              }
+                            } else if (widget.TYPE == "Video Call") {
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_video_appointment_info',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'doctor_id': widget.docid,
+                                  'payment_details': transID,
+                                  'payment_status': "0",
+                                  'amount': widget.amount,
+                                  'is_review_appointment': "1",
+
+                                }),
+                              );
+                              mainP();
+                              showThisToast("Please wait while your pending transaction gets approved");
+
+//
+//                              Navigator.push(
+//                                  context,
+//                                  MaterialPageRoute(
+//                                      builder: (context) =>
+//                                          VideoAppointmentListActivityPatient(
+//                                              widget.auth, widget.uid)));
+                              // Navigator.of(context).pop();
+                            } else if (widget.TYPE == "Prescription Review") {
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_payment_info_only',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'dr_id': widget.docid,
+                                  'amount': widget.amount,
+                                  'status': "0",
+                                  'reason': "Prescription review",
+                                  'transID': transID,
+                                }),
+                              );
+
+                              if (response.statusCode == 200) {
+                                print(response.body.toLowerCase());
+                                dynamic jsonResponse = jsonDecode(response.body);
+                                print(jsonResponse.toString());
+                                print(jsonResponse["message"].toString());
+                                // dynamic jsonresponse = jsonDecode(response.body);
+                                if (true) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              ChoosePrescriptionForPrescriptionreview(widget.auth,widget.uid, widget.docid,transID,
+                                                  jsonResponse["message"].toString())));
+                                } else {
+                                  showThisToast("Failed to insert data");
+                                }
+                              } else {
+                                showThisToast("Api error");
+                              }
+                            }else if (widget.TYPE == "Follow up Video Appointment") {
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add_video_appointment_info',
+                                headers: <String, String>{
+                                  'Content-Type': 'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                },
+                                body: jsonEncode(<String, String>{
+                                  'patient_id': widget.uid,
+                                  'doctor_id': widget.docid,
+                                  'payment_details': transID,
+                                  'payment_status': "0",
+                                  'amount': widget.amount,
+                                  'is_review_appointment': "1",
+                                }),
+                              );
+                              mainP();
+
+
+//                              Navigator.push(
+//                                  context,
+//                                  MaterialPageRoute(
+//                                      builder: (context) =>
+//                                          FollowupVideoAppointmentListActivityPatient(
+//                                              widget.auth, widget.uid)));
+                              // Navigator.of(context).pop();
+                            }  else {
+                              showThisToast("Unknwon service " + widget.TYPE);
+                            }
+                            setState(() {
+                              StandbyWid = Text("Please wait");
+                            });
+
+
+
+                              int start = 0 ;
+                              int current = 0 ;
+
+                              //mainD();
+                            } else {
+                              // showThisToast("User Allreasy registered");
+
+                            }
+                          },
+
+                        child: StandbyWid,
+                      )),
+                ),
+              ],
+            ),
+          )],
 
 
         ),
       ),);
+  }
+}
+String createChatRoomName(int one, int two) {
+  if (one > two) {
+    return (one.toString() + "-" + two.toString());
+  } else {
+    return (two.toString() + "-" + one.toString());
   }
 }
 //
@@ -546,116 +1118,116 @@ Widget Educations(List education_info) {
 //),
 //)
 
-class MakePrescriptionRequestWidget extends StatefulWidget {
-  String tranactionID;
-
-  int fees;
-
-  String docID;
-
-  MakePrescriptionRequestWidget(this.tranactionID, this.fees, this.docID);
-
-  @override
-  _MakePrescriptionRequestState createState() =>
-      _MakePrescriptionRequestState();
-}
-
-class _MakePrescriptionRequestState
-    extends State<MakePrescriptionRequestWidget> {
-  final _formKey = GlobalKey<FormState>();
-  String problem;
-  String myMessage = "Submit";
-
-  Widget StandbyWid = Text(
-    "Login",
-    style: TextStyle(color: Colors.white),
-  );
-
-  @override
-  void initState() {
-    // TODO: implement initState
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Create Prescription Request"),
-      ),
-      body: Scaffold(
-        body: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    "Write your problems in detail and Doctor will send you prescripton",
-                    style: TextStyle(
-                        color: Color(0xFF34448c), fontWeight: FontWeight.bold),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                    child: TextFormField(
-                      initialValue: "",
-                      validator: (value) {
-                        problem = value;
-                        if (value.isEmpty) {
-                          return 'Write your Problems';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
-                    child: SizedBox(
-                        height: 50,
-                        width: double.infinity, // match_parent
-                        child: RaisedButton(
-                          color: Color(0xFF34448c),
-                          onPressed: () async {
-                            // Validate returns true if the form is valid, or false
-                            // otherwise.
-                            if (_formKey.currentState.validate()) {
-                              // If the form is valid, display a Snackbar.
-                              setState(() {
-                                StandbyWid = Text("Please wait");
-                              });
-                              final http.Response response = await http.post(
-                                _baseUrl + 'add-prescription-request',
-                                headers: <String, String>{
-                                  'Content-Type': 'application/json; charset=UTF-8',
-                                  'Authorization': AUTH_KEY,
-                                },
-                                body: jsonEncode(<String, String>{
-                                  'patient_id': USER_ID,
-                                  'dr_id': widget.docID,
-                                  'payment_status': "1",
-                                  'problem': problem,
-                                  'payment_details': widget.tranactionID
-                                }),
-                              );
-                              showThisToast(response.statusCode.toString());
-                              //popup count
-
-                              setState(() {
-                                StandbyWid =
-                                    Text("Prescription request success");
-                              });
-                            } else {}
-                          },
-                          child: StandbyWid,
-                        )),
-                  ),
-                ],
-              ),
-            )),
-      ),
-    );
-  }
-}
+//class MakePrescriptionRequestWidget extends StatefulWidget {
+//  String tranactionID;
+//
+//  int fees;
+//
+//  String docID;
+//
+//  MakePrescriptionRequestWidget(this.tranactionID, this.fees, this.docID);
+//
+//  @override
+//  _MakePrescriptionRequestState createState() =>
+//      _MakePrescriptionRequestState();
+//}
+//
+//class _MakePrescriptionRequestState
+//    extends State<MakePrescriptionRequestWidget> {
+//  final _formKey = GlobalKey<FormState>();
+//  String problem;
+//  String myMessage = "Submit";
+//
+//  Widget StandbyWid = Text(
+//    "Login",
+//    style: TextStyle(color: Colors.white),
+//  );
+//
+//  @override
+//  void initState() {
+//    // TODO: implement initState
+//  }
+//
+//  @override
+//  Widget build(BuildContext context) {
+//    return Scaffold(
+//      appBar: AppBar(
+//        title: Text("Create Prescription Request"),
+//      ),
+//      body: Scaffold(
+//        body: SingleChildScrollView(
+//            child: Form(
+//              key: _formKey,
+//              child: Column(
+//                crossAxisAlignment: CrossAxisAlignment.center,
+//                mainAxisAlignment: MainAxisAlignment.center,
+//                children: <Widget>[
+//                  Text(
+//                    "Write your problems in detail and Doctor will send you prescripton",
+//                    style: TextStyle(
+//                        color: Color(0xFF34448c), fontWeight: FontWeight.bold),
+//                  ),
+//                  Padding(
+//                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+//                    child: TextFormField(
+//                      initialValue: "",
+//                      validator: (value) {
+//                        problem = value;
+//                        if (value.isEmpty) {
+//                          return 'Write your Problems';
+//                        }
+//                        return null;
+//                      },
+//                    ),
+//                  ),
+//                  Padding(
+//                    padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
+//                    child: SizedBox(
+//                        height: 50,
+//                        width: double.infinity, // match_parent
+//                        child: RaisedButton(
+//                          color: Color(0xFF34448c),
+//                          onPressed: () async {
+//                            // Validate returns true if the form is valid, or false
+//                            // otherwise.
+//                            if (_formKey.currentState.validate()) {
+//                              // If the form is valid, display a Snackbar.
+//                              setState(() {
+//                                StandbyWid = Text("Please wait");
+//                              });
+//                              final http.Response response = await http.post(
+//                                _baseUrl + 'add-prescription-request',
+//                                headers: <String, String>{
+//                                  'Content-Type': 'application/json; charset=UTF-8',
+//                                  'Authorization': AUTH_KEY,
+//                                },
+//                                body: jsonEncode(<String, String>{
+//                                  'patient_id': USER_ID,
+//                                  'dr_id': widget.docID,
+//                                  'payment_status': "1",
+//                                  'problem': problem,
+//                                  'payment_details': widget.tranactionID
+//                                }),
+//                              );
+//                              showThisToast(response.statusCode.toString());
+//                              //popup count
+//
+//                              setState(() {
+//                                StandbyWid =
+//                                    Text("Prescription request success");
+//                              });
+//                            } else {}
+//                          },
+//                          child: StandbyWid,
+//                        )),
+//                  ),
+//                ],
+//              ),
+//            )),
+//      ),
+//    );
+//  }
+//}
 
 void showThisToast(String s) {
   Fluttertoast.showToast(

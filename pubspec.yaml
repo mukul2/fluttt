@@ -60,7 +60,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.7.5
 
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo2.jpeg"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -94,12 +99,15 @@ flutter:
     - assets/riad.png
     - assets/doc_female.jpg
     - assets/logo.jpeg
+    - assets/logo2.jpeg
     - assets/stet.png
     - assets/facebook.png
     - assets/youtube.png
     - assets/info.png
     - assets/twitter.png
     - assets/logout.png
+    - assets/video_call_img.png
+    - assets/window.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

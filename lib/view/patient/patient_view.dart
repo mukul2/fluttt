@@ -631,16 +631,21 @@ class _HomeState extends State<Home> {
                           height: 48,
                           width: 48,
                           child: Image.asset(
-                            "assets/help.png",
+                            "assets/window.png",
                             fit: BoxFit.cover,
                           ),
                         ),
-                        Padding(
-                            padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                            child: Text(
-                              "Home Visits",
-                              style: TextStyle(color: Color(0xFF34448c)),
-                            ))
+                        Center(
+                          child: Padding(
+                              padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+                              child: Text(
+                                "Home Visits",
+                                style: TextStyle(
+                                  color: Color(0xFF34448c),
+                                ),
+                                textAlign: TextAlign.center,
+                              )),
+                        )
                       ],
                     ),
                   ),
@@ -674,16 +679,70 @@ class _HomeState extends State<Home> {
                           height: 48,
                           width: 48,
                           child: Image.asset(
-                            "assets/help.png",
+                            "assets/video_call_img.png",
                             fit: BoxFit.cover,
                           ),
                         ),
-                        Padding(
-                            padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                            child: Text(
-                              "Online Appointment",
-                              style: TextStyle(color: Color(0xFF34448c)),
-                            ))
+                        Center(
+                          child: Padding(
+                              padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+                              child: Text(
+                                "Online Appointment",
+                                style: TextStyle(
+                                  color: Color(0xFF34448c),
+                                ),
+                                textAlign: TextAlign.center,
+                              )),
+                        )
+                      ],
+                    ),
+                  ),
+                )),
+            InkWell(
+                onTap: () {
+//                  Navigator.push(
+//                      context,
+//                      MaterialPageRoute(
+//                          builder: (context) => HomeVisitsDoctorsList()));
+
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              FollowupVideoAppointmentListActivityPatient(
+                                  A_KEY, UID)));
+                },
+                child: Container(
+                  height: 110,
+                  child: Card(
+                    margin: EdgeInsets.all(0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(0.0),
+                    ),
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Container(
+                          height: 48,
+                          width: 48,
+                          child: Image.asset(
+                            "assets/video_call_img.png",
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Center(
+                          child: Padding(
+                              padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+                              child: Text(
+                                "Follow up Online Appointment",
+                                style: TextStyle(
+                                  color: Color(0xFF34448c),
+                                ),
+                                textAlign: TextAlign.center,
+                              )),
+                        )
                       ],
                     ),
                   ),
@@ -696,6 +755,9 @@ class _HomeState extends State<Home> {
 }
 
 class HomeVisitsDoctorsList extends StatefulWidget {
+  String address;
+  HomeVisitsDoctorsList(this. address);
+
   @override
   _HomeVisitsDoctorsListState createState() => _HomeVisitsDoctorsListState();
 }
@@ -744,7 +806,7 @@ class _HomeVisitsDoctorsListState extends State<HomeVisitsDoctorsList> {
                         context,
                         MaterialPageRoute(
                             builder: (context) =>
-                                HomeVisitDoctorDetailPage(data[index])));
+                                HomeVisitDoctorDetailPage(widget.address,data[index])));
                   },
                   child: Card(
                     shape: RoundedRectangleBorder(
@@ -786,8 +848,9 @@ class _HomeVisitsDoctorsListState extends State<HomeVisitsDoctorsList> {
 
 class HomeVisitDoctorDetailPage extends StatefulWidget {
   dynamic data;
+  String address;
 
-  HomeVisitDoctorDetailPage(this.data);
+  HomeVisitDoctorDetailPage(this.address,this.data);
 
   @override
   _HomeVisitDoctorDetailPageState createState() =>
@@ -799,7 +862,11 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
   String problems, homeAddress, date, phone;
   String myMessage = "Submit";
   DateTime selectedDate = DateTime.now();
-  String selctedDate_ = DateTime.now().year.toString()+"-"+DateTime.now().month.toString()+"-"+DateTime.now().day.toString();
+  String selctedDate_ = DateTime.now().year.toString() +
+      "-" +
+      DateTime.now().month.toString() +
+      "-" +
+      DateTime.now().day.toString();
 
   Future<Null> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -810,10 +877,13 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
     if (picked != null && picked != selectedDate)
       setState(() {
         selectedDate = picked;
-        selctedDate_ = picked.year.toString()+"-"+picked.month.toString()+"-"+picked.day.toString();
+        selctedDate_ = picked.year.toString() +
+            "-" +
+            picked.month.toString() +
+            "-" +
+            picked.day.toString();
         setState(() {
           date = selctedDate_;
-
         });
         showThisToast(selctedDate_);
       });
@@ -886,7 +956,9 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
                   Padding(
                     padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
                     child: TextFormField(
+                      initialValue: widget.address,
                       validator: (value) {
+
                         homeAddress = value;
                         if (value.isEmpty) {
                           return 'Please enter home address';
@@ -904,7 +976,6 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
                       autocorrect: false,
                     ),
                   ),
-
                   Padding(
                     padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
                     child: Container(
@@ -1646,7 +1717,6 @@ Widget myDrawer() {
             child: Image.asset("assets/facebook.png"),
           ),
           title: Text('Facebook'),
-
           onTap: () {
             const url = "https://www.facebook.com";
 
@@ -1659,7 +1729,8 @@ Widget myDrawer() {
             height: 25,
             width: 25,
             child: Image.asset("assets/youtube.png"),
-          ),          title: Text('Youtube'),
+          ),
+          title: Text('Youtube'),
           onTap: () {
             const url = "https://www.youtube.com";
 
@@ -1696,11 +1767,12 @@ Widget myDrawer() {
           },
         ),
         ListTile(
-            leading: SizedBox(
-              height: 25,
-              width: 25,
-              child: Image.asset("assets/logout.png"),
-            ),          title: Text('Logout'),
+          leading: SizedBox(
+            height: 25,
+            width: 25,
+            child: Image.asset("assets/logout.png"),
+          ),
+          title: Text('Logout'),
           onTap: () {
             setLoginStatus(false);
             runApp(LoginUI());
@@ -2714,9 +2786,8 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
                         child: ListTile(
                           trailing: Icon(Icons.arrow_right),
                           leading: CircleAvatar(
-                            backgroundImage: NetworkImage(
-                              _baseUrl_image+prescriptionList[index]["dr_info"]["photo"]
-                            ),
+                            backgroundImage: NetworkImage(_baseUrl_image +
+                                prescriptionList[index]["dr_info"]["photo"]),
                           ),
                           title: new Text(
                             (prescriptionList[index]["dr_info"] == null
@@ -3143,16 +3214,14 @@ class _PrescriptionsReviedBodyState
 
 class TestRecomendationWidget extends StatefulWidget {
   @override
-  _TestRecomendationState createState() =>
-      _TestRecomendationState();
+  _TestRecomendationState createState() => _TestRecomendationState();
 }
 
 class _TestRecomendationState extends State<TestRecomendationWidget> {
   List prescriptionReviewList = [];
 
-
   Future<String> getData() async {
-    showThisToast("user id "+UID);
+    showThisToast("user id " + UID);
     final http.Response response = await http.post(
       _baseUrl + 'test-recommendation-list',
       headers: <String, String>{
@@ -3228,7 +3297,9 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: new Text(
-                            prescriptionReviewList[index]["test_recommendation_info"].toString(),
+                            prescriptionReviewList[index]
+                                    ["test_recommendation_info"]
+                                .toString(),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -3362,19 +3433,28 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
   String address;
 
   int selected = 0;
+  String currentLocation = "Current location";
 
   PageController pageController = PageController(
     initialPage: 0,
     keepPage: true,
   );
 
-  _getCurrentLocation() {
+  _getCurrentLocation() async{
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+
+
 
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
+        .then((Position position) async{
+      List<Placemark> p = await geolocator.placemarkFromCoordinates(
+          position.latitude, position.longitude);
+      Placemark place = p[0];
+    //  showThisToast("${place.locality}, ${place.postalCode}, ${place.country}");
       setState(() {
+        currentLocation = "${place.name}, ${place.postalCode}, ${place.country}";
+        address = "${place.name}, ${place.postalCode}, ${place.country}";
         latitude = position.latitude;
         longitude = position.longitude;
       });
@@ -3382,6 +3462,8 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
       print(e);
     });
   }
+
+
 
   Widget buildPageView(BuildContext context) {
     return Stack(
@@ -3391,7 +3473,7 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
           left: 0,
           right: 0,
           bottom: 60,
-          child: HomeVisitsDoctorsList(),
+          child: HomeVisitsDoctorsList(address),
         ),
         Align(
           alignment: Alignment.bottomCenter,
@@ -3404,7 +3486,7 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     (latitude != null)
-                        ? Text("Current location")
+                        ? Text(currentLocation)
                         : Text("Getting your location"),
                     FlatButton(
                       onPressed: () async {
@@ -3425,19 +3507,21 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
                         // double latitude = detail.result.geometry.location.lat;
                         // double longitude = detail.result.geometry.location.lng;
                         String address = prediction.description;
+                      //  showThisToast(address);
 
                         setState(() {
+                          currentLocation = address;
                           latitude = detail.result.geometry.location.lat;
                           longitude = detail.result.geometry.location.lng;
                         });
                       },
                       child: Padding(
                           padding: EdgeInsets.fromLTRB(0, 0, 00, 0),
-                          child: Text("Change Location",
+                          child: Text("Change",
                               style: TextStyle(
                                   color: tColor,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 18))),
+                                  fontSize: 14))),
                     )
                   ],
                 ),
