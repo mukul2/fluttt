@@ -1011,7 +1011,9 @@ class _HomeVisitWidgetState extends State<HomeVisitWidget> {
                             subtitle: new Text(
                               appointments[index]["home_address"] +
                                   " , " +
-                                  appointments[index]["phone"],
+                                  appointments[index]["phone"]+
+                                  "\n" +
+                                  appointments[index]["problems"],
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -1141,72 +1143,75 @@ class _ConfirmedListWidgetState extends State<ConfirmedListWidget> {
                                   confirmedList[index]["patient_info"]
                                       ["photo"])));
                     },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(00.0),
-                      ),
-                      child: Column(
-                        children: <Widget>[
-                          ListTile(
-                            trailing: Icon(Icons.keyboard_arrow_right),
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(_baseUrl_image +
-                                  confirmedList[index]["patient_info"]
-                                      ["photo"]),
-                            ),
-                            title: new Text(
-                              confirmedList[index]["patient_info"]["name"],
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: new Text(
-                              confirmedList[index]["problems"],
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              RaisedButton(
-                                color: Colors.white,
-                                elevation: 0,
-                                onPressed: () async {
-                                  final http.Response response =
-                                      await http.post(
-                                    _baseUrl + 'change-appointment-status',
-                                    headers: <String, String>{
-                                      'Content-Type':
-                                          'application/json; charset=UTF-8',
-                                      'Authorization': AUTH_KEY,
-                                    },
-                                    body: jsonEncode(<String, String>{
-                                      'status': "3",
-                                      'appointment_id': (confirmedList[index]
-                                              ["id"])
-                                          .toString()
-                                    }),
-                                  );
-                                  dynamic res = json.decode(response.body);
-                                  //   showThisToast(res["message"]);
-                                  this.getData();
-                                },
-                                child: Text("Mark as Served"),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(00.0),
+                        ),
+                        child: Column(
+                          children: <Widget>[
+                            ListTile(
+                              trailing: Icon(Icons.keyboard_arrow_right),
+                              leading: CircleAvatar(
+                                backgroundImage: NetworkImage(_baseUrl_image +
+                                    confirmedList[index]["patient_info"]
+                                    ["photo"]),
                               ),
-                              RaisedButton(
-                                color: Colors.white,
-                                elevation: 0,
-                                onPressed: () async {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              ChamberAppointmentPrescriptionWriteWidget(
-                                                  confirmedList[index])));
-                                },
-                                child: Text("Make Prescription"),
-                              )
-                            ],
-                          ),
-                        ],
+                              title: new Text(
+                                confirmedList[index]["patient_info"]["name"],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: new Text(
+                               "Appointment Date : "+ confirmedList[index]["date"]+ "\n"+confirmedList[index]["problems"],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                RaisedButton(
+                                  color: Colors.white,
+                                  elevation: 0,
+                                  onPressed: () async {
+                                    final http.Response response =
+                                    await http.post(
+                                      _baseUrl + 'change-appointment-status',
+                                      headers: <String, String>{
+                                        'Content-Type':
+                                        'application/json; charset=UTF-8',
+                                        'Authorization': AUTH_KEY,
+                                      },
+                                      body: jsonEncode(<String, String>{
+                                        'status': "3",
+                                        'appointment_id': (confirmedList[index]
+                                        ["id"])
+                                            .toString()
+                                      }),
+                                    );
+                                    dynamic res = json.decode(response.body);
+                                    //   showThisToast(res["message"]);
+                                    this.getData();
+                                  },
+                                  child: Text("Mark as Served"),
+                                ),
+                                RaisedButton(
+                                  color: Colors.white,
+                                  elevation: 0,
+                                  onPressed: () async {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ChamberAppointmentPrescriptionWriteWidget(
+                                                    confirmedList[index])));
+                                  },
+                                  child: Text("Make Prescription"),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ));
               },
@@ -1260,100 +1265,103 @@ class _PendingListWidgetState extends State<PendingListWidget> {
               itemBuilder: (BuildContext context, int index) {
                 return new InkWell(
                     onTap: () {},
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(00.0),
-                      ),
-                      child: Column(
-                        children: <Widget>[
-                          ListTile(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(00.0),
+                        ),
+                        child: Column(
+                          children: <Widget>[
+                            ListTile(
 
-                            trailing: Icon(Icons.keyboard_arrow_right),
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(_baseUrl_image +
-                                  pendingList[index]["patient_info"]["photo"]),
-                            ),
-                            title: new Text(
-                              pendingList[index]["patient_info"]["name"],
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: new Text(
-                              pendingList[index]["problems"],
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            onTap: (){
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          PatientFullProfileView(
-                                              AUTH_KEY,
-                                              pendingList[index]
-                                              ["patient_info"]["id"]
-                                                  .toString(),
-                                              pendingList[index]
-                                              ["patient_info"]["name"],
-                                              pendingList[index]
-                                              ["patient_info"]
-                                              ["photo"])));
-                            },
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-
-                              RaisedButton(
-                                color: Colors.white,
-                                elevation: 0,
-                                onPressed: () async {
-                                  final http.Response response =
-                                      await http.post(
-                                    _baseUrl + 'change-appointment-status',
-                                    headers: <String, String>{
-                                      'Content-Type':
-                                          'application/json; charset=UTF-8',
-                                      'Authorization': AUTH_KEY,
-                                    },
-                                    body: jsonEncode(<String, String>{
-                                      'status': "1",
-                                      'appointment_id':
-                                          (pendingList[index]["id"]).toString()
-                                    }),
-                                  );
-                                  dynamic res = json.decode(response.body);
-                                  //  showThisToast(res["message"]);
-                                  this.getData();
-                                },
-                                child: Text("Confirm"),
+                              trailing: Icon(Icons.keyboard_arrow_right),
+                              leading: CircleAvatar(
+                                backgroundImage: NetworkImage(_baseUrl_image +
+                                    pendingList[index]["patient_info"]["photo"]),
                               ),
-                              RaisedButton(
-                                color: Colors.white,
-                                elevation: 0,
-                                onPressed: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              GiveTestRecomdActivity(
+                              title: new Text(
+                                pendingList[index]["patient_info"]["name"],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: new Text(
+                                "Appointment Date : "+ pendingList[index]["date"]+ "\n"+  pendingList[index]["problems"],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              onTap: (){
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            PatientFullProfileView(
+                                                AUTH_KEY,
                                                 pendingList[index]
-                                                        ["id"]
+                                                ["patient_info"]["id"]
                                                     .toString(),
-                                                function: (data) {
+                                                pendingList[index]
+                                                ["patient_info"]["name"],
+                                                pendingList[index]
+                                                ["patient_info"]
+                                                ["photo"])));
+                              },
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+
+                                RaisedButton(
+                                  color: Colors.white,
+                                  elevation: 0,
+                                  onPressed: () async {
+                                    final http.Response response =
+                                    await http.post(
+                                      _baseUrl + 'change-appointment-status',
+                                      headers: <String, String>{
+                                        'Content-Type':
+                                        'application/json; charset=UTF-8',
+                                        'Authorization': AUTH_KEY,
+                                      },
+                                      body: jsonEncode(<String, String>{
+                                        'status': "1",
+                                        'appointment_id':
+                                        (pendingList[index]["id"]).toString()
+                                      }),
+                                    );
+                                    dynamic res = json.decode(response.body);
+                                    //  showThisToast(res["message"]);
+                                    this.getData();
+                                  },
+                                  child: Text("Confirm"),
+                                ),
+                                RaisedButton(
+                                  color: Colors.white,
+                                  elevation: 0,
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                GiveTestRecomdActivity(
+                                                  pendingList[index]
+                                                  ["id"]
+                                                      .toString(),
+                                                  function: (data) {
                                                     //showThisToast("im hit hit hit wioth "+data.length.toString());
-                                                  setState(() {
+                                                    setState(() {
 //                                                selectedDepartment =
 //                                                    data["id"].toString();
 //                                                txtSelectDepartment =
 //                                                    data["name"].toString();
-                                                  });
-                                                },
-                                              )));
-                                },
-                                child: Text("Test Recommendation"),
-                              )
-                            ],
-                          ),
-                        ],
+                                                    });
+                                                  },
+                                                )));
+                                  },
+                                  child: Text("Test Recommendation"),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ));
               },

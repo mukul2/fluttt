@@ -767,8 +767,12 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
 
                                 }),
                               );
-                              mainP();
-                              showThisToast("Please wait while your pending transaction gets approved");
+                              if(response.statusCode == 200){
+                                mainP();
+                                showThisToast("Please wait while your pending transaction gets approved");
+                              }else{
+                                showThisToast("Error occured");
+                              }
 
 //
 //                              Navigator.push(
