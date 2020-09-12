@@ -2913,9 +2913,9 @@ Widget medicinesListOfAPrescriptionWidget(medicineList) {
                       borderRadius: BorderRadius.circular(00.0),
                     ),
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(15, 10, 10, 10),
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
                       child: ListTile(
-                        leading: Icon(Icons.accessible_forward),
+                        leading: Icon(Icons.label_important),
                         title: new Text(medicineList["medicine_info"][index2]
                             ["medicine_name_info"]["name"]),
                         subtitle: createMedicineDoseWid(
@@ -3221,7 +3221,7 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
   List prescriptionReviewList = [];
 
   Future<String> getData() async {
-    showThisToast("user id " + UID);
+   // showThisToast("user id " + UID);
     final http.Response response = await http.post(
       _baseUrl + 'test-recommendation-list',
       headers: <String, String>{
@@ -3230,8 +3230,8 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
       },
       body: jsonEncode(<String, String>{'patient_id': UID}),
     );
-    showThisToast(response.statusCode.toString());
-    showThisToast(response.body);
+    //showThisToast(response.statusCode.toString());
+    //showThisToast(response.body);
     this.setState(() {
       prescriptionReviewList = json.decode(response.body);
       // showThisToast(prescriptionReviewList.toString());
@@ -3265,16 +3265,14 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
               itemBuilder: (BuildContext context, int index) {
                 return new InkWell(
                     onTap: () {
-//                      print(prescriptionReviewList[index]);
-//                      if (prescriptionReviewList[index]["is_reviewed"] == 1) {
-//                        Navigator.push(
-//                            context,
-//                            MaterialPageRoute(
-//                                builder: (context) =>
-//                                    PrescriptionsReviedBodyState(
-//                                        prescriptionReviewList[index])));
-//                      } else
-//                        showThisToast("Not Reviewed Yet");
+
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    TestRecomendationView(
+                                        prescriptionReviewList[index])));
+
                     },
                     child: Card(
                       shape: RoundedRectangleBorder(
@@ -3298,7 +3296,7 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
                           ),
                           subtitle: new Text(
                             prescriptionReviewList[index]
-                                    ["test_recommendation_info"]
+                                    ["problems"]
                                 .toString(),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
@@ -3314,6 +3312,92 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
               )),
     );
   }
+}
+
+class TestRecomendationView extends StatefulWidget {
+  dynamic testRecomBody ;
+  TestRecomendationView(this.testRecomBody);
+
+  @override
+  _TestRecomendationViewWidgetState createState() =>
+      _TestRecomendationViewWidgetState();
+}
+
+class _TestRecomendationViewWidgetState extends State<TestRecomendationView> {
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Test Recommendation Details"),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              title: Text("Problems"),
+              subtitle: Text(widget.testRecomBody["problems"]),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(15,0,0,0),
+              child: Text("Recommened Tests"),
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: widget.testRecomBody["test_recommendation_info"] == null
+                  ? 0
+                  : widget.testRecomBody["test_recommendation_info"].length,
+              itemBuilder: (BuildContext context, int index) {
+                return new InkWell(
+                  onTap: () {
+//                      Navigator.push(
+//                          context,
+//                          MaterialPageRoute(
+//                              builder: (context) =>
+//                                  TestRecomendationView(
+//                                      prescriptionReviewList[index])));
+
+                  },
+                  child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(00.0),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(05),
+                        child: ListTile(
+                          subtitle: new Text(widget.testRecomBody["test_recommendation_info"][index]["test_info"]["type"]),
+                         // trailing: Icon(Icons.keyboard_arrow_right),
+                          leading: Icon(Icons.label_important),
+                          title: new Text(widget.testRecomBody["test_recommendation_info"][index]["test_info"]["name"],
+
+
+                          ),
+                        ),
+                      )),
+
+
+                );
+              }
+    )
+
+
+
+          ],
+        ),
+      ),
+
+    );
+  }
+
 }
 
 class PrescriptionsReviewWidget extends StatefulWidget {
@@ -3334,12 +3418,13 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
       },
       body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
     );
-    showThisToast(response.statusCode.toString());
-    showThisToast(response.body);
+    //showThisToast(response.statusCode.toString());
+   // showThisToast(response.body);
     this.setState(() {
       prescriptionReviewList = json.decode(response.body);
       // showThisToast(prescriptionReviewList.toString());
     });
+    print(response.body);
     return "Success!";
   }
 
@@ -3375,8 +3460,15 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    PrescriptionsReviedBodyState(
+                                    PrescriptionsReviewBodyWidget2(
                                         prescriptionReviewList[index])));
+
+//                        Navigator.push(
+//                            context,
+//                            MaterialPageRoute(
+//                                builder: (context) =>
+//                                    PrescriptionsReviedBodyState(
+//                                        prescriptionReviewList[index])));
                       } else
                         showThisToast("Not Reviewed Yet");
                     },
@@ -3419,6 +3511,186 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
     );
   }
 }
+
+
+
+class PrescriptionsReviewBodyWidget2 extends StatefulWidget {
+  dynamic prescriptionReview;
+
+  PrescriptionsReviewBodyWidget2(this.prescriptionReview);
+  @override
+  _PrescriptionsReviewBodyWidget2State createState() => _PrescriptionsReviewBodyWidget2State();
+}
+
+class _PrescriptionsReviewBodyWidget2State extends State<PrescriptionsReviewBodyWidget2> {
+  List prescriptionReviewList = [];
+  dynamic oldPrescription;
+  dynamic newPrescription;
+
+  Future<String> getData() async {
+    final http.Response response = await http.post(
+      _baseUrl + 'get-my-recheck-requests',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': AUTH_KEY,
+      },
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
+    );
+    this.setState(() {
+      prescriptionReviewList = json.decode(response.body);
+      //showThisToast(prescriptionReviewList.toString());
+    });
+    return "Success!";
+  }
+
+  Future<String> getOldPrescription() async {
+    showThisToast(widget.prescriptionReview["old_prescription_id"].toString());
+
+    final http.Response response = await http.post(
+      _baseUrl + 'get_single_prescription_info',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': AUTH_KEY,
+      },
+      body: jsonEncode(<String, String>{
+        'id': widget.prescriptionReview["old_prescription_id"].toString(),
+      }),
+    );
+    this.setState(() {
+      print("Single Prescriptin");
+      oldPrescription = json.decode(response.body);
+
+      print(oldPrescription);
+    });
+    showThisToast(response.statusCode.toString());
+    return "Success!";
+  }
+
+  Future<String> getNewPrescription() async {
+    final http.Response response = await http.post(
+      _baseUrl + 'get_single_prescription_info',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': AUTH_KEY,
+      },
+      body: jsonEncode(<String, String>{
+        'id': widget.prescriptionReview["new_prescription_id"].toString(),
+      }),
+    );
+   // showThisToast("new pr download "+response.statusCode.toString());
+
+    this.setState(() {
+      print("Single Prescriptin");
+      newPrescription = json.decode(response.body);
+
+      print(newPrescription);
+    });
+    return "Success!";
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    print("review page api hit starts");
+    print("orescription id " +
+        widget.prescriptionReview["old_prescription_id"].toString());
+
+   // this.getData();
+    this.getOldPrescription();
+    this.getNewPrescription();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        child: DefaultTabController(
+          length: 3,
+          child: Scaffold(
+            appBar: AppBar(
+
+              title: Text("Review From Doctor"),
+              bottom: new PreferredSize(
+                preferredSize: Size.fromHeight(kToolbarHeight),
+                child: new Container(
+
+                  height: 50.0,
+                  child: new TabBar(
+                    tabs: [
+                      Tab(
+                        text: "Summery",
+                      ), Tab(
+                        text: "Old Prescription",
+                      ),
+                      Tab(text: "New Prescription"),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            body: TabBarView(
+              children: [
+               Padding(
+                 padding: EdgeInsets.fromLTRB(15, 10, 0, 0),
+                 child:  Column(
+                   mainAxisAlignment: MainAxisAlignment.start,
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Text("Patient's Comment :"),
+                     Text(widget.prescriptionReview["patient_comment"]),
+                     Text("Doctors's Comment :"),
+                     Text(widget.prescriptionReview["dr_comment"].toString()),
+
+                   ],
+                 ),
+               ),
+                ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(00, 0, 0, 0),
+                      child: ListTile(
+                        title: Text("Doctors Comment"),
+                        subtitle: Text(oldPrescription != null
+                            ? oldPrescription["diseases_name"]
+                            : "Loading"),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(15, 0, 0, 5),
+                      child: Text("Medicines"),
+                    ),
+                    medicinesListOfAPrescriptionWidget(oldPrescription)
+                  ],
+                ),
+               ListView(
+                 children: [
+                   Padding(
+                     padding: EdgeInsets.fromLTRB(00, 0, 0, 0),
+                     child: ListTile(
+                       title: Text("Doctors Comment"),
+                       subtitle: Text(newPrescription != null
+                           ? newPrescription["diseases_name"]
+                           : "Loading"),
+                     ),
+                   ),
+                   Padding(
+                     padding: EdgeInsets.fromLTRB(15, 0, 0, 5),
+                     child: Text("Medicines"),
+                   ),
+                   medicinesListOfAPrescriptionWidget(newPrescription)
+                 ],
+               )
+              ],
+            ),
+          ),
+        ));
+  }
+}
+
+
+
+
 
 class HomeVisitViewPagerWid extends StatefulWidget {
   @override

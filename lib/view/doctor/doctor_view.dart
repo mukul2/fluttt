@@ -142,8 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       BottomNavigationBarItem(
           icon: Icon(
-            Icons.supervised_user_circle
-            ,
+            Icons.supervised_user_circle,
             color: Colors.blue,
           ),
           title: Text(
@@ -327,7 +326,8 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-              )), //chambeer app
+              )),
+          //chambeer app
           InkWell(
               onTap: () {
                 Navigator.push(
@@ -361,7 +361,8 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-              )), //pending
+              )),
+          //pending
           InkWell(
               onTap: () {
 //                Navigator.push(
@@ -394,7 +395,8 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-              )), //subscriptions
+              )),
+          //subscriptions
           InkWell(
               onTap: () {
                 Navigator.push(
@@ -425,7 +427,8 @@ class _HomeState extends State<Home> {
                             ))
                       ],
                     )),
-              )), //chat
+              )),
+          //chat
 //          InkWell(
 //              onTap: () {
 //                Navigator.push(context,
@@ -489,7 +492,8 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-              )), //pres request
+              )),
+          //pres request
           InkWell(
               onTap: () {
                 Navigator.push(
@@ -523,7 +527,8 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-              )), //Prescription Review
+              )),
+          //Prescription Review
 
           InkWell(
               onTap: () {
@@ -593,7 +598,8 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-              )), //earnings
+              )),
+          //earnings
           InkWell(
               onTap: () {
                 // _controller.jumpTo(_controller.position.maxScrollExtent);
@@ -629,7 +635,57 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-              )), //
+              )),
+          InkWell(
+              onTap: () {
+//                  Navigator.push(
+//                      context,
+//                      MaterialPageRoute(
+//                          builder: (context) => HomeVisitsDoctorsList()));
+
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            FollowupVideoAppointmentListActivityDoctor(
+                                AUTH_KEY, UID)));
+              },
+              child: Container(
+                height: 110,
+                child: Card(
+                  margin: EdgeInsets.all(0.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0.0),
+                  ),
+                  color: Colors.white,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Container(
+                        height: 48,
+                        width: 48,
+                        child: Image.asset(
+                          "assets/video_call_img.png",
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Center(
+                        child: Padding(
+                            padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+                            child: Text(
+                              "Follow up Online Appointment",
+                              style: TextStyle(
+                                color: Color(0xFF34448c),
+                              ),
+                              textAlign: TextAlign.center,
+                            )),
+                      )
+                    ],
+                  ),
+                ),
+              )),
+          //
         ],
       ),
     );
@@ -644,6 +700,7 @@ class MyEarningsWidget extends StatefulWidget {
 class _MyEarningsWidgetState extends State<MyEarningsWidget> {
   String totalBill = "";
   String allWidthdraw = "";
+  String wallet = "";
   List billDetails = [];
   List widthdrawDetails = [];
 
@@ -661,6 +718,7 @@ class _MyEarningsWidgetState extends State<MyEarningsWidget> {
       totalBill = jsonResponse["total_bill"].toString();
       allWidthdraw = jsonResponse["all_widthdraw"].toString();
       billDetails = jsonResponse["bill_details"];
+      wallet = jsonResponse["wallet"].toString();
       //print(appointments.toString());
     });
     return "Success!";
@@ -707,9 +765,9 @@ class _MyEarningsWidgetState extends State<MyEarningsWidget> {
         ),
         body: TabBarView(
           children: [
-            EarningSummeryWidget(totalBill, allWidthdraw),
+            EarningSummeryWidget(totalBill, allWidthdraw,wallet),
             EarningCollectionsWidget(billDetails),
-            EarningWidthDrawWidget(widthdrawDetails),
+            EarningWidthDrawWidget(widthdrawDetails,wallet),
           ],
         ),
       ),
@@ -721,8 +779,9 @@ class EarningSummeryWidget extends StatefulWidget {
   String totalBill;
 
   String allWidthdraw;
+  String wallet;
 
-  EarningSummeryWidget(this.totalBill, this.allWidthdraw);
+  EarningSummeryWidget(this.totalBill, this.allWidthdraw,this.wallet);
 
   @override
   _EarningSummeryWidgetState createState() => _EarningSummeryWidgetState();
@@ -779,6 +838,30 @@ class _EarningSummeryWidgetState extends State<EarningSummeryWidget> {
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
                     child: Text(widget.allWidthdraw + " BDT",
+                        textAlign: TextAlign.justify),
+                  ),
+                )
+              ],
+            ),
+            Divider(
+              height: 1,
+              color: Colors.grey,
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
+                    child: Text(
+                      "Available Balance",
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
+                    child: Text(widget.wallet+ " BDT",
                         textAlign: TextAlign.justify),
                   ),
                 )
@@ -852,8 +935,9 @@ class _EarningCollectionsWidgetState extends State<EarningCollectionsWidget> {
 
 class EarningWidthDrawWidget extends StatefulWidget {
   List billDetails = [];
+  String wallet;
 
-  EarningWidthDrawWidget(this.billDetails);
+  EarningWidthDrawWidget(this.billDetails,this.wallet);
 
   @override
   _EarningWidthDrawWidgetState createState() => _EarningWidthDrawWidgetState();
@@ -867,42 +951,173 @@ class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: (widget.billDetails.length > 0)
-            ? new ListView.builder(
-                shrinkWrap: true,
-                itemCount:
-                    widget.billDetails == null ? 0 : widget.billDetails.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0.0),
-                    ),
-                    child: Padding(
-                        padding: EdgeInsets.all(0),
-                        child: Column(
-                          children: <Widget>[
-                            ListTile(
-                              leading: Text(widget.billDetails[index]["amount"]
-                                  .toString()),
-                              title: new Text(
-                                widget.billDetails[index]["created_at"]
-                                    .toString(),
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: new Text(
-                                widget.billDetails[index]["status"].toString(),
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
+    return Stack(
+      children: [
+        Scaffold(
+            body: (widget.billDetails.length > 0)
+                ? new ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: widget.billDetails == null
+                        ? 0
+                        : widget.billDetails.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0.0),
+                        ),
+                        child: Padding(
+                            padding: EdgeInsets.all(0),
+                            child: Column(
+                              children: <Widget>[
+                                ListTile(
+                                  leading: Text(widget.billDetails[index]
+                                          ["amount"]
+                                      .toString()),
+                                  title: new Text(
+                                    widget.billDetails[index]["created_at"]
+                                        .toString(),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: new Text(
+                                    widget.billDetails[index]["status"]
+                                        .toString(),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            )),
+                      );
+                    },
+                  )
+                : Center(
+                    child: Text("No Data"),
+                  )),
+        Positioned(
+
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: InkWell(
+            onTap: (){
+              final _formKey = GlobalKey<FormState>();
+              String amount,bank;
+              return showDialog<void>(
+                context: context,
+                barrierDismissible: false, // user must tap button!
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('Request for Withdrawl'),
+                    content: SingleChildScrollView(
+                      child: ListBody(
+                        children: <Widget>[
+                          ListTile(
+                            title: Text("Available in wallet"),
+                            subtitle: Text(widget.wallet),
+                          ),
+                          Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                                  child: TextFormField(
+                                    initialValue: "",
+                                    validator: (value) {
+                                      amount = value;
+                                      if (value.isEmpty) {
+                                        return 'Please enter withdraw amount';
+                                      }
+                                      return null;
+                                    },
+                                    decoration: InputDecoration(
+                                        fillColor: Colors.white10,
+                                        border: OutlineInputBorder(
+                                            borderSide: BorderSide(color: Colors.pink)),
+                                        enabledBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(color: Colors.blue)),
+                                        labelText: "Amount"),
+                                    keyboardType: TextInputType.number,
+                                    autocorrect: false,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                                  child: TextFormField(
+                                    initialValue: "",
+                                    validator: (value) {
+                                      bank = value;
+                                      if (value.isEmpty) {
+                                        return 'Please enter bank details';
+                                      }
+                                      return null;
+                                    },
+                                    decoration: InputDecoration(
+                                        fillColor: Colors.white10,
+                                        border: OutlineInputBorder(
+                                            borderSide: BorderSide(color: Colors.pink)),
+                                        enabledBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(color: Colors.blue)),
+                                        labelText: "Bank Info"),
+                                    keyboardType: TextInputType.text,
+                                    autocorrect: false,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        )),
+                          )
+                        ],
+                      ),
+                    ),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text('Cancel'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      FlatButton(
+                        child: Text('Request'),
+                        onPressed: () {
+                          if (_formKey.currentState.validate()) {
+                            if(double.parse(amount)<=double.parse(widget.wallet) )
+                              {
+                                showThisToast("permitted");
+                              }else{
+                              showThisToast("not permitted");
+
+                            }
+                            var status =
+                            request_withdraw(AUTH_KEY, UID, amount,bank);
+
+                            status.then(
+                                    (value) => Navigator.of(context).pop());
+                          }
+                        },
+                      ),
+                    ],
                   );
                 },
-              )
-            : Center(
-                child: Text("No Data"),
-              ));
+              );
+            },
+            child: Card(
+
+              color: Colors.blue,
+              child: Center(
+
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+                  child: Text("Withdraw Request"
+                    ,style: TextStyle(color: Colors.white),),
+                ),
+              ),
+            ),
+          ),
+        )
+      ],
+    );
   }
 }
 
@@ -1011,7 +1226,7 @@ class _HomeVisitWidgetState extends State<HomeVisitWidget> {
                             subtitle: new Text(
                               appointments[index]["home_address"] +
                                   " , " +
-                                  appointments[index]["phone"]+
+                                  appointments[index]["phone"] +
                                   "\n" +
                                   appointments[index]["problems"],
                               style: TextStyle(fontWeight: FontWeight.bold),
@@ -1156,14 +1371,17 @@ class _ConfirmedListWidgetState extends State<ConfirmedListWidget> {
                               leading: CircleAvatar(
                                 backgroundImage: NetworkImage(_baseUrl_image +
                                     confirmedList[index]["patient_info"]
-                                    ["photo"]),
+                                        ["photo"]),
                               ),
                               title: new Text(
                                 confirmedList[index]["patient_info"]["name"],
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: new Text(
-                               "Appointment Date : "+ confirmedList[index]["date"]+ "\n"+confirmedList[index]["problems"],
+                                "Appointment Date : " +
+                                    confirmedList[index]["date"] +
+                                    "\n" +
+                                    confirmedList[index]["problems"],
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -1175,17 +1393,17 @@ class _ConfirmedListWidgetState extends State<ConfirmedListWidget> {
                                   elevation: 0,
                                   onPressed: () async {
                                     final http.Response response =
-                                    await http.post(
+                                        await http.post(
                                       _baseUrl + 'change-appointment-status',
                                       headers: <String, String>{
                                         'Content-Type':
-                                        'application/json; charset=UTF-8',
+                                            'application/json; charset=UTF-8',
                                         'Authorization': AUTH_KEY,
                                       },
                                       body: jsonEncode(<String, String>{
                                         'status': "3",
                                         'appointment_id': (confirmedList[index]
-                                        ["id"])
+                                                ["id"])
                                             .toString()
                                       }),
                                     );
@@ -1274,21 +1492,24 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                         child: Column(
                           children: <Widget>[
                             ListTile(
-
                               trailing: Icon(Icons.keyboard_arrow_right),
                               leading: CircleAvatar(
                                 backgroundImage: NetworkImage(_baseUrl_image +
-                                    pendingList[index]["patient_info"]["photo"]),
+                                    pendingList[index]["patient_info"]
+                                        ["photo"]),
                               ),
                               title: new Text(
                                 pendingList[index]["patient_info"]["name"],
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: new Text(
-                                "Appointment Date : "+ pendingList[index]["date"]+ "\n"+  pendingList[index]["problems"],
+                                "Appointment Date : " +
+                                    pendingList[index]["date"] +
+                                    "\n" +
+                                    pendingList[index]["problems"],
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              onTap: (){
+                              onTap: () {
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -1296,35 +1517,35 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                                             PatientFullProfileView(
                                                 AUTH_KEY,
                                                 pendingList[index]
-                                                ["patient_info"]["id"]
+                                                        ["patient_info"]["id"]
                                                     .toString(),
                                                 pendingList[index]
-                                                ["patient_info"]["name"],
+                                                    ["patient_info"]["name"],
                                                 pendingList[index]
-                                                ["patient_info"]
-                                                ["photo"])));
+                                                        ["patient_info"]
+                                                    ["photo"])));
                               },
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: <Widget>[
-
                                 RaisedButton(
                                   color: Colors.white,
                                   elevation: 0,
                                   onPressed: () async {
                                     final http.Response response =
-                                    await http.post(
+                                        await http.post(
                                       _baseUrl + 'change-appointment-status',
                                       headers: <String, String>{
                                         'Content-Type':
-                                        'application/json; charset=UTF-8',
+                                            'application/json; charset=UTF-8',
                                         'Authorization': AUTH_KEY,
                                       },
                                       body: jsonEncode(<String, String>{
                                         'status': "1",
-                                        'appointment_id':
-                                        (pendingList[index]["id"]).toString()
+                                        'appointment_id': (pendingList[index]
+                                                ["id"])
+                                            .toString()
                                       }),
                                     );
                                     dynamic res = json.decode(response.body);
@@ -1342,8 +1563,7 @@ class _PendingListWidgetState extends State<PendingListWidget> {
                                         MaterialPageRoute(
                                             builder: (context) =>
                                                 GiveTestRecomdActivity(
-                                                  pendingList[index]
-                                                  ["id"]
+                                                  pendingList[index]["id"]
                                                       .toString(),
                                                   function: (data) {
                                                     //showThisToast("im hit hit hit wioth "+data.length.toString());
@@ -1414,19 +1634,16 @@ class _GiveTestRecomdActivityState extends State<GiveTestRecomdActivity> {
           Padding(
             padding: EdgeInsets.fromLTRB(0, 0, 15, 0),
             child: GestureDetector(
-              onTap: ()  async {
+              onTap: () async {
                 print(widget.selected.toString());
                 //widget.function(widget.selected);
-                for(int i = 0 ;i<widget.selected.length;i++){
-                  final Map<String, dynamic> data =
-                  new Map<String, dynamic>();
+                for (int i = 0; i < widget.selected.length; i++) {
+                  final Map<String, dynamic> data = new Map<String, dynamic>();
                   //data['id'] = widget.testList[index]["id"].toString();
                   data['test_id'] = widget.selected[i].toString();
                   widget.selectedForUp.add(data);
-
                 }
                 //add-test-recommendation
-
 
                 final http.Response response = await http.post(
                   _baseUrl + 'add-test-recommendation',
@@ -1439,20 +1656,15 @@ class _GiveTestRecomdActivityState extends State<GiveTestRecomdActivity> {
                     'test_ids': widget.selected.toString(),
                   }),
                 );
-                print( widget.selected);
-                if(response.statusCode ==200){
+                print(widget.selected);
+                if (response.statusCode == 200) {
                   Navigator.of(context).pop(true);
-
-                }else{
+                } else {
                   print(response.body);
-
                 }
-
-
               },
               child: Icon(Icons.done_all),
             ),
-
           )
         ],
         title: Text("Choose Tests"),
@@ -2884,6 +3096,100 @@ class _AddMedicineWidgetState extends State<AddMedicineWidget> {
   }
 }
 
+class FollowupVideoAppointmentListActivityDoctor extends StatefulWidget {
+  String AUTH, USER_ID;
+
+  FollowupVideoAppointmentListActivityDoctor(this.AUTH, this.USER_ID);
+
+  @override
+  _FollowupVideoAppointmentListActivityDoctorState createState() =>
+      _FollowupVideoAppointmentListActivityDoctorState();
+}
+
+class _FollowupVideoAppointmentListActivityDoctorState
+    extends State<FollowupVideoAppointmentListActivityDoctor> {
+  List data = [];
+
+  Future getData() async {
+    body = <String, String>{
+      'user_type': "doctor",
+      'isFollowup': "1",
+      'id': widget.USER_ID
+    };
+    String apiResponse =
+        await makePostReq("get_video_appointment_list", widget.AUTH, body);
+    this.setState(() {
+      data = json.decode(apiResponse);
+    });
+  }
+
+  @override
+  void initState() {
+    this.getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Followup Video Appointments"),
+      ),
+      body: data.length > 0
+          ? ListView.builder(
+              shrinkWrap: true,
+              itemCount: data == null ? 0 : data.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new InkWell(
+                  onTap: () {
+                    String chatRoom = createChatRoomName(
+                        int.parse(widget.USER_ID),
+                        data[index]["patient_info"]["id"]);
+                    CHAT_ROOM = chatRoom;
+                    showThisToast(chatRoom);
+                    // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ChatScreen(
+                                widget.USER_ID,
+                                UNAME,
+                                _baseUrl_image +
+                                    data[index]["patient_info"]["photo"],
+                                data[index]["patient_info"]["id"].toString(),
+                                data[index]["patient_info"]["name"],
+                                _baseUrl_image +
+                                    data[index]["patient_info"]["photo"],
+                                chatRoom)));
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(00.0),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(0),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(_baseUrl_image +
+                              data[index]["patient_info"]["photo"]),
+                        ),
+                        title: Text(data[index]["patient_info"]["name"]),
+                        subtitle: Text(
+                          "Send a Message/Call",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            )
+          : Center(
+              child: Text("No Data"),
+            ),
+    );
+  }
+}
+
 Widget AmbulanceBodyWidget(dynamic ambulanceBody) {
   return Scaffold(
     appBar: AppBar(
@@ -3336,7 +3642,7 @@ Widget myDrawer() {
                     child: CircleAvatar(
                       radius: 50,
                       backgroundImage:
-                      NetworkImage(_baseUrl_image + USER_PHOTO),
+                          NetworkImage(_baseUrl_image + USER_PHOTO),
                     )),
                 Padding(
                     padding: EdgeInsets.fromLTRB(0, 10, 0, 25),
@@ -3360,7 +3666,6 @@ Widget myDrawer() {
             child: Image.asset("assets/facebook.png"),
           ),
           title: Text('Facebook'),
-
           onTap: () {
             const url = "https://www.facebook.com";
 
@@ -3373,7 +3678,8 @@ Widget myDrawer() {
             height: 25,
             width: 25,
             child: Image.asset("assets/youtube.png"),
-          ),          title: Text('Youtube'),
+          ),
+          title: Text('Youtube'),
           onTap: () {
             const url = "https://www.youtube.com";
 
@@ -3414,7 +3720,8 @@ Widget myDrawer() {
             height: 25,
             width: 25,
             child: Image.asset("assets/logout.png"),
-          ),          title: Text('Logout'),
+          ),
+          title: Text('Logout'),
           onTap: () {
             setLoginStatus(false);
             runApp(LoginUI());
@@ -3553,7 +3860,6 @@ class _BasicProfileState extends State<BasicProfile> {
               ),
             ),
           )),
-
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 00),
             child: Card(

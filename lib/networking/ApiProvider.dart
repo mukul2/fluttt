@@ -219,8 +219,7 @@ Future<LoginResponse> fetchDepartList(String email, String password) async {
   }
 }
 
-Future<dynamic> updateDisplayName(
-    String auth, String userID, String name) async {
+Future<dynamic> updateDisplayName(String auth, String userID, String name) async {
   final http.Response response = await http.post(
     _baseUrl + 'update-user-info',
     headers: <String, String>{
@@ -238,7 +237,24 @@ Future<dynamic> updateDisplayName(
     throw Exception('Failed to load album');
   }
 }
-
+Future<dynamic> request_withdraw(String auth, String userID, String amout,String bank) async {
+  final http.Response response = await http.post(
+    _baseUrl + 'add_withdrawal_request',
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': auth,
+    },
+    body: jsonEncode(<String, String>{'amount': amout, 'dr_id': userID,'bankinfo':bank}),
+  );
+  // showThisToast(response.statusCode.toString());
+  if (response.statusCode == 200) {
+    return json.decode(response.body);
+    // return LoginResponse.fromJson(json.decode(response.body));
+  } else {
+    showThisToast((response.statusCode).toString());
+    throw Exception('Failed to load album');
+  }
+}
 Future<dynamic> addDiseasesHistory(String auth,String uid,
     String name, String startdate, String status) async {
   final http.Response response = await http.post(
