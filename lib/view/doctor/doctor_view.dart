@@ -479,7 +479,7 @@ class _HomeState extends State<Home> {
                         height: 48,
                         width: 48,
                         child: Image.asset(
-                          "assets/transfusion.png",
+                          "assets/rx.png",
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -514,7 +514,7 @@ class _HomeState extends State<Home> {
                         height: 48,
                         width: 48,
                         child: Image.asset(
-                          "assets/pharmacy.png",
+                          "assets/note.png",
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -550,7 +550,7 @@ class _HomeState extends State<Home> {
                         height: 48,
                         width: 48,
                         child: Image.asset(
-                          "assets/examination.png",
+                          "assets/meeting.png",
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -585,7 +585,7 @@ class _HomeState extends State<Home> {
                         height: 48,
                         width: 48,
                         child: Image.asset(
-                          "assets/help.png",
+                          "assets/portfolio.png",
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -622,7 +622,7 @@ class _HomeState extends State<Home> {
                         height: 48,
                         width: 48,
                         child: Image.asset(
-                          "assets/help.png",
+                          "assets/home_run.png",
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -638,11 +638,8 @@ class _HomeState extends State<Home> {
               )),
           InkWell(
               onTap: () {
-//                  Navigator.push(
-//                      context,
-//                      MaterialPageRoute(
-//                          builder: (context) => HomeVisitsDoctorsList()));
-
+                // _controller.jumpTo(_controller.position.maxScrollExtent);
+                //
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -650,14 +647,10 @@ class _HomeState extends State<Home> {
                             FollowupVideoAppointmentListActivityDoctor(
                                 AUTH_KEY, UID)));
               },
-              child: Container(
-                height: 110,
-                child: Card(
-                  margin: EdgeInsets.all(0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(0.0),
-                  ),
-                  color: Colors.white,
+              child: Card(
+                color: Colors.white,
+                child: Container(
+                  height: 110,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -670,21 +663,20 @@ class _HomeState extends State<Home> {
                           fit: BoxFit.cover,
                         ),
                       ),
-                      Center(
-                        child: Padding(
-                            padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                            child: Text(
-                              "Follow up Online Appointment",
-                              style: TextStyle(
-                                color: Color(0xFF34448c),
-                              ),
-                              textAlign: TextAlign.center,
-                            )),
-                      )
+                      Padding(
+                          padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+                          child: Text(
+                            "Follow up Online Appointment",
+                            style: TextStyle(
+                              color: Color(0xFF34448c),
+                            ),
+                            textAlign: TextAlign.center,
+                          ))
                     ],
                   ),
                 ),
               )),
+
           //
         ],
       ),
@@ -813,7 +805,7 @@ class _EarningSummeryWidgetState extends State<EarningSummeryWidget> {
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
-                    child: Text(widget.totalBill + " BDT",
+                    child: Text(widget.totalBill + " USD",
                         textAlign: TextAlign.justify),
                   ),
                 )
@@ -837,7 +829,7 @@ class _EarningSummeryWidgetState extends State<EarningSummeryWidget> {
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
-                    child: Text(widget.allWidthdraw + " BDT",
+                    child: Text(widget.allWidthdraw + " USD",
                         textAlign: TextAlign.justify),
                   ),
                 )
@@ -861,7 +853,7 @@ class _EarningSummeryWidgetState extends State<EarningSummeryWidget> {
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
-                    child: Text(widget.wallet+ " BDT",
+                    child: Text(widget.wallet+ " USD",
                         textAlign: TextAlign.justify),
                   ),
                 )
@@ -1435,7 +1427,7 @@ class _ConfirmedListWidgetState extends State<ConfirmedListWidget> {
               },
             )
           : Center(
-              child: Text("No Appointmnt Data"),
+              child: Text("No Appointment Data"),
             ),
     );
   }
@@ -1587,7 +1579,7 @@ class _PendingListWidgetState extends State<PendingListWidget> {
               },
             )
           : Center(
-              child: Text("No Appointmnt Data"),
+              child: Text("No Appointment Data"),
             ),
     );
   }
@@ -1753,12 +1745,13 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
       body: jsonEncode(<String, String>{
         'user_type': "doctor",
         'id': UID,
+        'isFollowup': "0",
       }),
     );
     this.setState(() {
       VideoCallListList = json.decode(response.body);
       print(VideoCallListList.toString());
-      // showThisToast((confirmedList.length).toString());
+       showThisToast((VideoCallListList.length).toString());
     });
   }
 
@@ -1832,7 +1825,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                           children: <Widget>[
                             Flexible(
                               child: CheckboxListTile(
-                                title: Text("Served"),
+                                title: Text("Done"),
                                 value: VideoCallListList[index]
                                             ["appointment_status"] ==
                                         1
@@ -1909,7 +1902,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
               },
             )
           : Center(
-              child: Text("No Appointmnt Data"),
+              child: Text("No Appointment Data"),
             ),
     );
   }
@@ -3132,60 +3125,146 @@ class _FollowupVideoAppointmentListActivityDoctorState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Followup Video Appointments"),
+        title: Text("Followup Video Calls"),
       ),
-      body: data.length > 0
+      body: (data != null && data.length > 0)
           ? ListView.builder(
-              shrinkWrap: true,
-              itemCount: data == null ? 0 : data.length,
-              itemBuilder: (BuildContext context, int index) {
-                return new InkWell(
+        shrinkWrap: true,
+        itemCount:
+        data == null ? 0 : data.length,
+        itemBuilder: (BuildContext context, int index) {
+          return Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(00.0),
+            ),
+            child: Column(
+              children: <Widget>[
+                ListTile(
                   onTap: () {
                     String chatRoom = createChatRoomName(
-                        int.parse(widget.USER_ID),
-                        data[index]["patient_info"]["id"]);
+                        int.parse(UID),
+                        int.parse(data[index]["patient_info"]
+                        ["id"]
+                            .toString()));
                     CHAT_ROOM = chatRoom;
                     showThisToast(chatRoom);
-                    // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => ChatScreen(
-                                widget.USER_ID,
+                                data[index]["patient_info"]
+                                ["id"]
+                                    .toString(),
+                                data[index]["patient_info"]
+                                ["name"],
+                                data[index]["patient_info"]
+                                ["photo"],
+                                UID,
                                 UNAME,
-                                _baseUrl_image +
-                                    data[index]["patient_info"]["photo"],
-                                data[index]["patient_info"]["id"].toString(),
-                                data[index]["patient_info"]["name"],
-                                _baseUrl_image +
-                                    data[index]["patient_info"]["photo"],
+                                UPHOTO,
                                 chatRoom)));
                   },
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(00.0),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(0),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(_baseUrl_image +
-                              data[index]["patient_info"]["photo"]),
-                        ),
-                        title: Text(data[index]["patient_info"]["name"]),
-                        subtitle: Text(
-                          "Send a Message/Call",
-                          style: TextStyle(color: Colors.blue),
+                  trailing: Icon(Icons.call),
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage((_baseUrl_image +
+                        data[index]["patient_info"]
+                        ["photo"])
+                        .toString()),
+                  ),
+                  title: new Text(
+                    data[index]["patient_info"]["name"],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: new Text(
+                    data[index]["created_at"],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      Flexible(
+                        child: CheckboxListTile(
+                          title: Text("Done"),
+                          value: data[index]
+                          ["appointment_status"] ==
+                              1
+                              ? true
+                              : false,
+                          onChanged: (bool newValue) async {
+                            final http.Response response =
+                            await http.post(
+                              _baseUrl +
+                                  'change_video_appointment_status',
+                              headers: <String, String>{
+                                'Content-Type':
+                                'application/json; charset=UTF-8',
+                                'Authorization': AUTH_KEY,
+                              },
+                              body: jsonEncode(<String, String>{
+                                'status': newValue ? "1" : "0",
+                                'appointment_id':
+                                (data[index]["id"])
+                                    .toString()
+                              }),
+                            );
+                            //     showThisToast((response.statusCode).toString());
+                            this.getData();
+                          },
+                          controlAffinity: ListTileControlAffinity
+                              .leading, //  <-- leading Checkbox
                         ),
                       ),
-                    ),
+                      Flexible(
+                        child: RaisedButton(
+                          color: Colors.white,
+                          elevation: 0,
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        PatientFullProfileView(
+                                            AUTH_KEY,
+                                            data[index]
+                                            ["patient_info"]["id"]
+                                                .toString(),
+                                            data[index]
+                                            ["patient_info"]["name"],
+                                            data[index]
+                                            ["patient_info"]
+                                            ["photo"])));
+                          },
+                          child: Text("View Profile"),
+                        ),
+                      ),
+                      Flexible(
+                        child: RaisedButton(
+                          color: Colors.white,
+                          elevation: 0,
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        VideoAppointmentPrescriptionWriteWidget(
+                                            data[index])));
+                          },
+                          child: Text("Give Prescription"),
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
-            )
-          : Center(
-              child: Text("No Data"),
+                )
+              ],
             ),
+          );
+        },
+      )
+          : Center(
+        child: Text("No Appointment Data"),
+      ),
     );
   }
 }

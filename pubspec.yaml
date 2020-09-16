@@ -108,6 +108,11 @@ flutter:
     - assets/logout.png
     - assets/video_call_img.png
     - assets/window.png
+    - assets/rx.png
+    - assets/note.png
+    - assets/portfolio.png
+    - assets/meeting.png
+    - assets/home_run.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

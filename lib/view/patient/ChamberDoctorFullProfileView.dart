@@ -1,4 +1,3 @@
-
 import 'package:appxplorebd/networking/ApiProvider.dart';
 import 'package:appxplorebd/networking/Const.dart';
 import 'package:appxplorebd/projPaypal/PaypalPayment.dart';
@@ -39,12 +38,11 @@ class ChamberDoctorFullProfileView extends StatefulWidget {
 
 class HomePageState extends State<ChamberDoctorFullProfileView> {
   Future<String> getData() async {
-
     Future<SharedPreferences> _prefs =
     SharedPreferences.getInstance();
     SharedPreferences prefs;
     prefs = await _prefs;
-    AUTH_KEY =  prefs.getString("auth");
+    AUTH_KEY = prefs.getString("auth");
     final http.Response response = await http.post(
       "http://telemedicine.drshahidulislam.com/api/" +
           'doctor-education-chamber-info',
@@ -69,7 +67,7 @@ class HomePageState extends State<ChamberDoctorFullProfileView> {
 
   @override
   void initState() {
- /*   Future<SharedPreferences> _prefs =
+    /*   Future<SharedPreferences> _prefs =
     SharedPreferences.getInstance();
     SharedPreferences prefs;
     prefs = await _prefs;
@@ -261,38 +259,52 @@ Widget chamberBooking(chamber_info, BuildContext context) {
         child: new Column(
 
           children: <Widget>[
-          Card(
+            Card(
 
-            child:   ListTile(
-              leading:  Padding(
-                padding: EdgeInsets.fromLTRB(0, 0, 00, 0),
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  child: Expanded(
-                    child: CircleAvatar(
-                      backgroundImage: NetworkImage( "http://telemedicine.drshahidulislam.com/" + photo_),
+              child: ListTile(
+                leading: Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 00, 0),
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    child: Expanded(
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(
+                            "http://telemedicine.drshahidulislam.com/" +
+                                photo_),
+                      ),
                     ),
                   ),
                 ),
+                trailing: Text((chamber_info["fee"]).toString() + " USD"),
+                title: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Your Doctor", style: TextStyle(fontSize: 12),),
+                    Text(name_, style: TextStyle(color: Colors.black),),
+                    Text(designation_title_, style: TextStyle(fontSize: 12),)
+                  ],
+                ),
               ),
-              trailing: Text((chamber_info["fee"]).toString()+" BDT"),
-              title:Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Your Doctor",style: TextStyle(fontSize: 12),),
-                  Text(name_,style: TextStyle(color: Colors.black),),
-                  Text(designation_title_,style: TextStyle(fontSize: 12),)
-                ],
-              ) ,
             ),
-          ),
+
+            Card(
+                child: ListTile(
+                  leading: Icon(Icons.label_important),
+                  title: Text("Chamber Name"),
+                  subtitle: Text((chamber_info["address"]).toString()),
+                ),
+            ),
+            Card(
+                child: ListTile(
+                  leading: Icon(Icons.label_important),
+                  title: Text("Followup Fees"),
+                  subtitle: Text((chamber_info["follow_up_fee"]).toString()),
+                ),
+            ),
 //
-//            ListTile(
-//              title: Text("Chamber Name"),
-//              subtitle: Text((chamber_info["address"]).toString()),
-//            ),
+
 //            Divider(
 //              color: Colors.grey,
 //              height: 1,
@@ -313,10 +325,7 @@ Widget chamberBooking(chamber_info, BuildContext context) {
 //              color: Colors.grey,
 //              height: 1,
 //            ),
-//            ListTile(
-//              title: Text("Followup Fees"),
-//              subtitle: Text((chamber_info["follow_up_fee"]).toString()),
-//            ),
+
 //
 //            Divider(
 //              color: Colors.grey,
@@ -374,7 +383,6 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
       endTimesList[int.parse(chamber_days[k]["day"].toString())] =
           (chamber_days[k]["end_time"]).toString();
     }
-
   }
 
   // showThisToast((chamber_days[0]["day"]).toString());
@@ -612,8 +620,9 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
                 Text("Opening Time " + startTimesList[datesListWeekMap[i]]),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(0,0,0,15),
-                child: Text("Closing Time " + endTimesList[datesListWeekMap[i]]),
+                padding: EdgeInsets.fromLTRB(0, 0, 0, 15),
+                child: Text(
+                    "Closing Time " + endTimesList[datesListWeekMap[i]]),
               ),
               Padding(
                 padding: EdgeInsets.all(0),
@@ -622,21 +631,21 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
                     color: Colors.pink,
                     child: Text("Book Appointment",
                         style: TextStyle(color: Colors.white)),
-                    onPressed: () async{
-
+                    onPressed: () async {
                       Future<SharedPreferences> _prefs =
                       SharedPreferences.getInstance();
                       SharedPreferences prefs;
                       prefs = await _prefs;
-                      String auth =  prefs.getString("auth");
-                      String uid =  prefs.getString("uid");
+                      String auth = prefs.getString("auth");
+                      String uid = prefs.getString("uid");
 
                       SELECTED_DATE = datesList[i];
                       showThisToast(SELECTED_DATE);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) =>
-                                appointmentFormWidget(chamber_id,SELECTED_DATE,auth,uid)));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) =>
+                              appointmentFormWidget(
+                                  chamber_id, SELECTED_DATE, auth, uid)));
                     },
                   ),
                 ),
@@ -706,13 +715,15 @@ int getMonthCount(int month) {
 //),
 //)
 
-Widget appointmentFormWidget(String chamberID, String DATE,String auth,String uid) {
+Widget appointmentFormWidget(String chamberID, String DATE, String auth,
+    String uid) {
   return Scaffold(
     appBar: AppBar(
       title: Text("Confirm Appointment"),
     ),
     body: SingleChildScrollView(
-        child: AppointmentConfirmForm(id_.toString(), chamberID, DATE,auth,uid)),
+        child: AppointmentConfirmForm(
+            id_.toString(), chamberID, DATE, auth, uid)),
   );
 }
 

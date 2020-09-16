@@ -1,3 +1,4 @@
+
 import 'dart:math';
 
 import 'package:appxplorebd/chat/model/chat_message.dart';
@@ -218,6 +219,8 @@ Future<LoginResponse> fetchDepartList(String email, String password) async {
     throw Exception('Failed to load album');
   }
 }
+
+
 
 Future<dynamic> updateDisplayName(String auth, String userID, String name) async {
   final http.Response response = await http.post(

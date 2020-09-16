@@ -220,15 +220,22 @@ class MyCustomFormState extends State<MyCustomForm> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text(
-            "Telemedicine",
-            style: TextStyle(
-                color: Color(0xFF34448c),
-                fontSize: 30,
-                fontWeight: FontWeight.bold),
+//          Text(
+//            "Telemedicine",
+//            style: TextStyle(
+//                color: Color(0xFF34448c),
+//                fontSize: 30,
+//                fontWeight: FontWeight.bold),
+//          ),
+          Center(
+            child: Container(
+              height: 150,
+              width: 250,
+              child: Image.asset("assets/logo2.jpeg"),
+            ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
+            padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
             child: TextFormField(
               initialValue: "",
               validator: (value) {

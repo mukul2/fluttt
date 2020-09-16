@@ -1693,13 +1693,13 @@ Widget myDrawer() {
                     child: CircleAvatar(
                       radius: 50,
                       backgroundImage:
-                          NetworkImage(_baseUrl_image + USER_PHOTO),
+                          NetworkImage(_baseUrl_image + UPHOTO),
                     )),
                 Padding(
                     padding: EdgeInsets.fromLTRB(0, 10, 0, 25),
                     child: new Center(
                       child: Text(
-                        USER_NAME,
+                        UNAME,
                         style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -3726,7 +3726,9 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
     //  showThisToast("${place.locality}, ${place.postalCode}, ${place.country}");
       setState(() {
         currentLocation = "${place.name}, ${place.postalCode}, ${place.country}";
+        //currentLocation = place.locality;
         address = "${place.name}, ${place.postalCode}, ${place.country}";
+        //address =place.administrativeArea;
         latitude = position.latitude;
         longitude = position.longitude;
       });

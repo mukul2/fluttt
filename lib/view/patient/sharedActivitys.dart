@@ -7,6 +7,7 @@ import 'package:appxplorebd/view/patient/patient_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_maps_webservice/directions.dart';
 import 'package:http/http.dart' as http;
 
 final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
@@ -51,9 +52,13 @@ class _VideoAppointmentListActivityPatientState
   List data = [];
 
   Future getData() async {
-    body = <String, String>{'user_type': "patient" ,'isFollowup':"0",'id': widget.USER_ID};
+    body = <String, String>{
+      'user_type': "patient",
+      'isFollowup': "0",
+      'id': widget.USER_ID
+    };
     String apiResponse =
-    await makePostReq("get_video_appointment_list", widget.AUTH, body);
+        await makePostReq("get_video_appointment_list", widget.AUTH, body);
     this.setState(() {
       data = json.decode(apiResponse);
     });
@@ -72,56 +77,55 @@ class _VideoAppointmentListActivityPatientState
       ),
       body: data.length > 0
           ? ListView.builder(
-        shrinkWrap: true,
-        itemCount: data == null ? 0 : data.length,
-        itemBuilder: (BuildContext context, int index) {
-          return new InkWell(
-            onTap: () {
-              String chatRoom = createChatRoomName(
-                  int.parse(widget.USER_ID),
-                  data[index]["dr_info"]["id"]);
-              CHAT_ROOM = chatRoom;
-              showThisToast(chatRoom);
-              // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                          widget.USER_ID,
-                          UNAME,
-                          _baseUrl_image +
-                              data[index]["dr_info"]["photo"],
-                          data[index]["dr_info"]["id"].toString(),
-                          data[index]["dr_info"]["name"],
-                          _baseUrl_image +
-                              data[index]["dr_info"]["photo"],
-                          chatRoom)));
-            },
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(00.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(0),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: NetworkImage(
-                        _baseUrl_image + data[index]["dr_info"]["photo"]),
+              shrinkWrap: true,
+              itemCount: data == null ? 0 : data.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new InkWell(
+                  onTap: () {
+                    String chatRoom = createChatRoomName(
+                        int.parse(widget.USER_ID),
+                        data[index]["dr_info"]["id"]);
+                    CHAT_ROOM = chatRoom;
+                    showThisToast(chatRoom);
+                    // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ChatScreen(
+                                data[index]["dr_info"]["id"].toString(),
+                                data[index]["dr_info"]["name"],
+                                _baseUrl_image +
+                                    data[index]["dr_info"]["photo"],
+                                widget.USER_ID,
+                                UNAME,
+                                UPHOTO,
+                                chatRoom)));
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(00.0),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(0),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(
+                              _baseUrl_image + data[index]["dr_info"]["photo"]),
+                        ),
+                        title: Text(data[index]["dr_info"]["name"]),
+                        subtitle: Text(
+                          "Send a Message",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ),
                   ),
-                  title: Text(data[index]["dr_info"]["name"]),
-                  subtitle: Text(
-                    "Send a Message",
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      )
+                );
+              },
+            )
           : Center(
-        child: Text("No Data"),
-      ),
+              child: Text("No Data"),
+            ),
     );
   }
 }
@@ -141,9 +145,13 @@ class _FollowupVideoAppointmentListActivityPatientState
   List data = [];
 
   Future getData() async {
-    body = <String, String>{'user_type': "patient",'isFollowup':"1", 'id': widget.USER_ID};
+    body = <String, String>{
+      'user_type': "patient",
+      'isFollowup': "1",
+      'id': widget.USER_ID
+    };
     String apiResponse =
-    await makePostReq("get_video_appointment_list", widget.AUTH, body);
+        await makePostReq("get_video_appointment_list", widget.AUTH, body);
     this.setState(() {
       data = json.decode(apiResponse);
     });
@@ -162,66 +170,65 @@ class _FollowupVideoAppointmentListActivityPatientState
       ),
       body: data.length > 0
           ? ListView.builder(
-        shrinkWrap: true,
-        itemCount: data == null ? 0 : data.length,
-        itemBuilder: (BuildContext context, int index) {
-          return new InkWell(
-            onTap: () {
-              String chatRoom = createChatRoomName(
-                  int.parse(widget.USER_ID),
-                  data[index]["dr_info"]["id"]);
-              CHAT_ROOM = chatRoom;
-              showThisToast(chatRoom);
-              // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                          widget.USER_ID,
-                          UNAME,
-                          _baseUrl_image +
-                              data[index]["dr_info"]["photo"],
-                          data[index]["dr_info"]["id"].toString(),
-                          data[index]["dr_info"]["name"],
-                          _baseUrl_image +
-                              data[index]["dr_info"]["photo"],
-                          chatRoom)));
-            },
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(00.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(0),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: NetworkImage(
-                        _baseUrl_image + data[index]["dr_info"]["photo"]),
+              shrinkWrap: true,
+              itemCount: data == null ? 0 : data.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new InkWell(
+                  onTap: () {
+                    String chatRoom = createChatRoomName(
+                        int.parse(widget.USER_ID),
+                        data[index]["dr_info"]["id"]);
+                    CHAT_ROOM = chatRoom;
+                    showThisToast(chatRoom);
+                    // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ChatScreen(
+                                widget.USER_ID,
+                                UNAME,
+                                _baseUrl_image +
+                                    data[index]["dr_info"]["photo"],
+                                data[index]["dr_info"]["id"].toString(),
+                                data[index]["dr_info"]["name"],
+                                _baseUrl_image +
+                                    data[index]["dr_info"]["photo"],
+                                chatRoom)));
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(00.0),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(0),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(
+                              _baseUrl_image + data[index]["dr_info"]["photo"]),
+                        ),
+                        title: Text(data[index]["dr_info"]["name"]),
+                        subtitle: Text(
+                          "Send a Message",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ),
                   ),
-                  title: Text(data[index]["dr_info"]["name"]),
-                  subtitle: Text(
-                    "Send a Message",
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      )
+                );
+              },
+            )
           : Center(
-        child: Text("No Data"),
-      ),
+              child: Text("No Data"),
+            ),
     );
   }
 }
 
-
-
 class ChoosePrescriptionForPrescriptionreview extends StatefulWidget {
-  String AUTH, USER_ID,TRANS_ID,PAYPAL_ID,DR_ID;
+  String AUTH, USER_ID, TRANS_ID, PAYPAL_ID, DR_ID;
 
-  ChoosePrescriptionForPrescriptionreview(this.AUTH, this.USER_ID,this.DR_ID,this.TRANS_ID,this.PAYPAL_ID);
+  ChoosePrescriptionForPrescriptionreview(
+      this.AUTH, this.USER_ID, this.DR_ID, this.TRANS_ID, this.PAYPAL_ID);
 
   @override
   _ChoosePrescriptionForPrescriptionreviewState createState() =>
@@ -233,13 +240,12 @@ class _ChoosePrescriptionForPrescriptionreviewState
   List data = [];
 
   Future getData() async {
-
     body = <String, String>{'user_type': "patient", 'id': widget.USER_ID};
     String apiResponse =
         await makePostReq("get-prescription-info", widget.AUTH, body);
     this.setState(() {
       data = json.decode(apiResponse);
-      showThisToast("total pres found "+data.length.toString());
+      showThisToast("total pres found " + data.length.toString());
     });
   }
 
@@ -441,16 +447,16 @@ class _ChooseCommentForPresRecheckAndPublishState
     "Submit",
     style: TextStyle(color: Colors.white),
   );
+
   Future getData() async {
     body = <String, String>{'dr_id': widget.USER_ID};
-
   }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-   // this.getData();
+    // this.getData();
     //doctor-education-chamber-info
   }
 
@@ -461,114 +467,113 @@ class _ChooseCommentForPresRecheckAndPublishState
       appBar: AppBar(
         title: Text(""),
       ),
-      body:  Scaffold(
+      body: Scaffold(
         body: SingleChildScrollView(
             child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
-                    child: TextFormField(
-                      minLines: 3,
-                      maxLines: 5,
-                      validator: (value) {
-                        problem = value;
-                        if (value.isEmpty) {
-                          return 'Please write your problem';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                          alignLabelWithHint: true,
-                          labelStyle: TextStyle(color: Colors.blue),
-                          fillColor: Colors.white10,
-                          border: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.pink)),
-                          enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blue)),
-                          labelText: "Write write your problem"),
-                      keyboardType: TextInputType.emailAddress,
-                      autocorrect: false,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
-                    child: SizedBox(
-                        height: 50,
-                        width: double.infinity, // match_parent
-                        child: RaisedButton(
-                          color: Colors.blue,
-                          onPressed: () async {
-                            // Validate returns true if the form is valid, or false
-                            // otherwise.
-                            if (_formKey.currentState.validate()) {
-                              // If the form is valid, display a Snackbar.
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
+                child: TextFormField(
+                  minLines: 3,
+                  maxLines: 5,
+                  validator: (value) {
+                    problem = value;
+                    if (value.isEmpty) {
+                      return 'Please write your problem';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                      alignLabelWithHint: true,
+                      labelStyle: TextStyle(color: Colors.blue),
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.pink)),
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue)),
+                      labelText: "Write write your problem"),
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
+                child: SizedBox(
+                    height: 50,
+                    width: double.infinity, // match_parent
+                    child: RaisedButton(
+                      color: Colors.blue,
+                      onPressed: () async {
+                        // Validate returns true if the form is valid, or false
+                        // otherwise.
+                        if (_formKey.currentState.validate()) {
+                          // If the form is valid, display a Snackbar.
+                          setState(() {
+                            StandbyWid = Text("Please wait",
+                                style: TextStyle(color: Colors.white));
+                          });
+                          var body_ = jsonEncode(<String, String>{
+                            'patient_id': UID,
+                            'dr_id': widget.dr_id,
+                            'old_prescription_id': widget.old_pres_id,
+                            'patient_comment': problem,
+                            'payment_status': "1",
+                            'payment_details': widget.payment_details,
+                            'amount': widget.amount,
+                            'paypal_id': widget.paypal_id
+                          });
+                          final http.Response response = await http.post(
+                            _baseUrl + 'add-prescription-recheck-request',
+                            headers: <String, String>{
+                              'Content-Type': 'application/json; charset=UTF-8',
+                              'Authorization': A_KEY,
+                            },
+                            body: body_,
+                          );
+
+                          print(body_);
+                          if (response.statusCode == 200) {
+                            dynamic jsonRes = jsonDecode(response.body);
+                            if (jsonRes["status"]) {
                               setState(() {
-                                StandbyWid = Text("Please wait",
+                                StandbyWid = Text(
+                                    "Prescription Review request success",
                                     style: TextStyle(color: Colors.white));
                               });
-                              var body_ = jsonEncode(<String, String>{
-                                'patient_id': UID,
-                                'dr_id': widget.dr_id,
-                                'old_prescription_id': widget.old_pres_id,
-                                'patient_comment': problem,
-                                'payment_status': "1",
-                                'payment_details': widget.payment_details,
-                                'amount': widget.amount,
-                                'paypal_id': widget.paypal_id
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              showThisToast(jsonRes["message"]);
+                            } else {
+                              setState(() {
+                                StandbyWid = Text("Error occured",
+                                    style: TextStyle(color: Colors.white));
                               });
-                              final http.Response response = await http.post(
-                                _baseUrl + 'add-prescription-recheck-request',
-                                headers: <String, String>{
-                                  'Content-Type': 'application/json; charset=UTF-8',
-                                  'Authorization': A_KEY,
-                                },
-                                body: body_,
-                              );
+                              showThisToast("Error occured");
+                            }
+                          } else {
+                            showThisToast(response.statusCode.toString());
+                          }
 
-                              print(body_);
-                              if (response.statusCode == 200) {
-                                dynamic jsonRes = jsonDecode(response.body);
-                                if (jsonRes["status"]) {
-                                  setState(() {
-                                    StandbyWid = Text(
-                                        "Prescription Review request success",
-                                        style: TextStyle(color: Colors.white));
-                                  });
-                                  Navigator.of(context).pop();
-                                  Navigator.of(context).pop();
-                                  Navigator.of(context).pop();
-                                  Navigator.of(context).pop();
-                                  Navigator.of(context).pop();
-                                  Navigator.of(context).pop();
-                                  Navigator.of(context).pop();
-                                  showThisToast(jsonRes["message"]);
-                                } else {
-                                  setState(() {
-                                    StandbyWid = Text("Error occured",
-                                        style: TextStyle(color: Colors.white));
-                                  });
-                                  showThisToast("Error occured");
-                                }
-                              } else {
-                                showThisToast(response.statusCode.toString());
+                          //  showThisToast(response.statusCode.toString());
+                          //popup count
 
-                              }
-
-                              //  showThisToast(response.statusCode.toString());
-                              //popup count
-
-                            } else {}
-                          },
-                          child: StandbyWid,
-                        )),
-                  ),
-                ],
+                        } else {}
+                      },
+                      child: StandbyWid,
+                    )),
               ),
-            )),
+            ],
+          ),
+        )),
       ),
     );
   }
@@ -694,15 +699,15 @@ class _ChamberActivityState extends State<ChamberActivity> {
       appBar: AppBar(
         title: Text("Chamber Info"),
       ),
-      floatingActionButton: FloatingActionButton.extended(onPressed: (){
-
-
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ChamberAddctivity(widget.AUTH,
-                    widget.USER_ID)));
-      }, label: Text("Add a Chamber")),
+      floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        ChamberAddctivity(widget.AUTH, widget.USER_ID)));
+          },
+          label: Text("Add a Chamber")),
       body: data.length > 0
           ? ListView.builder(
               shrinkWrap: true,
@@ -842,8 +847,10 @@ class ChamberAddctivity extends StatefulWidget {
 
 class _ChamberAddctivityState extends State<ChamberAddctivity> {
   final _formKey = GlobalKey<FormState>();
-  String cname, caddress,fees,ffees;
+  String cname, caddress, fees, ffees;
   String myMessage = "Submit";
+  String txtSelectDays = "Add Chamber Opening Times";
+  var days;
 
   Widget StandbyWid = Text(
     "Add",
@@ -865,20 +872,12 @@ class _ChamberAddctivityState extends State<ChamberAddctivity> {
       appBar: AppBar(
         title: Text("Add New Chamber"),
       ),
-
       body: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Text(
-              "Telemedicine",
-              style: TextStyle(
-                  color: Color(0xFF34448c),
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold),
-            ),
             Padding(
               padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
               child: TextFormField(
@@ -928,9 +927,9 @@ class _ChamberAddctivityState extends State<ChamberAddctivity> {
               child: TextFormField(
                 initialValue: "",
                 validator: (value) {
-                  caddress = value;
+                  fees = value;
                   if (value.isEmpty) {
-                    return 'Please write chamber address';
+                    return 'Please write chamber Fees';
                   }
                   return null;
                 },
@@ -940,9 +939,59 @@ class _ChamberAddctivityState extends State<ChamberAddctivity> {
                         borderSide: BorderSide(color: Colors.pink)),
                     enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.blue)),
-                    labelText: "Chamber Address"),
-                keyboardType: TextInputType.emailAddress,
+                    labelText: "Chamber Fees"),
+                keyboardType: TextInputType.number,
                 autocorrect: false,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: TextFormField(
+                initialValue: "",
+                validator: (value) {
+                  ffees = value;
+                  if (value.isEmpty) {
+                    return 'Please write Followup Fees';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.pink)),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue)),
+                    labelText: "Followup Visit Fees"),
+                keyboardType: TextInputType.number,
+                autocorrect: false,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: Container(
+                decoration: myBoxDecoration(),
+                child: ListTile(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ChooseChamberDaysActivity(
+                                  function: (data) {
+                                    //  showThisToast("im hit hit hit wioth "+data);
+                                    setState(() {
+                                      print(data.toString());
+                                      days = data;
+//                                  selectedDepartment =
+//                                      data["id"].toString();
+//                                  txtSelectDepartment =
+//                                      data["name"].toString();
+                                    });
+                                  },
+                                )));
+                  },
+                  trailing: Icon(Icons.arrow_downward),
+                  title: Text(txtSelectDays),
+                ),
               ),
             ),
             Padding(
@@ -961,24 +1010,365 @@ class _ChamberAddctivityState extends State<ChamberAddctivity> {
                           StandbyWid = Text("Please wait");
                         });
 
-
+                        var body_ = jsonEncode(<String, String>{
+                          'dr_id': widget.USER_ID,
+                          'chamber_name': cname,
+                          'address': caddress,
+                          'fee': fees,
+                          'follow_up_fee': ffees,
+                          'days': jsonEncode(days)
+                        });
+                        final http.Response response = await http.post(
+                          _baseUrl + 'chamber-add',
+                          headers: <String, String>{
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            'Accept': 'application/json',
+                            'Authorization': widget.AUTH,
+                          },
+                          body: body_,
+                        );
+                        print(body_);
+                        showThisToast(response.statusCode.toString());
+                        print(response.body);
+                        if (response.statusCode == 200) {
+                          Navigator.of(context).pop();
+                        } else {
+                          showThisToast("Error occured");
+                        }
                       }
                     },
                     child: StandbyWid,
                   )),
             ),
-
           ],
         ),
       ),
-
-
     );
   }
 }
 //==
 
+//start
+class ChooseChamberDaysActivity extends StatefulWidget {
+  List timeTable = [
+    <String, String>{
+      'day': '1',
+      'name': 'Mon',
+      'start_time': '15:00',
+      'end_time': '23:59',
+      'status': '1'
+    },
+    <String, String>{
+      'day': '2',
+      'name': 'Tue',
+      'start_time': '15:00',
+      'end_time': '23:59',
+      'status': '1'
+    },
+    <String, String>{
+      'day': '3',
+      'name': 'Wed',
+      'start_time': '15:00',
+      'end_time': '23:59',
+      'status': '1'
+    },
+    <String, String>{
+      'day': '4',
+      'name': 'Thu',
+      'start_time': '15:00',
+      'end_time': '23:59',
+      'status': '1'
+    },
+    <String, String>{
+      'day': '5',
+      'name': 'Fri',
+      'start_time': '15:00',
+      'end_time': '23:59',
+      'status': '1'
+    },
+    <String, String>{
+      'day': '6',
+      'name': 'Sat',
+      'start_time': '15:00',
+      'end_time': '23:59',
+      'status': '1'
+    },
+    <String, String>{
+      'day': '0',
+      'name': 'Sun',
+      'start_time': '15:00',
+      'end_time': '23:59',
+      'status': '0'
+    },
+  ];
 
+  Function function;
+
+  //ChooseDeptActivity(this.deptList__, this.function);
+  ChooseChamberDaysActivity({Key key, this.function}) : super(key: key);
+
+  @override
+  _ChooseChamberDaysActivityState createState() =>
+      _ChooseChamberDaysActivityState();
+}
+
+class _ChooseChamberDaysActivityState extends State<ChooseChamberDaysActivity> {
+  // List deptList = ['Sat Day','Sunday','Monday','Tues Day'];
+  changeTimeFunctionOpening(data) {
+    int index = int.parse(data["index"]);
+    String hour = data["hour"];
+    String minute = data["minute"];
+    setState(() {
+      widget.timeTable[index]["start_time"] = hour + ":" + minute;
+    });
+  }
+
+  changeTimeFunctionClosing(data) {
+    int index = int.parse(data["index"]);
+    String hour = data["hour"];
+    String minute = data["minute"];
+    setState(() {
+      widget.timeTable[index]["end_time"] = hour + ":" + minute;
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    //  this.getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          Center(
+            child: InkWell(
+              onTap: () {
+                widget.function(widget.timeTable);
+                Navigator.of(context).pop();
+              },
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                child: Text("Finish & Return"),
+              ),
+            ),
+          )
+        ],
+        title: Text("Choose Days"),
+      ),
+      body: true
+          ? ListView.builder(
+              itemCount: widget.timeTable == null ? 0 : widget.timeTable.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new InkWell(
+                    onTap: () {
+                      setState(() {
+                        // widget.timeTable[index]["status"]=="1"?(widget.timeTable[index]["status"]=1):(widget.timeTable[index]["status"]=0);
+                      });
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0.0),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(0),
+                        child: ListTile(
+                          trailing: Switch(
+                            value: widget.timeTable[index]["status"] == "1"
+                                ? true
+                                : false,
+                            activeColor: Colors.blue,
+                            focusColor: Colors.blue,
+                            onChanged: (value) {
+                              setState(() {
+                                value
+                                    ? (widget.timeTable[index]["status"] = "1")
+                                    : (widget.timeTable[index]["status"] = "0");
+                              });
+                              // showThisToast(value.toString());
+                            },
+                          ),
+                          leading: Icon(Icons.access_time),
+                          title: new Text(
+                            widget.timeTable[index]["name"],
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: createSubtitleWidget(
+                              widget,
+                              index,
+                              changeTimeFunctionOpening,
+                              changeTimeFunctionClosing),
+                        ),
+                      ),
+                    ));
+              },
+            )
+          : Center(
+              child: Text(widget.timeTable.toString()),
+            ),
+    );
+  }
+
+  Widget createSubtitleWidget(ChooseChamberDaysActivity theWidget, int index,
+      Function changeTimeFunctionOpening, Function changeTimeFunctionClosing) {
+    return Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: () {
+              String hour = "00";
+              String minute = "00";
+
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                            appBar: AppBar(
+                              title: Text("Chamber Opening Time"),
+                            ),
+                            body: Center(
+                              child: Container(
+                                child: Column(
+                                  children: [
+                                    Container(
+                                        height:
+                                            MediaQuery.of(context).size.height /
+                                                4,
+                                        child: CupertinoDatePicker(
+                                          mode: CupertinoDatePickerMode.time,
+                                          //initialDateTime: DateTime(1969, 1, 1, _timeOfDay.hour, _timeOfDay.minute),
+                                          onDateTimeChanged:
+                                              (DateTime newDateTime) {
+                                            var newTod = TimeOfDay.fromDateTime(
+                                                newDateTime);
+                                            // _updateTimeFunction(newTod);
+                                            // showThisToast(newDateTime.hour.toString());
+                                            hour = newDateTime.hour.toString();
+                                            minute =
+                                                newDateTime.minute.toString();
+                                          },
+                                          use24hFormat: true,
+                                          minuteInterval: 1,
+                                        )), //double.infinity
+                                    SizedBox(
+                                      height: 50,
+                                      width: double.infinity,
+                                      child: InkWell(
+                                        onTap: () {
+                                          changeTimeFunctionOpening(<String,
+                                              String>{
+                                            'hour': hour,
+                                            'minute': minute,
+                                            'index': index.toString()
+                                          });
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Card(
+                                          color: Colors.blue,
+                                          child: Center(
+                                            child: Text(
+                                              "Done",
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )));
+
+              showThisToast("Clicked");
+            },
+            child: Text("Opens : " + theWidget.timeTable[index]["start_time"]),
+          ),
+        ),
+        Expanded(
+          child: InkWell(
+            onTap: () {
+              String hour = "00";
+              String minute = "00";
+
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                            appBar: AppBar(
+                              title: Text("Chamber Closing Time"),
+                            ),
+                            body: Center(
+                              child: Container(
+                                child: Column(
+                                  children: [
+                                    Container(
+                                        height:
+                                            MediaQuery.of(context).size.height /
+                                                4,
+                                        child: CupertinoDatePicker(
+                                          mode: CupertinoDatePickerMode.time,
+                                          //initialDateTime: DateTime(1969, 1, 1, _timeOfDay.hour, _timeOfDay.minute),
+                                          onDateTimeChanged:
+                                              (DateTime newDateTime) {
+                                            var newTod = TimeOfDay.fromDateTime(
+                                                newDateTime);
+                                            // _updateTimeFunction(newTod);
+                                            // showThisToast(newDateTime.hour.toString());
+                                            hour = newDateTime.hour.toString();
+                                            minute =
+                                                newDateTime.minute.toString();
+                                          },
+                                          use24hFormat: true,
+                                          minuteInterval: 1,
+                                        )), //double.infinity
+                                    SizedBox(
+                                      height: 50,
+                                      width: double.infinity,
+                                      child: InkWell(
+                                        onTap: () {
+                                          changeTimeFunctionClosing(<String,
+                                              String>{
+                                            'hour': hour,
+                                            'minute': minute,
+                                            'index': index.toString()
+                                          });
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Card(
+                                          color: Colors.blue,
+                                          child: Center(
+                                            child: Text(
+                                              "Done",
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )));
+
+              // showThisToast("Clicked");
+            },
+            child: Text("Closes : " + theWidget.timeTable[index]["end_time"]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+//ends
 
 String getDayName(int day) {
   String returnDay = "Error";
@@ -1044,10 +1434,7 @@ class myServicesWidget extends StatefulWidget {
   String AUTH, UID;
   Function function;
 
-  function_name() {
-
-
-  }
+  function_name() {}
 
   myServicesWidget(this.AUTH, this.UID);
 
@@ -1066,6 +1453,11 @@ class _myServicesWidgetState extends State<myServicesWidget> {
       data = json.decode(apiResponse);
       //showThisToast("skill row found "+data.length.toString());
     });
+  }
+
+  functionReloaded() {
+    this.getData();
+    this.getData_doc();
   }
 
   Future getData_doc() async {
@@ -1096,9 +1488,7 @@ class _myServicesWidgetState extends State<myServicesWidget> {
             itemCount: data == null ? 0 : data.length,
             itemBuilder: (BuildContext context, int index) {
               return new InkWell(
-                onTap: () {
-
-                },
+                onTap: () {},
                 child: Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(00.0),
@@ -1106,74 +1496,79 @@ class _myServicesWidgetState extends State<myServicesWidget> {
                   child: Padding(
                     padding: EdgeInsets.all(0),
                     child: ListTile(
-                      trailing: Checkbox(
-                        onChanged: (newvalue) async{
-                          showThisToast(newvalue.toString());
-                          if(newvalue){
+                        trailing: Checkbox(
+                          onChanged: (newvalue) async {
+                            showThisToast(newvalue.toString());
+                            if (newvalue) {
+                              var body_ = jsonEncode(<String, String>{
+                                'doctor_id': widget.UID,
+                                'online_service_id':
+                                    data[index]["id"].toString(),
+                                'fees_per_unit': "00"
+                              });
+                              final http.Response response = await http.post(
+                                _baseUrl + 'add-online-doctor-service',
+                                headers: <String, String>{
+                                  'Content-Type':
+                                      'application/json; charset=UTF-8',
+                                  'Accept': 'application/json',
+                                  'Authorization': widget.AUTH,
+                                },
+                                body: body_,
+                              );
+                              showThisToast(response.body);
+                              print(response.body);
 
+                              if (response.statusCode == 200) {
+                                this.getData();
+                                this.getData_doc();
+                              } else {
+                                showThisToast("Error Occured");
+                              }
+                            } else {
+                              //delete-online-doctor-service
+                              var body_ = jsonEncode(<String, String>{
+                                'doctor_id': widget.UID,
+                                'online_service_id':
+                                    data[index]["id"].toString(),
+                              });
+                              final http.Response response = await http.post(
+                                _baseUrl + 'delete-online-doctor-service',
+                                headers: <String, String>{
+                                  'Content-Type':
+                                      'application/json; charset=UTF-8',
+                                  'Accept': 'application/json',
+                                  'Authorization': widget.AUTH,
+                                },
+                                body: body_,
+                              );
+                              showThisToast(response.body);
+                              print(response.body);
 
-                            var body_ = jsonEncode(<String, String>{
-                              'doctor_id': widget.UID,
-                              'online_service_id': data[index]["id"].toString(),
-                              'fees_per_unit': "00"
-                            });
-                            final http.Response response = await http.post(
-                              _baseUrl + 'add-online-doctor-service',
-                              headers: <String, String>{
-                                'Content-Type': 'application/json; charset=UTF-8',
-                                'Accept': 'application/json',
-                                'Authorization':  widget.AUTH,
-                              },
-                              body: body_,
-                            );
-                            showThisToast(response.body);
-                            print(response.body);
-
-                            if(response.statusCode == 200){
-                              this.getData();
-                              this.getData_doc();
-                            }else{
-                              showThisToast("Error Occured");
+                              if (response.statusCode == 200) {
+                                this.getData();
+                                this.getData_doc();
+                              } else {
+                                showThisToast("Error Occured");
+                              }
                             }
-
-                          }else{
-                            //delete-online-doctor-service
-                            var body_ = jsonEncode(<String, String>{
-                              'doctor_id': widget.UID,
-                              'online_service_id': data[index]["id"].toString(),
-                            });
-                            final http.Response response = await http.post(
-                              _baseUrl + 'delete-online-doctor-service',
-                              headers: <String, String>{
-                                'Content-Type': 'application/json; charset=UTF-8',
-                                'Accept': 'application/json',
-
-                                'Authorization':  widget.AUTH,
-                              },
-                              body: body_,
-                            );
-                            showThisToast(response.body);
-                            print(response.body);
-
-                            if(response.statusCode == 200){
-                              this.getData();
-                              this.getData_doc();
-                            }else{
-                              showThisToast("Error Occured");
-                            }
-                          }
-
 
 //                          setState(() {
 //                            this.getData();
 //                            this.getData_doc();
 //                          });
-                        },
-                        value: getvalueBool(data[index]["id"], data_doc),
-                      ),
-                      title: Text(data[index]["name"]),
-                      subtitle: getfeesAmount(data[index]["id"], data_doc,context,widget.AUTH,widget.UID, widget.function_name)
-                    ),
+                          },
+                          value: getvalueBool(data[index]["id"], data_doc),
+                        ),
+                        title: Text(data[index]["name"]),
+                        subtitle: getfeesAmount(
+                            data[index]["id"],
+                            data_doc,
+                            context,
+                            widget.AUTH,
+                            widget.UID,
+                            widget.function_name,
+                            functionReloaded)),
                   ),
                 ),
               );
@@ -1186,7 +1581,8 @@ class _myServicesWidgetState extends State<myServicesWidget> {
 }
 
 //end
-Widget getfeesAmount(int serviceId, List data,BuildContext context,String auth, String uid,Function function,) {
+Widget getfeesAmount(int serviceId, List data, BuildContext context,
+    String auth, String uid, Function function, Function reload) {
   List<Widget> widgests = [];
   String dataFees = "00";
   //&&  data [i]["status"] == 1
@@ -1200,9 +1596,9 @@ Widget getfeesAmount(int serviceId, List data,BuildContext context,String auth, 
       }
     }
   }
-  widgests.add(Text(dataFees + " BDT"));
+  widgests.add(Text(dataFees + " USD"));
   InkWell inkWell = InkWell(
-    onTap: (){
+    onTap: () {
       final _formKey = GlobalKey<FormState>();
       String fees;
       return showDialog<void>(
@@ -1210,7 +1606,7 @@ Widget getfeesAmount(int serviceId, List data,BuildContext context,String auth, 
         barrierDismissible: false, // user must tap button!
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Add / Update Fees in BDT'),
+            title: Text('Add / Update Fees in USD'),
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[
@@ -1244,33 +1640,30 @@ Widget getfeesAmount(int serviceId, List data,BuildContext context,String auth, 
               ),
               FlatButton(
                 child: Text('Update'),
-                onPressed: () async{
+                onPressed: () async {
                   if (_formKey.currentState.validate()) {
                     //update-online-doctor-service-fees
                     var body_ = jsonEncode(<String, String>{
                       'doctor_id': uid,
                       'online_service_id': serviceId.toString(),
-                      'fees':fees,
+                      'fees': fees,
                     });
                     final http.Response response = await http.post(
                       _baseUrl + 'update-online-doctor-service-fees',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
                         'Accept': 'application/json',
-
-                        'Authorization':  auth,
+                        'Authorization': auth,
                       },
                       body: body_,
                     );
-                    if(response.statusCode == 200){
+                    if (response.statusCode == 200) {
                       Navigator.of(context).pop();
                       function();
-
-
-                    }else{
+                      reload.call();
+                    } else {
                       showThisToast("Error occured");
                     }
-
                   }
                 },
               ),
@@ -1297,22 +1690,20 @@ Widget getfeesAmount(int serviceId, List data,BuildContext context,String auth, 
   );
   return row;
 }
+
 //start
 class SetFeesActivity extends StatefulWidget {
   List deptList__ = [];
   Function function;
 
   //ChooseDeptActivity(this.deptList__, this.function);
-  SetFeesActivity(this.deptList__, {Key key, this.function})
-      : super(key: key);
+  SetFeesActivity(this.deptList__, {Key key, this.function}) : super(key: key);
 
   @override
   _SetFeesActivityState createState() => _SetFeesActivityState();
 }
 
 class _SetFeesActivityState extends State<SetFeesActivity> {
-
-
   @override
   void initState() {
     // TODO: implement initState
@@ -1325,10 +1716,10 @@ class _SetFeesActivityState extends State<SetFeesActivity> {
       appBar: AppBar(
         title: Text("Set Fees"),
       ),
-
     );
   }
 }
+
 //ends
 bool getvalueBool(int serviceId, List data) {
   bool value = false;
@@ -1345,7 +1736,7 @@ bool getvalueBool(int serviceId, List data) {
       }
     }
   } else {
-   // showThisToast("No data");
+    // showThisToast("No data");
   }
 
   return value;

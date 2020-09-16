@@ -103,6 +103,8 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
                   enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.blue)),
                   labelText: "Write your problems/symptoms"),
+              minLines: 3,
+              maxLines: 4,
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
             ),
@@ -125,7 +127,7 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
                   enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.blue)),
                   labelText: 'Contact phone number'),
-              keyboardType: TextInputType.emailAddress,
+              keyboardType: TextInputType.phone,
               autocorrect: false,
             ),
           ),
@@ -162,6 +164,9 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
                           "0",
                           "n");
                       if (appointmentSubmitRespons["status"]) {
+
+
+
                         Navigator.of(context).pop(true);
                         Navigator.of(context).pop(true);
                         Navigator.of(context).pop(true);
