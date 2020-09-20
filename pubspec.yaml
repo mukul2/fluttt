@@ -113,6 +113,10 @@ flutter:
     - assets/portfolio.png
     - assets/meeting.png
     - assets/home_run.png
+    - assets/man_.png
+    - heart_disease.png
+    - prescription_.png
+    - chemistry.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

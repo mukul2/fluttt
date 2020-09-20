@@ -1380,7 +1380,7 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Basic Information"),
             subtitle: Text("Update name,photo"),
-            leading: Icon(Icons.supervised_user_circle),
+            leading: Image.asset("assets/man_.png",width: 30,height: 30,),
           ),
           Divider(),
           ListTile(
@@ -1391,7 +1391,7 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Disease History"),
             subtitle: Text("Add/View your diseases history"),
-            leading: Icon(Icons.supervised_user_circle),
+            leading: Image.asset("heart_disease.png",width: 30,height: 30,),
           ),
           Divider(),
           ListTile(
@@ -1404,7 +1404,7 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Prescriptions"),
             subtitle: Text("Add/View your prescriptions"),
-            leading: Icon(Icons.supervised_user_circle),
+            leading: Image.asset("prescription_.png",width: 30,height: 30,),
           ),
           Divider(),
           ListTile(
@@ -1418,7 +1418,7 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Prescription Review"),
             subtitle: Text("View your prescription request and responses"),
-            leading: Icon(Icons.supervised_user_circle),
+            leading: Image.asset("prescription_.png",width: 30,height: 30,),
           ),
           Divider(),
           ListTile(
@@ -1432,7 +1432,7 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Test Recommendations"),
             subtitle: Text("View your recommended tests from doctors"),
-            leading: Icon(Icons.supervised_user_circle),
+            leading: Image.asset("chemistry.png",width: 30,height: 30,),
           ),
         ],
       ),
