@@ -96,6 +96,7 @@ class DoctorAPP extends StatelessWidget {
     return WillPopScope(
       onWillPop: _onWillpop,
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(fontFamily: 'SF Pro Display Regular'),
         home: MyHomePage(title: 'Flutter Demo Home Page'),

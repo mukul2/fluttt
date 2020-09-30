@@ -14,7 +14,7 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(theme: ThemeData(fontFamily: 'Helvetica'),title: 'Chucky Norris', home: projectWidget(context));
+    return MaterialApp(debugShowCheckedModeBanner: false, theme: ThemeData(fontFamily: 'Helvetica'),title: 'Chucky Norris', home: projectWidget(context));
   }
 }
 

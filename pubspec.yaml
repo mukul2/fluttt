@@ -53,6 +53,7 @@ dependencies:
   fluster: ^1.1.2
   autocomplete_textfield: ^1.7.3
   file_picker: ^1.13.3
+  shimmer: ^1.1.1
 
 
   # Cache manager

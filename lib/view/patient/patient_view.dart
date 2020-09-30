@@ -101,6 +101,7 @@ class PatientAPP extends StatelessWidget {
     return WillPopScope(
       onWillPop: _onWillpop,
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(fontFamily: 'SF Pro Display Regular'),
         home: MyHomePage(title: 'Flutter Demo Home Page'),
@@ -433,7 +434,7 @@ class _HomeState extends State<Home> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => DeptListOnlineDocWidget(context),
+                        builder: (context) => DeptListOnlineDocWidget(),
                       ));
                 },
                 child: Card(
@@ -1796,7 +1797,7 @@ class DeptOnlineActivity extends StatelessWidget {
 //          ),
         ],
       ),
-      body: DeptListOnlineDocWidget(context),
+      body: DeptListOnlineDocWidget(),
     );
   }
 }
@@ -2420,12 +2421,13 @@ Widget ChatListWidget(BuildContext context) {
                               context,
                               MaterialPageRoute(
                                   builder: (context) => ChatScreen(
-                                      UID,
-                                      UNAME,
-                                      UPHOTO,
+
                                       partner_id,
                                       partner_name,
                                       parner_photo,
+                                      UID,
+                                      UNAME,
+                                      UPHOTO,
                                       chatRoom)));
                         },
                         child: Card(

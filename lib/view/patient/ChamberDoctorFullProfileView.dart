@@ -6,6 +6,7 @@ import 'package:appxplorebd/utils/myCalender.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../login_view.dart';
@@ -13,9 +14,7 @@ import 'package:http/http.dart' as http;
 
 import 'AppointmentConfirmForm.dart';
 
-List skill_info;
-List education_info;
-List chamber_info;
+
 String AUTH_KEY;
 String SELECTED_DATE;
 String name_;
@@ -37,6 +36,9 @@ class ChamberDoctorFullProfileView extends StatefulWidget {
 }
 
 class HomePageState extends State<ChamberDoctorFullProfileView> {
+  List skill_info = [];
+  List education_info = [];
+  List chamber_info = [];
   Future<String> getData() async {
     Future<SharedPreferences> _prefs =
     SharedPreferences.getInstance();
@@ -52,7 +54,7 @@ class HomePageState extends State<ChamberDoctorFullProfileView> {
       },
       body: jsonEncode(<String, String>{'dr_id': widget.id.toString()}),
     );
-    showThisToast(response.statusCode.toString());
+    //showThisToast(response.statusCode.toString());
 
     this.setState(() {
       skill_info = json.decode(response.body)["skill_info"];
@@ -125,8 +127,47 @@ class HomePageState extends State<ChamberDoctorFullProfileView> {
 
 Widget Chambers(List chambers) {
   print("see now");
+ bool  _enabled = true;
   print(chambers);
-  return new ListView.builder(
+  return  chambers.length ==0 ?Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+    child: Column(
+      mainAxisSize: MainAxisSize.max,
+      children: <Widget>[
+        Expanded(
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey[300],
+            highlightColor: Colors.grey[100],
+            enabled: _enabled,
+            child: ListView.builder(
+              itemBuilder: (_, __) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(00.0),
+                  ),
+                  child: ListTile(
+                    trailing: Icon(Icons.arrow_right),
+                    title: Padding(
+                        padding: EdgeInsets.all(0),
+                        child: Container(
+                          width: double.infinity,
+                          height: 12.0,
+                          color: Colors.white,
+                        )
+                    ),
+                  ),
+                ),
+              ),
+              itemCount: 6,
+            ),
+          ),
+        ),
+
+      ],
+    ),
+  ): new ListView.builder(
     itemCount: chambers == null ? 0 : chambers.length,
     itemBuilder: (BuildContext context, int index) {
       return new InkWell(
@@ -168,7 +209,7 @@ Widget Chambers(List chambers) {
                       MaterialPageRoute(
                         builder: (BuildContext context) =>
                             chamberBooking(
-                                chamber_info[index], context), //startwork
+                                chambers[index], context), //startwork
                       ));
                 },
               ),
@@ -332,14 +373,14 @@ Widget chamberBooking(chamber_info, BuildContext context) {
 //              height: 1,
 //            ),
             printAllDates(chamber_info["chamber_days"], context,
-                (chamber_info["id"]).toString()),
+                (chamber_info["id"]).toString(), (chamber_info["fees"]).toString())
 
           ],
         )),
   );
 }
 
-Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
+Widget printAllDates(chamber_days, BuildContext context, String chamber_id,String fees) {
   int seelctedPosition = 0;
   showThisToast(chamber_days.length.toString());
 
@@ -645,7 +686,7 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id) {
                           context,
                           MaterialPageRoute(builder: (context) =>
                               appointmentFormWidget(
-                                  chamber_id, SELECTED_DATE, auth, uid)));
+                                  chamber_id, SELECTED_DATE, auth, uid,fees)));
                     },
                   ),
                 ),
@@ -716,10 +757,10 @@ int getMonthCount(int month) {
 //)
 
 Widget appointmentFormWidget(String chamberID, String DATE, String auth,
-    String uid) {
+    String uid,String fees) {
   return Scaffold(
     appBar: AppBar(
-      title: Text("Confirm Appointment"),
+      title: Text("Confirm Appointment "+fees),
     ),
     body: SingleChildScrollView(
         child: AppointmentConfirmForm(

@@ -1,12 +1,16 @@
 import 'dart:convert';
 
 import 'package:appxplorebd/models/login_response.dart';
+import 'package:appxplorebd/projPaypal/PaypalPayment.dart';
+import 'package:appxplorebd/projPaypal/config.dart';
 import 'package:flutter/material.dart';
 import 'package:appxplorebd/networking/Repsonse.dart';
 import 'package:appxplorebd/networking/ApiProvider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'OnlineDoctorFullProfileView.dart';
 
 String dID, cID;
 String DATE = "";
@@ -22,7 +26,7 @@ class AppointmentConfirmForm___ extends StatelessWidget {
         appBar: AppBar(
           title: Text(appTitle),
         ),
-        body: AppointmentConfirmForm("", "","","",""),
+        body: AppointmentConfirmForm("", "", "", "", ""),
       ),
     );
   }
@@ -30,9 +34,10 @@ class AppointmentConfirmForm___ extends StatelessWidget {
 
 // Create a Form widget.
 class AppointmentConfirmForm extends StatefulWidget {
-  String docID_, chamberID_, SELECTED_DATE,auth,uid;
+  String docID_, chamberID_, SELECTED_DATE, auth, uid;
 
-  AppointmentConfirmForm(this.docID_, this.chamberID_, this.SELECTED_DATE,this.auth,this.uid);
+  AppointmentConfirmForm(
+      this.docID_, this.chamberID_, this.SELECTED_DATE, this.auth, this.uid);
 
   @override
   MyCustomFormState createState() {
@@ -65,8 +70,7 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
         children: <Widget>[
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-            child:  TextFormField(
-
+            child: TextFormField(
               validator: (value) {
                 name = value;
                 if (value.isEmpty) {
@@ -87,8 +91,7 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
           ),
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-            child:  TextFormField(
-
+            child: TextFormField(
               validator: (value) {
                 problem = value;
                 if (value.isEmpty) {
@@ -111,8 +114,7 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
           ),
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-            child:  TextFormField(
-
+            child: TextFormField(
               validator: (value) {
                 contact = value;
                 if (value.isEmpty) {
@@ -131,57 +133,236 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
               autocorrect: false,
             ),
           ),
-
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
             child: SizedBox(
-                height: 50,
-                width: double.infinity, // match_parent
-                child: RaisedButton(
-                  color: Colors.pink,
-                  onPressed: () async {
-                    // Validate returns true if the form is valid, or false
-                    // otherwise.
-                    if (_formKey.currentState.validate()) {
-                      // If the form is valid, display a Snackbar.
-                      setState(() {
-                        StandbyWid = Text(
-                          "Please wait",
-                          style: TextStyle(color: Colors.white),
-                        );
-                      });
+              height: 50,
+              width: double.infinity, // match_parent
+              child: RaisedButton(
+                color: Colors.pink,
+                onPressed: () async {
+                  // Validate returns true if the form is valid, or false
+                  // otherwise.
+                  if (_formKey.currentState.validate()) {
+                    // If the form is valid, display a Snackbar.
+                    setState(() {
+                      StandbyWid = Text(
+                        "Please wait",
+                        style: TextStyle(color: Colors.white),
+                      );
+                    });
 
+                    var appointmentSubmitRespons =
+                        await performAppointmentSubmit(
+                            widget.auth,
+                            widget.uid,
+                            widget.docID_,
+                            problem,
+                            contact,
+                            name,
+                            widget.chamberID_,
+                            widget.SELECTED_DATE,
+                            "0",
+                            "n");
+                    if (appointmentSubmitRespons["status"]) {
+                      //show page
+                      //_ConfirmedAppointmentPageState
 
-                      var appointmentSubmitRespons =
-                      await performAppointmentSubmit(widget.auth,
-                          widget.uid,
-                          widget.docID_,
-                          problem,
-                          contact,
-                          name,
-                          widget.chamberID_,
-                          widget.SELECTED_DATE,
-                          "0",
-                          "n");
-                      if (appointmentSubmitRespons["status"]) {
+//                      Navigator.push(
+//                          context,
+//                          MaterialPageRoute(
+//                              builder: (context) => ConfirmedAppointmentPage(
+//                                  appointmentSubmitRespons)));
 
-
+/*
 
                         Navigator.of(context).pop(true);
                         Navigator.of(context).pop(true);
                         Navigator.of(context).pop(true);
                         Navigator.of(context).pop(true);
                         Navigator.of(context).pop(true);
-                      }
+
+ */
                     }
-                  },
-                  child: StandbyWid,
-                ),),
+                  }
+                },
+                child: StandbyWid,
+              ),
+            ),
           ),
-
-
         ],
       ),
+    );
+  }
+}
+
+class ConfirmedAppointmentPage extends StatefulWidget {
+  dynamic response;
+  List paymentMethods = [];
+  String amount ;
+  String docID ;
+  String docName;
+  String docPhoto;
+  String type;
+
+  ConfirmedAppointmentPage(this.response,this.amount,this.docID,this.docName,this.docPhoto,this.type);
+
+  @override
+  _ConfirmedAppointmentPageState createState() =>
+      _ConfirmedAppointmentPageState();
+}
+
+class _ConfirmedAppointmentPageState extends State<ConfirmedAppointmentPage> {
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  Future<String> getPaymentMethods() async {
+    Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+    SharedPreferences prefs;
+    prefs = await _prefs;
+   String  a = prefs.getString("auth");
+   String uid  = prefs.getString("uid");
+    final http.Response response = await http.get(
+      "http://telemedicine.drshahidulislam.com/api/" +
+          'get_payment_methods_list',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': a,
+      },
+    );
+
+    this.setState(() {
+      widget.paymentMethods = json.decode(response.body);
+    });
+
+    // print(skill_info);
+
+    return "Success!";
+  }
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+          child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.done_all,
+            size: 50,
+          ),
+          Text(
+            "Your Appointment request has been submittes successfully",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+          ),
+          Padding(
+            padding: EdgeInsets.all(10),
+            child: OutlineButton(
+                child: new Text("Make Payment", style: TextStyle(color: Colors.blue)),
+                onPressed: () {
+                  scaffoldKey.currentState
+                      .showBottomSheet((context) => Container(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(15),
+                          child: Text(
+                            "Choose a Payment Method",
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight:
+                                FontWeight.bold),
+                          ),
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          itemCount:
+                          widget.paymentMethods == null
+                              ? 0
+                              : widget.paymentMethods
+                              .length,
+                          itemBuilder:
+                              (BuildContext context,
+                              int index_) {
+                            return new InkWell(
+                                onTap: () {
+                                  payable_amount =widget.amount;
+                                  docID = widget.docID;
+                                  docNAME = widget.docName;
+                                  docPhoto = widget.docPhoto;
+                                String  type = widget.type;
+
+                                  if (widget.paymentMethods[
+                                  index_]["name"] ==
+                                      "Paypal") {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (BuildContext
+                                          context) =>
+                                              PaypalPayment(
+                                                type,
+                                                onFinish:
+                                                    (number) async {},
+                                              ),
+                                        ));
+                                  } else if (widget
+                                      .paymentMethods[
+                                  index_]["name"] ==
+                                      "Bank Transfer") {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (BuildContext
+                                          context) =>
+                                              BkashPaymentActivity(
+                                                  widget.paymentMethods[
+                                                  index_],
+                                                  "UID",
+                                                  "AUTH_KEY",
+                                                  payable_amount,
+                                                  docID,
+                                                  type),
+                                        ));
+                                  }
+                                },
+                                child: Card(
+                                    color: Colors.white70,
+                                    shape:
+                                    RoundedRectangleBorder(
+                                      borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                          00.0),
+                                    ),
+                                    child: ListTile(
+                                      trailing: Icon(Icons
+                                          .arrow_right),
+                                      title: Text(widget
+                                          .paymentMethods[
+                                      index_]["name"]),
+                                    )));
+                          },
+                        ),
+                      ],
+                    ),
+                    margin: const EdgeInsets.only(
+                        top: 5, left: 15, right: 15),
+                    color: Colors.white,
+                  ));
+                },
+                shape: new RoundedRectangleBorder(
+                    borderRadius: new BorderRadius.circular(5.0))),
+          )
+        ],
+      )),
     );
   }
 }

@@ -413,17 +413,18 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
 
     return InkWell(
       onTap: (){
+        docID = widget.id.toString();
+        docNAME = widget.name;
+        docPhoto = widget.photo;
+        type = (online_doctors_service_info
+        ["service_name_info"]["name"])
+            .toString();
         // makePayment();
         if (!isActivated) {
           payable_amount =
               (["fees_per_unit"])
                   .toString();
-          docID = widget.id.toString();
-          docNAME = widget.name;
-          docPhoto = widget.photo;
-          type = (online_doctors_service_info
-          ["service_name_info"]["name"])
-              .toString();
+
           showThisToast(type);
           scaffoldKey.currentState
               .showBottomSheet((context) => Container(
@@ -526,7 +527,116 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
             color: Colors.white,
           ));
         }else{
-          showThisToast("Allready purchased");
+          if(type == "Video Call"){
+
+            String chatRoom = createChatRoomName(
+                int.parse(UID), int.parse(docID));
+            CHAT_ROOM = chatRoom;
+            //   showThisToast("chat room " + CHAT_ROOM);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                        docID,
+                        docNAME,
+                        docPhoto,
+                        UID,
+                        UNAME,
+                        UPHOTO,
+                        chatRoom)));
+
+          }else  if(type == "Chat"){
+
+            String chatRoom = createChatRoomName(
+                int.parse(UID), int.parse(docID));
+            CHAT_ROOM = chatRoom;
+            //   showThisToast("chat room " + CHAT_ROOM);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                        docID,
+                        docNAME,
+                        docPhoto,
+                        UID,
+                        UNAME,
+                        UPHOTO,
+                        chatRoom)));
+
+          }else  if(type == "1 Month Subscription"){
+
+            String chatRoom = createChatRoomName(
+                int.parse(UID), int.parse(docID));
+            CHAT_ROOM = chatRoom;
+            //   showThisToast("chat room " + CHAT_ROOM);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                        docID,
+                        docNAME,
+                        docPhoto,
+                        UID,
+                        UNAME,
+                        UPHOTO,
+                        chatRoom)));
+
+          }else  if(type == "3 Month Subscription"){
+
+            String chatRoom = createChatRoomName(
+                int.parse(UID), int.parse(docID));
+            CHAT_ROOM = chatRoom;
+            //   showThisToast("chat room " + CHAT_ROOM);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                        docID,
+                        docNAME,
+                        docPhoto,
+                        UID,
+                        UNAME,
+                        UPHOTO,
+                        chatRoom)));
+
+          }else  if(type == "6 Month Subscription"){
+
+            String chatRoom = createChatRoomName(
+                int.parse(UID), int.parse(docID));
+            CHAT_ROOM = chatRoom;
+            //   showThisToast("chat room " + CHAT_ROOM);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                        docID,
+                        docNAME,
+                        docPhoto,
+                        UID,
+                        UNAME,
+                        UPHOTO,
+                        chatRoom)));
+
+          }else  if(type == "1 Year Subscription"){
+
+            String chatRoom = createChatRoomName(
+                int.parse(UID), int.parse(docID));
+            CHAT_ROOM = chatRoom;
+            //   showThisToast("chat room " + CHAT_ROOM);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                        docID,
+                        docNAME,
+                        docPhoto,
+                        UID,
+                        UNAME,
+                        UPHOTO,
+                        chatRoom)));
+
+          }
+          //showThisToast("Allready purchased" +"   "+docID+"  "+docNAME+"  "+type);
         }
       },
       child: Text(direction),

@@ -60,6 +60,7 @@ class LoginUI extends StatelessWidget {
     final appTitle = 'Login';
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       color: Colors.blueAccent,
       title: appTitle,
       home: Scaffold(
@@ -301,6 +302,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                       setState(() {
                         StandbyWid = Text(loginResponse.message);
                       });
+                     
                       if (loginResponse.status) {
                         setLoginStatus(true);
                         // AUTH_KEY = "Bearer " + loginResponse.accessToken;
