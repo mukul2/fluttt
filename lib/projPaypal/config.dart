@@ -3,3 +3,4 @@ String docID = "";
 String docNAME = "";
 String docPhoto = "";
 String CHAT_ROOM = "";
+String appTableID = "";

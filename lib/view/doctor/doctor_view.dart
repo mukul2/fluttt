@@ -758,9 +758,9 @@ class _MyEarningsWidgetState extends State<MyEarningsWidget> {
         ),
         body: TabBarView(
           children: [
-            EarningSummeryWidget(totalBill, allWidthdraw,wallet),
+            EarningSummeryWidget(totalBill, allWidthdraw, wallet),
             EarningCollectionsWidget(billDetails),
-            EarningWidthDrawWidget(widthdrawDetails,wallet),
+            EarningWidthDrawWidget(widthdrawDetails, wallet),
           ],
         ),
       ),
@@ -774,7 +774,7 @@ class EarningSummeryWidget extends StatefulWidget {
   String allWidthdraw;
   String wallet;
 
-  EarningSummeryWidget(this.totalBill, this.allWidthdraw,this.wallet);
+  EarningSummeryWidget(this.totalBill, this.allWidthdraw, this.wallet);
 
   @override
   _EarningSummeryWidgetState createState() => _EarningSummeryWidgetState();
@@ -854,7 +854,7 @@ class _EarningSummeryWidgetState extends State<EarningSummeryWidget> {
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
-                    child: Text(widget.wallet+ " USD",
+                    child: Text(widget.wallet + " USD",
                         textAlign: TextAlign.justify),
                   ),
                 )
@@ -930,7 +930,7 @@ class EarningWidthDrawWidget extends StatefulWidget {
   List billDetails = [];
   String wallet;
 
-  EarningWidthDrawWidget(this.billDetails,this.wallet);
+  EarningWidthDrawWidget(this.billDetails, this.wallet);
 
   @override
   _EarningWidthDrawWidgetState createState() => _EarningWidthDrawWidgetState();
@@ -988,14 +988,13 @@ class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
                     child: Text("No Data"),
                   )),
         Positioned(
-
           bottom: 0,
           left: 0,
           right: 0,
           child: InkWell(
-            onTap: (){
+            onTap: () {
               final _formKey = GlobalKey<FormState>();
-              String amount,bank;
+              String amount, bank;
               return showDialog<void>(
                 context: context,
                 barrierDismissible: false, // user must tap button!
@@ -1028,9 +1027,11 @@ class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
                                     decoration: InputDecoration(
                                         fillColor: Colors.white10,
                                         border: OutlineInputBorder(
-                                            borderSide: BorderSide(color: Colors.pink)),
+                                            borderSide:
+                                                BorderSide(color: Colors.pink)),
                                         enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(color: Colors.blue)),
+                                            borderSide:
+                                                BorderSide(color: Colors.blue)),
                                         labelText: "Amount"),
                                     keyboardType: TextInputType.number,
                                     autocorrect: false,
@@ -1050,9 +1051,11 @@ class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
                                     decoration: InputDecoration(
                                         fillColor: Colors.white10,
                                         border: OutlineInputBorder(
-                                            borderSide: BorderSide(color: Colors.pink)),
+                                            borderSide:
+                                                BorderSide(color: Colors.pink)),
                                         enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(color: Colors.blue)),
+                                            borderSide:
+                                                BorderSide(color: Colors.blue)),
                                         labelText: "Bank Info"),
                                     keyboardType: TextInputType.text,
                                     autocorrect: false,
@@ -1075,18 +1078,16 @@ class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
                         child: Text('Request'),
                         onPressed: () {
                           if (_formKey.currentState.validate()) {
-                            if(double.parse(amount)<=double.parse(widget.wallet) )
-                              {
-                                showThisToast("permitted");
-                              }else{
+                            if (double.parse(amount) <=
+                                double.parse(widget.wallet)) {
+                              showThisToast("permitted");
+                            } else {
                               showThisToast("not permitted");
-
                             }
                             var status =
-                            request_withdraw(AUTH_KEY, UID, amount,bank);
+                                request_withdraw(AUTH_KEY, UID, amount, bank);
 
-                            status.then(
-                                    (value) => Navigator.of(context).pop());
+                            status.then((value) => Navigator.of(context).pop());
                           }
                         },
                       ),
@@ -1096,14 +1097,14 @@ class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
               );
             },
             child: Card(
-
               color: Colors.blue,
               child: Center(
-
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                  child: Text("Withdraw Request"
-                    ,style: TextStyle(color: Colors.white),),
+                  child: Text(
+                    "Withdraw Request",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
             ),
@@ -1752,7 +1753,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
     this.setState(() {
       VideoCallListList = json.decode(response.body);
       print(VideoCallListList.toString());
-       showThisToast((VideoCallListList.length).toString());
+      showThisToast((VideoCallListList.length).toString());
     });
   }
 
@@ -3130,142 +3131,132 @@ class _FollowupVideoAppointmentListActivityDoctorState
       ),
       body: (data != null && data.length > 0)
           ? ListView.builder(
-        shrinkWrap: true,
-        itemCount:
-        data == null ? 0 : data.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(00.0),
-            ),
-            child: Column(
-              children: <Widget>[
-                ListTile(
-                  onTap: () {
-                    String chatRoom = createChatRoomName(
-                        int.parse(UID),
-                        int.parse(data[index]["patient_info"]
-                        ["id"]
-                            .toString()));
-                    CHAT_ROOM = chatRoom;
-                    showThisToast(chatRoom);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ChatScreen(
-                                data[index]["patient_info"]
-                                ["id"]
-                                    .toString(),
-                                data[index]["patient_info"]
-                                ["name"],
-                                data[index]["patient_info"]
-                                ["photo"],
-                                UID,
-                                UNAME,
-                                UPHOTO,
-                                chatRoom)));
-                  },
-                  trailing: Icon(Icons.call),
-                  leading: CircleAvatar(
-                    backgroundImage: NetworkImage((_baseUrl_image +
-                        data[index]["patient_info"]
-                        ["photo"])
-                        .toString()),
+              shrinkWrap: true,
+              itemCount: data == null ? 0 : data.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(00.0),
                   ),
-                  title: new Text(
-                    data[index]["patient_info"]["name"],
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: new Text(
-                    data[index]["created_at"],
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                SizedBox(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                  child: Column(
                     children: <Widget>[
-                      Flexible(
-                        child: CheckboxListTile(
-                          title: Text("Done"),
-                          value: data[index]
-                          ["appointment_status"] ==
-                              1
-                              ? true
-                              : false,
-                          onChanged: (bool newValue) async {
-                            final http.Response response =
-                            await http.post(
-                              _baseUrl +
-                                  'change_video_appointment_status',
-                              headers: <String, String>{
-                                'Content-Type':
-                                'application/json; charset=UTF-8',
-                                'Authorization': AUTH_KEY,
-                              },
-                              body: jsonEncode(<String, String>{
-                                'status': newValue ? "1" : "0",
-                                'appointment_id':
-                                (data[index]["id"])
-                                    .toString()
-                              }),
-                            );
-                            //     showThisToast((response.statusCode).toString());
-                            this.getData();
-                          },
-                          controlAffinity: ListTileControlAffinity
-                              .leading, //  <-- leading Checkbox
+                      ListTile(
+                        onTap: () {
+                          String chatRoom = createChatRoomName(
+                              int.parse(UID),
+                              int.parse(data[index]["patient_info"]["id"]
+                                  .toString()));
+                          CHAT_ROOM = chatRoom;
+                          showThisToast(chatRoom);
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ChatScreen(
+                                      data[index]["patient_info"]["id"]
+                                          .toString(),
+                                      data[index]["patient_info"]["name"],
+                                      data[index]["patient_info"]["photo"],
+                                      UID,
+                                      UNAME,
+                                      UPHOTO,
+                                      chatRoom)));
+                        },
+                        trailing: Icon(Icons.call),
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage((_baseUrl_image +
+                                  data[index]["patient_info"]["photo"])
+                              .toString()),
+                        ),
+                        title: new Text(
+                          data[index]["patient_info"]["name"],
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: new Text(
+                          data[index]["created_at"],
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      Flexible(
-                        child: RaisedButton(
-                          color: Colors.white,
-                          elevation: 0,
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        PatientFullProfileView(
-                                            AUTH_KEY,
-                                            data[index]
-                                            ["patient_info"]["id"]
-                                                .toString(),
-                                            data[index]
-                                            ["patient_info"]["name"],
-                                            data[index]
-                                            ["patient_info"]
-                                            ["photo"])));
-                          },
-                          child: Text("View Profile"),
+                      SizedBox(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Flexible(
+                              child: CheckboxListTile(
+                                title: Text("Done"),
+                                value: data[index]["appointment_status"] == 1
+                                    ? true
+                                    : false,
+                                onChanged: (bool newValue) async {
+                                  final http.Response response =
+                                      await http.post(
+                                    _baseUrl +
+                                        'change_video_appointment_status',
+                                    headers: <String, String>{
+                                      'Content-Type':
+                                          'application/json; charset=UTF-8',
+                                      'Authorization': AUTH_KEY,
+                                    },
+                                    body: jsonEncode(<String, String>{
+                                      'status': newValue ? "1" : "0",
+                                      'appointment_id':
+                                          (data[index]["id"]).toString()
+                                    }),
+                                  );
+                                  //     showThisToast((response.statusCode).toString());
+                                  this.getData();
+                                },
+                                controlAffinity: ListTileControlAffinity
+                                    .leading, //  <-- leading Checkbox
+                              ),
+                            ),
+                            Flexible(
+                              child: RaisedButton(
+                                color: Colors.white,
+                                elevation: 0,
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              PatientFullProfileView(
+                                                  AUTH_KEY,
+                                                  data[index]["patient_info"]
+                                                          ["id"]
+                                                      .toString(),
+                                                  data[index]["patient_info"]
+                                                      ["name"],
+                                                  data[index]["patient_info"]
+                                                      ["photo"])));
+                                },
+                                child: Text("View Profile"),
+                              ),
+                            ),
+                            Flexible(
+                              child: RaisedButton(
+                                color: Colors.white,
+                                elevation: 0,
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              VideoAppointmentPrescriptionWriteWidget(
+                                                  data[index])));
+                                },
+                                child: Text("Give Prescription"),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      Flexible(
-                        child: RaisedButton(
-                          color: Colors.white,
-                          elevation: 0,
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        VideoAppointmentPrescriptionWriteWidget(
-                                            data[index])));
-                          },
-                          child: Text("Give Prescription"),
-                        ),
-                      ),
+                      )
                     ],
                   ),
-                )
-              ],
-            ),
-          );
-        },
-      )
+                );
+              },
+            )
           : Center(
-        child: Text("No Appointment Data"),
-      ),
+              child: Text("No Appointment Data"),
+            ),
     );
   }
 }
@@ -4868,6 +4859,7 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
 
 class PrescriptionsodyWidget extends StatefulWidget {
   dynamic prescriptionBody;
+  dynamic oldPrescription;
 
   PrescriptionsodyWidget(this.prescriptionBody);
 
@@ -4878,6 +4870,26 @@ class PrescriptionsodyWidget extends StatefulWidget {
 
 class _PrescriptionsBodyWidgetState extends State<PrescriptionsodyWidget> {
   List prescriptionList = [];
+
+  Future<String> getOldPrescription(String id) async {
+    final http.Response response = await http.post(
+      _baseUrl + 'get_single_prescription_info',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': AUTH_KEY,
+      },
+      body: jsonEncode(<String, String>{
+        'id': id,
+      }),
+    );
+    this.setState(() {
+      print("Single Prescriptin");
+      //showThisToast(response.body);
+      widget.oldPrescription = json.decode(response.body);
+    });
+    //showThisToast(response.statusCode.toString());
+    return "Success!";
+  }
 
   Future<String> getData() async {
     final http.Response response = await http.post(
@@ -4903,6 +4915,8 @@ class _PrescriptionsBodyWidgetState extends State<PrescriptionsodyWidget> {
   void initState() {
     // TODO: implement initState
     this.getData();
+    this.getOldPrescription(
+        widget.prescriptionBody["old_prescription_id"].toString());
   }
 
   @override
@@ -4911,13 +4925,419 @@ class _PrescriptionsBodyWidgetState extends State<PrescriptionsodyWidget> {
       appBar: AppBar(
         title: Text("Prescription Body 0 "),
       ),
-      body: (widget.prescriptionBody["attachment"] != null
-          ? Image.network(
-              _baseUrl_image + widget.prescriptionBody["attachment"][0]["file"])
-          : Text(widget.prescriptionBody.toString())),
+      body: Stack(
+        children: [
+          Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 60,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Card(
+                        child: ListTile(
+                          title: Text(
+                              widget.prescriptionBody["patient_info"]["name"]),
+                          subtitle:
+                              Text(widget.prescriptionBody["patient_comment"]),
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(_baseUrl_image +
+                                widget.prescriptionBody["patient_info"]
+                                    ["photo"]),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(8, 0, 0, 0),
+                      child: Card(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(00),
+                              child: Container(
+                                color: Colors.blue,
+                                width: double.infinity,
+                                child: Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Text(
+                                    "Old Prescription",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(00, 0, 0, 0),
+                              child: ListTile(
+                                title: Text("Doctors Comment"),
+                                subtitle: Text(widget.oldPrescription != null
+                                    ? widget.oldPrescription["diseases_name"]
+                                    : "Loading"),
+                              ),
+                            ),
+                            Divider(
+                              color: Colors.grey,
+                              height: 1,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(15, 10, 0, 5),
+                              child: Text("Prescribed Medicines List"),
+                            ),
+                            medicinesListOfAPrescriptionWidget(
+                                widget.oldPrescription),
+                            (widget.prescriptionBody["attachment"] != null
+                                ? Image.network(_baseUrl_image +
+                                    widget.prescriptionBody["attachment"][0]
+                                        ["file"])
+                                : Text(""))
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+          Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              PrescriptionWriteWidgetForReview(widget.prescriptionBody)));
+                },
+                child: Card(
+                  color: Colors.blue,
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        "Give Prescription",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ))
+        ],
+      ),
     );
   }
 }
+
+//
+class PrescriptionWriteWidgetForReview extends StatefulWidget {
+  dynamic prescriptionreqModel;
+
+  PrescriptionWriteWidgetForReview(this.prescriptionreqModel);
+
+  @override
+  _PrescriptionWriteWidgetForReviewState createState() =>
+      _PrescriptionWriteWidgetForReviewState();
+}
+
+class _PrescriptionWriteWidgetForReviewState
+    extends State<PrescriptionWriteWidgetForReview> {
+  final _formKey_ = GlobalKey<FormState>();
+  String choice;
+  int mealTime = 0;
+  String diseases = "no datas";
+  bool morning = false;
+  bool noon = true;
+  bool evening = false;
+  bool checkedValue = false;
+  String dr_id = UID;
+  String patient_id;
+
+  @override
+  void initState() {
+    // showThisToast("patient id "+ widget.prescriptionreqModel["patient_info"]["id"].toString());
+    setState(() {
+      patient_id = widget.prescriptionreqModel["patient_info"]["id"].toString();
+      medicineList = [];
+      noon = true;
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Create Prescription - Review",
+        ),
+        actions: <Widget>[
+          Padding(
+              padding: EdgeInsets.only(right: 20.0),
+              child: GestureDetector(
+                onTap: () async {
+                  if (_formKey_.currentState.validate()) {
+                    setState(() {});
+
+                    final http.Response response = await http.post(
+                      _baseUrl + 'reply-prescription-recheck-request',
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Authorization': AUTH_KEY,
+                      },
+                      body: jsonEncode(<String, String>{
+                        'patient_id': patient_id,
+                        'dr_id': UID,
+                        'diseases_name': diseases,
+                        'medicine_info': jsonEncode(medicineList),
+                        'recheck_id': widget.prescriptionreqModel["id"].toString(),
+                        'dr_name': UNAME,
+                        'dr_comment': "written in prescription",
+                        'need_of_prescription': "1",
+                        'service_id': "1",
+                      }),
+                    );
+
+                    showThisToast(response.body.toString());
+                    print((jsonDecode(response.body))["message"]);
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                    if (response.statusCode == 200) {
+                      mainD();
+                    } else {
+                      showThisToast("Error occured");
+                    }
+                  }
+                },
+                child: Icon(
+                  Icons.send,
+                  color: Colors.white,
+                  size: 26.0,
+                ),
+              )),
+        ],
+      ),
+      body: Column(
+        children: <Widget>[
+          Form(
+            key: _formKey_,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(10, 30, 10, 0),
+              child: TextFormField(
+                minLines: 3,
+                maxLines: 5,
+                validator: (value) {
+                  diseases = value;
+                  if (value.isEmpty) {
+                    return 'Please write detected diseases';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                    alignLabelWithHint: true,
+                    labelStyle: TextStyle(color: Colors.blue),
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.pink)),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue)),
+                    labelText: "Write The Diagnosed Diseases"),
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+              ),
+            ),
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            itemCount: medicineList == null ? 0 : medicineList.length,
+            itemBuilder: (BuildContext context, int index) {
+              return new InkWell(
+                  onTap: () {
+//                Navigator.push(
+//                    context,
+//                    MaterialPageRoute(
+//                        builder: (context) => AmbulanceBodyWidget(
+//                            projectSnap.data[index])));
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(00.0),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(0),
+                      child: ListTile(
+                        trailing: Icon(Icons.delete),
+                        leading: Icon(Icons.note_add),
+                        title: new Text(
+                          medicineList[index]["name"],
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Row(
+                          children: <Widget>[
+                            medicineList[index]["morning"] == 1
+                                ? Padding(
+                                    padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                                    child: Text("Morning"),
+                                  )
+                                : Text(""),
+                            medicineList[index]["noon"] == 1
+                                ? Padding(
+                                    padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                                    child: Text("Noon"),
+                                  )
+                                : Text(""),
+                            medicineList[index]["evening"] == 1
+                                ? Padding(
+                                    padding: EdgeInsets.fromLTRB(00, 0, 10, 0),
+                                    child: Text("Evening"),
+                                  )
+                                : Text(""),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ));
+            },
+          )
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: Icon(Icons.add_circle_outline),
+        label: Text("Add Medicine"),
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => AddMedicineWidget(
+                        function: (data) {
+                          // showThisToast("im hit hit hit");
+                          setState(() {
+                            data["id"] =
+                                widget.prescriptionreqModel["id"].toString();
+                            medicineList.add(data);
+                          });
+                        },
+                      )));
+
+//          return showDialog<void>(
+//            context: context,
+//            barrierDismissible: false, // user must tap button!
+//            builder: (BuildContext context) {
+//              return AlertDialog(
+//                title: Text('Add Medicine'),
+//                content: SingleChildScrollView(
+//                  child: ListBody(
+//                    children: <Widget>[
+//                      Text(morning.toString()),
+//                      Form(
+//                        key: _formKey,
+//                        child: Column(
+//                          crossAxisAlignment: CrossAxisAlignment.start,
+//                          children: <Widget>[
+//                            Widgets.textFormField(
+//                              darkBackground: false,
+//                              labelText: 'Medicine Name',
+//                              inputType: TextInputType.emailAddress,
+//                              validator: (value) {
+//                                medName = value;
+//                                if (value.isEmpty) {
+//                                  return 'Please enter Medicine Name';
+//                                }
+//                                return null;
+//                              },
+//                            ),
+//                            Checkbox(
+//                              value: morning,
+//                              onChanged: (bool val){
+//                                this. setState(() {
+//                                  morning = val;
+//                                });
+//                              },
+//                            ),
+//                            CheckboxListTile(
+//                              title: Text("Morning 1"),
+//                              value: morning,
+//                              onChanged: (bool newValue)  {
+//                                showThisToast(newValue.toString());
+//                                morning = false;
+//                               this. setState(() {
+//                                  morning = false;
+//                                });
+//
+//                              },
+//                              controlAffinity: ListTileControlAffinity
+//                                  .leading, //  <-- leading Checkbox
+//                            ),
+//                            CheckboxListTile(
+//                              title: Text("Noon"),
+//                              value: noon,
+//                              onChanged: (bool newValue)  {
+//                                this. setState(() {
+//                                  noon = newValue;
+//                                });
+//
+//                              },
+//                              controlAffinity: ListTileControlAffinity
+//                                  .leading, //  <-- leading Checkbox
+//                            ),
+//
+//                            CheckboxListTile(
+//                              title: Text("Evening"),
+//                              value: evening,
+//                              onChanged: (bool newValue)  {
+//                                this. setState(() {
+//                                  evening = newValue;
+//                                });
+//
+//                              },
+//                              controlAffinity: ListTileControlAffinity
+//                                  .leading, //  <-- leading Checkbox
+//                            ),
+//                          ],
+//                        ),
+//                      )
+//                    ],
+//                  ),
+//                ),
+//                actions: <Widget>[
+//                  FlatButton(
+//                    child: Text('Cancel'),
+//                    onPressed: () {
+//                      Navigator.of(context).pop();
+//                    },
+//                  ),
+//                  FlatButton(
+//                    child: Text('Add'),
+//                    onPressed: () {
+//                      if (_formKey.currentState.validate()) {
+//                        setState(() {
+//                          final Map<String, dynamic> data =
+//                              new Map<String, dynamic>();
+//                          data['name'] = medName;
+//                          medicineList.add(data);
+//                        });
+//
+//                        Navigator.of(context).pop();
+//                      }
+//                    },
+//                  ),
+//                ],
+//              );
+//            },
+//          );
+        },
+      ),
+    );
+  }
+}
+//
 
 class PrescriptionsReviewWidget extends StatefulWidget {
   @override

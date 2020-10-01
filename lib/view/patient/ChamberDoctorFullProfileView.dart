@@ -373,7 +373,7 @@ Widget chamberBooking(chamber_info, BuildContext context) {
 //              height: 1,
 //            ),
             printAllDates(chamber_info["chamber_days"], context,
-                (chamber_info["id"]).toString(), (chamber_info["fees"]).toString())
+                (chamber_info["id"]).toString(), (chamber_info["fee"]).toString())
 
           ],
         )),
@@ -686,7 +686,7 @@ Widget printAllDates(chamber_days, BuildContext context, String chamber_id,Strin
                           context,
                           MaterialPageRoute(builder: (context) =>
                               appointmentFormWidget(
-                                  chamber_id, SELECTED_DATE, auth, uid,fees)));
+                                  chamber_id, SELECTED_DATE, auth, uid,fees,name_,photo_)));
                     },
                   ),
                 ),
@@ -757,14 +757,14 @@ int getMonthCount(int month) {
 //)
 
 Widget appointmentFormWidget(String chamberID, String DATE, String auth,
-    String uid,String fees) {
+    String uid,String fees,String name,String photo) {
   return Scaffold(
     appBar: AppBar(
-      title: Text("Confirm Appointment "+fees),
+      title: Text("Confirm Appointment"),
     ),
     body: SingleChildScrollView(
         child: AppointmentConfirmForm(
-            id_.toString(), chamberID, DATE, auth, uid)),
+            id_.toString(), chamberID, DATE, auth, uid,fees,name,photo)),
   );
 }
 

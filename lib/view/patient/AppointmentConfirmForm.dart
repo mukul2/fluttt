@@ -26,7 +26,7 @@ class AppointmentConfirmForm___ extends StatelessWidget {
         appBar: AppBar(
           title: Text(appTitle),
         ),
-        body: AppointmentConfirmForm("", "", "", "", ""),
+        body: AppointmentConfirmForm("", "", "", "", "","","",""),
       ),
     );
   }
@@ -34,10 +34,10 @@ class AppointmentConfirmForm___ extends StatelessWidget {
 
 // Create a Form widget.
 class AppointmentConfirmForm extends StatefulWidget {
-  String docID_, chamberID_, SELECTED_DATE, auth, uid;
+  String docID_, chamberID_, SELECTED_DATE, auth, uid,fees,name,photo;
 
   AppointmentConfirmForm(
-      this.docID_, this.chamberID_, this.SELECTED_DATE, this.auth, this.uid);
+      this.docID_, this.chamberID_, this.SELECTED_DATE, this.auth, this.uid,this.fees,this.name,this.photo);
 
   @override
   MyCustomFormState createState() {
@@ -55,7 +55,7 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
   // not a GlobalKey<MyCustomFormState>.
   final _formKey = GlobalKey<FormState>();
   String name, problem, contact;
-  String myMessage = "Login";
+  String myMessage = "";
 
   Widget StandbyWid = Text("Submit", style: TextStyle(color: Colors.white));
   LoginResponse _loginResponse;
@@ -167,12 +167,13 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
                     if (appointmentSubmitRespons["status"]) {
                       //show page
                       //_ConfirmedAppointmentPageState
+                      appTableID =  appointmentSubmitRespons["appointment_id"].toString();
 
-//                      Navigator.push(
-//                          context,
-//                          MaterialPageRoute(
-//                              builder: (context) => ConfirmedAppointmentPage(
-//                                  appointmentSubmitRespons)));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ConfirmedAppointmentPage(
+                                  appointmentSubmitRespons,widget.fees,widget.docID_,widget.name,widget.photo,"chamber")));
 
 /*
 
@@ -204,7 +205,8 @@ class ConfirmedAppointmentPage extends StatefulWidget {
   String docName;
   String docPhoto;
   String type;
-
+  String  AUTH__;
+  String UID__;
   ConfirmedAppointmentPage(this.response,this.amount,this.docID,this.docName,this.docPhoto,this.type);
 
   @override
@@ -213,38 +215,46 @@ class ConfirmedAppointmentPage extends StatefulWidget {
 }
 
 class _ConfirmedAppointmentPageState extends State<ConfirmedAppointmentPage> {
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
   Future<String> getPaymentMethods() async {
     Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
     SharedPreferences prefs;
     prefs = await _prefs;
-   String  a = prefs.getString("auth");
-   String uid  = prefs.getString("uid");
+    // AUTH__ = prefs.getString("auth");
+   // UID__  = prefs.getString("uid");
+    setState(() {
+      widget.AUTH__ = prefs.getString("auth");
+      widget. UID__  = prefs.getString("uid");
+    });
     final http.Response response = await http.get(
       "http://telemedicine.drshahidulislam.com/api/" +
           'get_payment_methods_list',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': a,
+        'Authorization': widget.AUTH__,
       },
     );
+
 
     this.setState(() {
       widget.paymentMethods = json.decode(response.body);
     });
-
+    //showThisToast(widget.paymentMethods.toString());
     // print(skill_info);
 
     return "Success!";
   }
   @override
   void initState() {
+    this.getPaymentMethods();
     // TODO: implement initState
     super.initState();
   }
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       body: Center(
           child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -255,7 +265,7 @@ class _ConfirmedAppointmentPageState extends State<ConfirmedAppointmentPage> {
             size: 50,
           ),
           Text(
-            "Your Appointment request has been submittes successfully",
+            "Your Appointment request has been submitted successfully",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
           ),
@@ -264,99 +274,198 @@ class _ConfirmedAppointmentPageState extends State<ConfirmedAppointmentPage> {
             child: OutlineButton(
                 child: new Text("Make Payment", style: TextStyle(color: Colors.blue)),
                 onPressed: () {
-                  scaffoldKey.currentState
-                      .showBottomSheet((context) => Container(
-                    width: double.infinity,
-                    child: Column(
-                      crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(15),
-                          child: Text(
-                            "Choose a Payment Method",
-                            style: TextStyle(
-                                fontSize: 18,
-                                fontWeight:
-                                FontWeight.bold),
-                          ),
-                        ),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          itemCount:
-                          widget.paymentMethods == null
-                              ? 0
-                              : widget.paymentMethods
-                              .length,
-                          itemBuilder:
-                              (BuildContext context,
-                              int index_) {
-                            return new InkWell(
-                                onTap: () {
-                                  payable_amount =widget.amount;
-                                  docID = widget.docID;
-                                  docNAME = widget.docName;
-                                  docPhoto = widget.docPhoto;
-                                String  type = widget.type;
 
-                                  if (widget.paymentMethods[
-                                  index_]["name"] ==
-                                      "Paypal") {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (BuildContext
-                                          context) =>
-                                              PaypalPayment(
-                                                type,
-                                                onFinish:
-                                                    (number) async {},
-                                              ),
-                                        ));
-                                  } else if (widget
-                                      .paymentMethods[
-                                  index_]["name"] ==
-                                      "Bank Transfer") {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (BuildContext
-                                          context) =>
-                                              BkashPaymentActivity(
-                                                  widget.paymentMethods[
-                                                  index_],
-                                                  "UID",
-                                                  "AUTH_KEY",
-                                                  payable_amount,
-                                                  docID,
-                                                  type),
-                                        ));
-                                  }
-                                },
-                                child: Card(
-                                    color: Colors.white70,
-                                    shape:
-                                    RoundedRectangleBorder(
-                                      borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                          00.0),
-                                    ),
-                                    child: ListTile(
-                                      trailing: Icon(Icons
-                                          .arrow_right),
-                                      title: Text(widget
-                                          .paymentMethods[
-                                      index_]["name"]),
-                                    )));
-                          },
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => Container(
+                      height: MediaQuery.of(context).size.height * 0.75,
+                      decoration: new BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: new BorderRadius.only(
+                          topLeft: const Radius.circular(25.0),
+                          topRight: const Radius.circular(25.0),
                         ),
-                      ],
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Column(
+                          children: [
+                            Text("Choose Payment Method",style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: Colors.blue),),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              itemCount:
+                              widget.paymentMethods == null
+                                  ? 0
+                                  : widget.paymentMethods
+                                  .length,
+                              itemBuilder:
+                                  (BuildContext context,
+                                  int index_) {
+                                return new InkWell(
+                                    onTap: () {
+                                      payable_amount =
+                                          widget.amount;
+                                      docID =
+                                          widget.docID;
+                                      docNAME = widget.docName;
+                                      docPhoto = widget.docPhoto;
+                                      type = widget.type;
+
+                                      if (widget.paymentMethods[
+                                      index_]["name"] ==
+                                          "Paypal") {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (BuildContext
+                                              context) =>
+                                                  PaypalPayment(
+                                                    type,
+                                                    onFinish:
+                                                        (number) async {},
+                                                  ),
+                                            ));
+                                      } else if (widget
+                                          .paymentMethods[
+                                      index_]["name"] ==
+                                          "Bank Transfer") {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (BuildContext
+                                              context) =>
+                                                  BkashPaymentActivity(
+                                                      widget.paymentMethods[
+                                                      index_],
+                                                      widget.UID__,
+                                                      widget.AUTH__,
+                                                      payable_amount,
+                                                      docID,
+                                                      type),
+                                            ));
+                                      }
+                                    },
+                                    child: Card(
+                                        color: Colors.white,
+                                        shape:
+                                        RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius
+                                              .circular(
+                                              00.0),
+                                        ),
+                                        child: ListTile(
+                                          trailing: Icon(Icons
+                                              .arrow_right),
+                                          title: Text(widget
+                                              .paymentMethods[
+                                          index_]["name"]),
+                                        )));
+                              },
+                            ),
+
+                          ],
+                        ),
+                      ),
                     ),
-                    margin: const EdgeInsets.only(
-                        top: 5, left: 15, right: 15),
-                    color: Colors.white,
-                  ));
+                  );
+
+
+//                  scaffoldKey.currentState
+//                      .showBottomSheet((context) => Container(
+//                    width: double.infinity,
+//                    child: Column(
+//                      crossAxisAlignment:
+//                      CrossAxisAlignment.start,
+//                      children: [
+//                        Padding(
+//                          padding: EdgeInsets.all(15),
+//                          child: Text(
+//                            "Choose a Payment Method",
+//                            style: TextStyle(
+//                                fontSize: 18,
+//                                fontWeight:
+//                                FontWeight.bold),
+//                          ),
+//                        ),
+//                        ListView.builder(
+//                          shrinkWrap: true,
+//                          itemCount:
+//                          widget.paymentMethods == null
+//                              ? 0
+//                              : widget.paymentMethods
+//                              .length,
+//                          itemBuilder:
+//                              (BuildContext context,
+//                              int index_) {
+//                            return new InkWell(
+//                                onTap: () {
+//                                  payable_amount =widget.amount;
+//                                  docID = widget.docID;
+//                                  docNAME = widget.docName;
+//                                  docPhoto = widget.docPhoto;
+//                                  String  type = widget.type;
+//
+//                                  if (widget.paymentMethods[
+//                                  index_]["name"] ==
+//                                      "Paypal") {
+//                                    Navigator.push(
+//                                        context,
+//                                        MaterialPageRoute(
+//                                          builder: (BuildContext
+//                                          context) =>
+//                                              PaypalPayment(
+//                                                type,
+//                                                onFinish:
+//                                                    (number) async {},
+//                                              ),
+//                                        ));
+//                                  } else if (widget
+//                                      .paymentMethods[
+//                                  index_]["name"] ==
+//                                      "Bank Transfer") {
+//                                    Navigator.push(
+//                                        context,
+//                                        MaterialPageRoute(
+//                                          builder: (BuildContext
+//                                          context) =>
+//                                              BkashPaymentActivity(
+//                                                  widget.paymentMethods[
+//                                                  index_],
+//                                                  widget.UID__,
+//                                                  widget.AUTH__,
+//                                                  payable_amount,
+//                                                  docID,
+//                                                  type),
+//                                        ));
+//                                  }
+//                                },
+//                                child: Card(
+//                                    color: Colors.white70,
+//                                    shape:
+//                                    RoundedRectangleBorder(
+//                                      borderRadius:
+//                                      BorderRadius
+//                                          .circular(
+//                                          00.0),
+//                                    ),
+//                                    child: ListTile(
+//                                      trailing: Icon(Icons
+//                                          .arrow_right),
+//                                      title: Text(widget
+//                                          .paymentMethods[
+//                                      index_]["name"]),
+//                                    )));
+//                          },
+//                        ),
+//                      ],
+//                    ),
+//                    margin: const EdgeInsets.only(
+//                        top: 5, left: 15, right: 15),
+//                    color: Colors.white,
+//                  ));
                 },
                 shape: new RoundedRectangleBorder(
                     borderRadius: new BorderRadius.circular(5.0))),

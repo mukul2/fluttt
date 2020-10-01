@@ -757,7 +757,59 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                             if (_formKey.currentState.validate()) {
                               // If the form is valid, display a Snackbar.
 
-                              if (widget.TYPE == 'Prescription Service') {
+                              if (widget.TYPE == 'chamber') {
+                                Map<String, String> body = <String, String>{
+                                  'patient_id': widget.uid,
+                                  'dr_id': widget.docid,
+                                  'amount': payable_amount,
+                                  'status': "0",
+                                  'reason': "Chamber Appointment",
+                                  'transID': transID,
+                                  'table_id': appTableID,
+                                };
+                                Map<String, String> header = <String, String>{
+                                  'Content-Type':
+                                  'application/json; charset=UTF-8',
+                                  'Authorization': widget.auth,
+                                };
+                                function_name(val) {
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+//                                  Navigator.push(
+//                                      context,
+//                                      MaterialPageRoute(
+//                                          builder: (context) =>
+//                                              MakePrescriptionRequestWidget(
+//                                                  widget.auth,
+//                                                  widget.uid,
+//                                                  transID,
+//                                                  payable_amount,
+//                                                  widget.docid,
+//                                                  val["message"].toString(),
+//                                                  widget.amount)));
+                                }
+
+                                if (selectedImage == null) {
+                                  apiRequestWithMultipart(
+                                      null,
+                                      header,
+                                      body,
+                                      _baseUrl,
+                                      'add_payment_info_only_for_chamber_appoiontment',
+                                      function_name);
+                                } else {
+                                  apiRequestWithMultipart(
+                                      selectedImage,
+                                      header,
+                                      body,
+                                      _baseUrl,
+                                      'add_payment_info_only_for_chamber_appoiontment',
+                                      function_name);
+                                }
+                              } else if (widget.TYPE == 'Prescription Service') {
                                 Map<String, String> body = <String, String>{
                                   'patient_id': widget.uid,
                                   'dr_id': widget.docid,
