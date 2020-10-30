@@ -24,7 +24,7 @@ class HomePageState extends State<OnlineDoctorList> {
 
   Future<String> getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'search-online-doctors',
+      "https://appointmentbd.com/api/" + 'search-online-doctors',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
@@ -90,7 +90,7 @@ class HomePageState extends State<OnlineDoctorList> {
                     style: TextStyle(fontWeight: FontWeight.bold),),
                 ),
                 leading: Image.network(
-                    "http://telemedicine.drshahidulislam.com/" +
+                    "https://appointmentbd.com/" +
                         data[index]["photo"], fit: BoxFit.fill),
 
               ),
@@ -108,7 +108,7 @@ List data_;
 
 Future<List> getData(String id) async {
   final http.Response response = await http.post(
-    "http://telemedicine.drshahidulislam.com/api/" + 'search-online-doctors',
+    "https://appointmentbd.com/api/" + 'search-online-doctors',
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
       'Authorization': AUTH_KEY,
@@ -163,7 +163,7 @@ Widget OnlineDoctorListWidget(String id) {
                         style: TextStyle(fontWeight: FontWeight.bold),),
                     ),
                     leading: Image.network(
-                        "http://telemedicine.drshahidulislam.com/" +
+                        "https://appointmentbd.com/" +
                             projectSnap.data[index]["photo"], fit: BoxFit.fill),
 
                   ),

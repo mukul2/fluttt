@@ -22,7 +22,7 @@ class HomePageState extends State<DeptForOnlineDoc> {
 
   Future<String> getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'department-list',
+      "https://appointmentbd.com/api/" + 'department-list',
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': AUTH_KEY,
@@ -93,10 +93,9 @@ class DeptListOnlineDocWidget extends StatefulWidget {
 class _DeptListOnlineDocWidget2State extends State<DeptListOnlineDocWidget> {
   List deptList = [] ;
 
-  Future<List> getData() async {
-    isLoading = true;
+  getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'department-list',
+      "https://appointmentbd.com/api/" + 'department-list',
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': AUTH_KEY,
@@ -108,9 +107,8 @@ class _DeptListOnlineDocWidget2State extends State<DeptListOnlineDocWidget> {
     });
    // data_ = json.decode(response.body);
 
-//  showThisToast(data_.length.toString());
+  showThisToast("dept size "+deptList.length.toString());
 
-    return data_;
   }
 
   @override
@@ -124,65 +122,25 @@ class _DeptListOnlineDocWidget2State extends State<DeptListOnlineDocWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 10,
           title: Text("Choose a Department"),
         ),
-        body: FutureBuilder(
-            future: getData(),
-            builder: (context, projectSnap) {
-              return ( deptList.length==0)
-                  ? Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: <Widget>[
-                    Expanded(
-                      child: Shimmer.fromColors(
-                        baseColor: Colors.grey[300],
-                        highlightColor: Colors.grey[100],
-                        enabled: _enabled,
-                        child: ListView.builder(
-                          itemBuilder: (_, __) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(00.0),
-                              ),
-                              child: ListTile(
-                                trailing: Icon(Icons.arrow_right),
-                                title: Padding(
-                                    padding: EdgeInsets.all(0),
-                                    child: Container(
-                                      width: double.infinity,
-                                      height: 12.0,
-                                      color: Colors.white,
-                                    )
-                                ),
-                              ),
-                            ),
-                          ),
-                          itemCount: 6,
-                        ),
-                      ),
-                    ),
-
-                  ],
-                ),
-              )
-                  : new ListView.builder(
-                itemCount:
-                deptList == null ? 0 : deptList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return new InkWell(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    ChooseDoctorOnline(
-                                        (deptList[index]["id"])
-                                            .toString())));
-                      },
+        body: ( deptList.length==0)
+            ? Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: <Widget>[
+              Expanded(
+                child: Shimmer.fromColors(
+                  baseColor: Colors.grey[300],
+                  highlightColor: Colors.grey[100],
+                  enabled: _enabled,
+                  child: ListView.builder(
+                    itemBuilder: (_, __) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
                       child: Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(00.0),
@@ -190,17 +148,55 @@ class _DeptListOnlineDocWidget2State extends State<DeptListOnlineDocWidget> {
                         child: ListTile(
                           trailing: Icon(Icons.arrow_right),
                           title: Padding(
-                            padding: EdgeInsets.all(0),
-                            child: new Text(
-                              deptList[index]["name"],
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                              padding: EdgeInsets.all(0),
+                              child: Container(
+                                width: double.infinity,
+                                height: 12.0,
+                                color: Colors.white,
+                              )
                           ),
                         ),
-                      ));
+                      ),
+                    ),
+                    itemCount: 6,
+                  ),
+                ),
+              ),
+
+            ],
+          ),
+        )
+            : new ListView.builder(
+          itemCount:
+          deptList == null ? 0 : deptList.length,
+          itemBuilder: (BuildContext context, int index) {
+            return new InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ChooseDoctorOnline(
+                                  (deptList[index]["id"])
+                                      .toString())));
                 },
-              );
-            }));
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(00.0),
+                  ),
+                  child: ListTile(
+                    trailing: Icon(Icons.arrow_right),
+                    title: Padding(
+                      padding: EdgeInsets.all(0),
+                      child: new Text(
+                        deptList[index]["name"],
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ));
+          },
+        ));
   }
 }
 
@@ -290,7 +286,7 @@ Widget DeptListOnlineDocWidget2(BuildContext context) {
 Future<List> getData() async {
   isLoading = true;
   final http.Response response = await http.post(
-    "http://telemedicine.drshahidulislam.com/api/" + 'department-list',
+    "https://appointmentbd.com/api/" + 'department-list',
     headers: <String, String>{
       'Content-Type': 'application/json',
       'Authorization': AUTH_KEY,

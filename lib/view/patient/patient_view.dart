@@ -1,15 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show File, Platform;
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:appxplorebd/chat/model/chat_message.dart';
+import 'package:appxplorebd/myCalling/call.dart';
 import 'package:appxplorebd/projPaypal/config.dart';
 import 'package:appxplorebd/utils/mySharedPreffManager.dart';
 import 'package:appxplorebd/view/login_view.dart';
 import 'package:appxplorebd/view/patient/sharedActivitys.dart';
 import 'package:appxplorebd/view/patient/sharedData.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
@@ -25,9 +30,13 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../main.dart';
+import 'OnlineDoctorFullProfileView.dart';
+import 'OnlineDoctorsList.dart';
 import 'SubscriptionsActivityPatient.dart';
 import 'departments_for_chamber_doc.dart';
 import 'departments_for_online_doc.dart';
@@ -37,6 +46,20 @@ import 'package:firebase_database/firebase_database.dart';
 import 'myMapViewActivity.dart';
 import 'myYoutubePlayer.dart';
 
+int lastApiHitted1 = 0;
+int lastApiHitted2 = 0;
+
+Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
+  print("_backgroundMessageHandler");
+  print("nadia");
+  if (message.containsKey('data')) {
+    // Handle data message
+    final dynamic data = message['data'];
+    print("_backgroundMessageHandler data: ${data}");
+  }
+}
+
+BuildContext useThisContext;
 var OWN_PHOTO;
 String AUTH_KEY;
 String A_KEY;
@@ -46,6 +69,7 @@ String UID;
 String UNAME;
 String UPHONE;
 var PARTNER_PHOTO;
+
 Map<int, Color> colorCodes = {
   50: Color.fromRGBO(147, 205, 72, .1),
   100: Color.fromRGBO(147, 205, 72, .2),
@@ -60,8 +84,8 @@ Map<int, Color> colorCodes = {
 };
 // Green color code: FF93cd48
 MaterialColor customColor = MaterialColor(0xFF34448c, colorCodes);
-final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
-final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
+final String _baseUrl = "https://appointmentbd.com/api/";
+final String _baseUrl_image = "https://appointmentbd.com/";
 var header;
 
 GlobalKey _bottomNavigationKey = GlobalKey();
@@ -78,11 +102,14 @@ void mainP() async {
   UPHOTO = prefs.getString("uphoto");
   UEMAIL = prefs.getString("uemail");
   UPHONE = prefs.getString("uphone");
+
   header = <String, String>{
     'Content-Type': 'application/json; charset=UTF-8',
     'Authorization': AUTH_KEY,
   };
   // = prefs.getString("auth");
+  UID_FOR_CHAT = UID;
+
   runApp(PatientAPP());
 }
 
@@ -103,7 +130,10 @@ class PatientAPP extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
-        theme: ThemeData(fontFamily: 'SF Pro Display Regular'),
+        theme: ThemeData(
+            fontFamily: 'SF Pro Display Regular',
+            primaryColor: Colors.orange,
+            accentColor: Colors.orangeAccent),
         home: MyHomePage(title: 'Flutter Demo Home Page'),
       ),
     );
@@ -119,7 +149,13 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+PageController pageController = PageController(
+  initialPage: 0,
+  keepPage: true,
+);
+
 class _MyHomePageState extends State<MyHomePage> {
+  String _platformVersion = 'Unknown';
   int bottomSelectedIndex = 0;
   int _page = 0;
   List _titles = ["Home", "Notifications", "Profile", "Appointments", "Blog"];
@@ -177,16 +213,12 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
   }
 
-  PageController pageController = PageController(
-    initialPage: 0,
-    keepPage: true,
-  );
-
   Widget buildPageView() {
     return PageView(
       controller: pageController,
       onPageChanged: (index) {
         pageChanged(index);
+        //showThisToast("changed now to " + index.toString());
       },
       children: <Widget>[
         Home(),
@@ -198,18 +230,162 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  loadSession() async {
+    Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+    prefs = await _prefs;
+    FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+    firebaseMessaging.subscribeToTopic(prefs.getString("uid"));
+    setState(() {
+      AUTH_KEY = prefs.getString("auth");
+      A_KEY = prefs.getString("auth");
+      UID = prefs.getString("uid");
+      UNAME = prefs.getString("uname");
+      UPHOTO = prefs.getString("uphoto");
+      UEMAIL = prefs.getString("uemail");
+      UPHONE = prefs.getString("uphone");
+      UID_FOR_CHAT = UID;
+    });
+  }
+
+  onBackPress() {
+    Navigator.pop(this.context, false);
+  }
+
   @override
   void initState() {
     super.initState();
+    this.loadSession();
+
+    bool isCallShowing = false;
+
+    // initPlatformState();
+    final databaseReference = FirebaseDatabase.instance.reference();
+    // databaseReference.child("hasCall").onChildChanged..then((DataSnapshot snapshot) {
+    //   print('Data : ${snapshot.value}');
+    //   showThisToast('Data : ${snapshot.value}');
+    // });
+    // databaseReference.child("hasCall").onValue.listen((event) {
+    //   print(event.snapshot.value.toString());
+    //   //showThisToast(event.snapshot.value.toString());
+    //   showThisToast(event.snapshot.value.toString());
+    //   Navigator.push(
+    //       useThisContext,
+    //       MaterialPageRoute(
+    //           builder: (context) => IncomingCallActivity(null)));
+    // });
+
+    FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+    _firebaseMessaging.configure(
+      // onBackgroundMessage: myBackgroundMessageHandler,
+
+      onLaunch: (Map<String, dynamic> message) async {
+        //_navigateToItemDetail(message);
+        print("on launch " + message.toString());
+        if (message["data"]["type"] == "incomming_call" &&
+            isCallingEngagged == false) {
+          isCallingEngagged = true;
+          // isCallShowing = true ;
+          Navigator.push(
+              useThisContext,
+              MaterialPageRoute(
+                  builder: (context) => IncomingCallActivity(message["data"])));
+        } else {
+          // showThisToast("unknown type");
+        }
+      },
+
+      onResume: (Map<String, dynamic> message) async {
+        print("on resume " + message.toString());
+        if (message["data"]["type"] == "incomming_call" &&
+            isCallingEngagged == false) {
+          isCallingEngagged = true;
+          // isCallShowing = true ;
+          Navigator.push(
+              useThisContext,
+              MaterialPageRoute(
+                  builder: (context) => IncomingCallActivity(message["data"])));
+        } else {
+          // showThisToast("unknown type");
+        }
+      },
+
+      //onBackgroundMessage: myBackgroundMessageHandler,
+      onMessage: (Map<String, dynamic> message) async {
+        // _navigateToItemDetail(message);
+        //  this.displayIncomingCall();
+        print("on message " + message.toString());
+
+        //showThisToast(message["data"]["room"]);
+
+        if (message["data"]["type"] == "incomming_call" &&
+            isCallingEngagged == false) {
+          isCallingEngagged = true;
+          // isCallShowing = true ;
+          Navigator.push(
+              useThisContext,
+              MaterialPageRoute(
+                  builder: (context) => IncomingCallActivity(message["data"])));
+        } else {
+          // showThisToast("unknown type");
+        }
+        /*
+        if (message["data"]["type"] == "reject_call" && isCallShowing ==true ) {
+          //this.onBackPress();
+          //mainP();
+          isCallShowing = false ;
+          isCallingEngagged = false ;
+          showThisToast("Call is terminated by the caller");
+        }
+
+         */
+        if (message["data"]["type"] == "end_call" &&
+            isCallingEngagged == true) {
+          //this.onBackPress();
+          //mainP();
+          isCallShowing = false;
+          isCallingEngagged = false;
+          showThisToast("Call is finished");
+        }
+        if (message["data"]["type"] == "cancel_call" &&
+            isCallingEngagged == true) {
+          this.onBackPress();
+          //mainP();
+          isCallShowing = false;
+          isCallingEngagged = false;
+          showThisToast("Call is canceled");
+        }
+      },
+    );
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    String platformVersion;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    // try {
+    //   platformVersion = await Callkeep.platformVersion;
+    // } on PlatformException {
+    //   platformVersion = 'Failed to get platform version.';
+    // }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _platformVersion = platformVersion;
+    });
   }
 
   void pageChanged(int index) {
-    CurvedNavigationBarState navBarState = _bottomNavigationKey.currentState;
-    navBarState.setPage(index);
+    //CurvedNavigationBarState navBarState = _bottomNavigationKey.currentState;
+    //navBarState.setPage(index);
     setState(() {
       bottomSelectedIndex = index;
       _page = index;
     });
+    showThisToast("changed to " + index.toString());
   }
 
   void bottomTapped(int index) {
@@ -221,7 +397,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void dispose() {
+    pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    useThisContext = context;
     Future<bool> _onWillpop() {
       Navigator.of(context).pop(true);
       //   showThisToast("backpressed");
@@ -232,62 +415,254 @@ class _MyHomePageState extends State<MyHomePage> {
     return AppWidget();
   }
 
+  int mainAppWidCount = 0;
+
   Widget AppWidget() {
+    mainAppWidCount++;
+    //  showThisToast("start app "+mainAppWidCount.toString()+" th time");
+
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _titles[bottomSelectedIndex],
+            style: TextStyle(color: Colors.orange),
+          ),
+          backgroundColor: Colors.white,
+          elevation: 10,
+        ),
+        drawer: myDrawer(),
+        body: buildPageView(),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: bottomSelectedIndex,
+          onTap: bottomTapped,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          items: [
+            BottomNavigationBarItem(
+                icon: new Icon(
+                  Icons.home,
+                  color: bottomSelectedIndex == 0 ? Colors.orange : Colors.grey,
+                ),
+                title: new Text(
+                  'Home',
+                  style: TextStyle(color: Colors.blue),
+                )),
+            BottomNavigationBarItem(
+              icon: new Icon(
+                Icons.notification_important,
+                color: bottomSelectedIndex == 1 ? Colors.orange : Colors.grey,
+              ),
+              title: new Text(
+                'Notification',
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.supervised_user_circle,
+                  color: bottomSelectedIndex == 2 ? Colors.orange : Colors.grey,
+                ),
+                title: Text(
+                  'Profile',
+                  style: TextStyle(color: Colors.blue),
+                )),
+            BottomNavigationBarItem(
+              icon: new Icon(
+                Icons.calendar_today,
+                color: bottomSelectedIndex == 3 ? Colors.orange : Colors.grey,
+              ),
+              title: new Text(
+                'Appointment',
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.book,
+                  color: bottomSelectedIndex == 4 ? Colors.orange : Colors.grey,
+                ),
+                title: Text(
+                  'Blog',
+                  style: TextStyle(color: Colors.blue),
+                ))
+          ],
+        ));
+  }
+}
+
+class IncomingCallActivity extends StatefulWidget {
+  dynamic data;
+
+  IncomingCallActivity(this.data);
+
+  @override
+  _IncomingCallActivityState createState() => _IncomingCallActivityState();
+}
+
+class _IncomingCallActivityState extends State<IncomingCallActivity> {
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[bottomSelectedIndex]),
-        backgroundColor: Color(0xFF34448c),
-        elevation: 0.0,
+        title: Text("Incomming Call"),
       ),
-      drawer: myDrawer(),
-      body: buildPageView(),
-      bottomNavigationBar: CurvedNavigationBar(
-        height: 56,
-        color: Color(0xFF34448c),
-        backgroundColor: Colors.white,
-        key: _bottomNavigationKey,
-        items: <Widget>[
-          Icon(
-            Icons.home,
-            size: 20,
-            color: Colors.white,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: EdgeInsets.all(15),
+            child: Text(
+              widget.data["doc_name"],
+              style: TextStyle(fontSize: 20, color: Colors.blue),
+            ),
           ),
-          Icon(
-            Icons.notifications,
-            size: 20,
-            color: Colors.white,
+          Padding(
+            padding: EdgeInsets.all(15),
+            child: CircleAvatar(
+              radius: 100,
+              backgroundImage:
+                  NetworkImage(_baseUrl_image + widget.data["doc_photo"]),
+            ),
           ),
-          Icon(
-            Icons.verified_user,
-            size: 20,
-            color: Colors.white,
-          ),
-          Icon(
-            Icons.calendar_today,
-            size: 20,
-            color: Colors.white,
-          ),
-          Icon(
-            Icons.library_books,
-            size: 20,
-            color: Colors.white,
-          ),
+          Row(
+            children: [
+              Expanded(
+                  child: Card(
+                child: ListTile(
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    // Navigator.of(context).pop();
+                    String chatRoom = createChatRoomName(int.parse(UID),
+                        int.parse(widget.data["doc_id"].toString()));
+                    CHAT_ROOM = widget.data["room"];
+                    ClientRole _role = ClientRole.Broadcaster;
+                    // await for camera and mic permissions before pushing video page
+                    await _handleCameraAndMic();
+                    // push video page with given channel name
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CallPage(
+                          channelName: widget.data["room"],
+                          role: _role,
+                          isCameraOn: true,
+                          UID: UID,
+                          isCaller: false,
+                        ),
+                      ),
+                    );
+                  },
+                  leading: Icon(Icons.done),
+                  title: Text("Attend Call"),
+                ),
+              )),
+              Expanded(
+                  child: Card(
+                child: ListTile(
+                  onTap: () async {
+                    http.Response response = await http.post(
+                      'https://fcm.googleapis.com/fcm/send',
+                      headers: <String, String>{
+                        'Content-Type': 'application/json',
+                        'Authorization':
+                            'key=AAAA8TsH26U:APA91bEK0P-32wiwnhs3iEicQzLFe20P4o7hx0-o4OS2oENSY0jfKSbd0zERkFJL1BNPYV3yE8_Y9PG4-HQ-j4ZXmV9AwrrjKvAiQdnh1JIR3JCmNg0Z4X3bM3lPZoiNGAsGXPkEdoGw',
+                        // Constant string
+                      },
+                      body: jsonEncode(
+                        <String, dynamic>{
+                          'notification': <String, dynamic>{},
+                          'priority': 'high',
+                          'data': <String, dynamic>{
+                            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+                            // 'doc_id': widget.UID,
+                            // 'doc_name': widget.ownName,
+                            // 'doc_photo': widget.partnerPhoto,
+                            'type': 'reject_call',
+                            //'room': widget.channelName
+                          },
+                          'to': "/topics/" + widget.data["doc_id"].toString()
+                        },
+                      ),
+                    );
+                    // showThisToast(response.statusCode.toString());
+                    isCallingEngagged = false;
+                    Navigator.of(context).pop();
+
+                    mainP();
+                  },
+                  leading: Icon(Icons.close),
+                  title: Text("Reject Call"),
+                ),
+              ))
+            ],
+          )
         ],
-        onTap: (index) {
-          bottomTapped(index);
-          //Handle button tap
-        },
       ),
     );
   }
 }
 
+Future<void> _handleCameraAndMic() async {
+  await PermissionHandler().requestPermissions(
+    [PermissionGroup.camera, PermissionGroup.microphone],
+  );
+}
+
 class Home extends StatefulWidget {
+  List deptList = [];
+  List videoAppList = [];
+
   @override
   _HomeState createState() => _HomeState();
 }
 
+bool _enabled = true;
+int apiHitCount = 0;
+
 class _HomeState extends State<Home> {
+  getData() async {
+    if (true) {
+      if (lastApiHitted1 + 3000 < DateTime.now().millisecondsSinceEpoch) {
+        final http.Response response = await http.post(
+          "https://appointmentbd.com/api/" + 'department-list',
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+            'Authorization': AUTH_KEY,
+          },
+        );
+        isLoading = false;
+        setState(() {
+          lastApiHitted1 = DateTime.now().millisecondsSinceEpoch;
+          widget.deptList = json.decode(response.body);
+          widget.deptList = widget.deptList.sublist(0, 4);
+        });
+      }
+    }
+    // data_ = json.decode(response.body);
+
+    // showThisToast("dept size "+response.body);
+  }
+
+  getVdoAppData() async {
+    if (true) {
+      if (lastApiHitted1 + 3000 < DateTime.now().millisecondsSinceEpoch) {
+        body = <String, String>{
+          'user_type': "patient",
+          'isFollowup': "0",
+          'id': UID
+        };
+        String apiResponse =
+            await makePostReq("get_video_appointment_list", AUTH_KEY, body);
+        this.setState(() {
+          widget.videoAppList = json.decode(apiResponse);
+          // showThisToast("this time video app size "+widget.videoAppList.length.toString());
+          lastApiHitted2 = DateTime.now().millisecondsSinceEpoch;
+        });
+      }
+    }
+  }
+
   // After 1 second, it takes you to the bottom of the ListView
   // After 1 second, it takes you to the bottom of the ListView
   // After 1 second, it takes you to the bottom of the ListView
@@ -295,461 +670,642 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    // After 1 second, it takes you to the bottom of the ListView
-    int total = 3;
-    int current = 0;
-
-    Timer.periodic(new Duration(seconds: 5), (timer) {
-      debugPrint(timer.tick.toString());
-      double total_width = _controller.position.maxScrollExtent + 320;
-      double one_width = total_width / 4;
-      _controller.animateTo(
-        one_width * current,
-        curve: Curves.easeOut,
-        duration: const Duration(milliseconds: 1000),
-      );
-      current++;
-      if (current > total) {
-        current = 0;
-      }
-    });
+    var _crossAxisSpacing = 8;
+    var _screenWidth = MediaQuery.of(context).size.width;
+    var _crossAxisCount = 2;
+    var _width = (_screenWidth - ((_crossAxisCount - 1) * _crossAxisSpacing)) /
+        _crossAxisCount;
+    var cellHeight = 60;
+    var _aspectRatio = _width / cellHeight;
     return SingleChildScrollView(
-        child: Column(
+        child: ListView(
+      shrinkWrap: true,
       children: <Widget>[
-        Container(
-          height: 130,
-          child: Stack(
-            children: <Widget>[
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 50,
-                child: Container(
-                  color: Color(0xFF34448c),
-                ),
-              ),
-              Positioned(
-                top: 00,
-                left: 0,
-                right: 0,
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      height: 130,
-                      child: ListView(
-                        controller: _controller,
-                        shrinkWrap: true,
+        Padding(
+          padding: EdgeInsets.all(10),
+          child: Card(
+            elevation: 10,
+            child: ListTile(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DoctorSearchActivity(),
+                    ));
+              },
+              leading: Icon(Icons.search),
+              title: Text("Search Doctor,Medicine or Pharmacy"),
+            ),
+          ),
+        ),
 
-                        // This next line does the trick.
-                        scrollDirection: Axis.horizontal,
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.all(5),
-                            child: Card(
-                                color: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                ),
-                                child: Container(
-                                  child: Center(
-                                    child: Image.asset(
-                                      "assets/banner5.png",
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  height: 100,
-                                )),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(5),
-                            child: Card(
-                                color: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                ),
-                                child: Container(
-                                  child: Center(
-                                    child: Image.asset(
-                                      "assets/banner2.png",
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  height: 100,
-                                )),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(5),
-                            child: Card(
-                                color: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                ),
-                                child: Container(
-                                  child: Center(
-                                    child: Image.asset(
-                                      "assets/banner3.png",
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  height: 100,
-                                )),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(5),
-                            child: Card(
-                                color: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                ),
-                                child: Container(
-                                  child: Center(
-                                    child: Image.asset(
-                                      "assets/banner4.png",
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  height: 100,
-                                )),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        Padding(
+            padding: EdgeInsets.all(0),
+            child: Container(
+              child: ListTile(
+                title: Text("Get Urgent Care"),
+                leading: Icon(
+                  Icons.work,
+                  color: Colors.orange,
+                ),
+                trailing: Icon(
+                  Icons.navigate_next,
+                  color: Colors.orange,
                 ),
               ),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(0),
+                  shape: BoxShape.rectangle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 1.0,
+                      spreadRadius: 1.0,
+                    ),
+                  ]),
+            )),
+
+        Padding(
+          padding: EdgeInsets.fromLTRB(0, 0, 0, 15),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              ListTile(
+                  title: Text("Consult a Physician"),
+                  leading: Icon(
+                    Icons.work,
+                    color: Colors.orange,
+                  ),
+                  trailing: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DeptListOnlineDocWidget(),
+                          ));
+                    },
+                    child: Text(
+                      "See All",
+                      style: TextStyle(color: Colors.orange),
+                    ),
+                  )),
+              FutureBuilder(
+                  future: getData(),
+                  builder: (context, projectSnap) {
+                    return new GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: _crossAxisCount,
+                          childAspectRatio: _aspectRatio),
+                      shrinkWrap: true,
+                      itemCount:
+                          widget.deptList == null ? 0 : widget.deptList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return new Padding(
+                          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                          child: Card(
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            ChooseDoctorOnline(
+                                                (widget.deptList[index]["id"])
+                                                    .toString())));
+                              },
+                              child: Container(
+                                height: 50,
+                                child: Center(
+                                    child: Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: new Text(
+                                    widget.deptList[index]["name"],
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                )),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  })
             ],
           ),
         ),
-        GridView.count(
-          shrinkWrap: true,
-          primary: false,
-          padding: const EdgeInsets.all(5),
-          crossAxisSpacing: 1,
-          mainAxisSpacing: 1,
-          crossAxisCount: 3,
-          children: <Widget>[
-            InkWell(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DeptListOnlineDocWidget(),
-                      ));
-                },
-                child: Card(
-                  margin: EdgeInsets.all(0.5),
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(0.0),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        height: 48,
-                        width: 48,
-                        child: Image.asset(
-                          "assets/doctor.png",
-                        ),
-                      ),
-                      Padding(
-                          padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                          child: Text(
-                            "Online Doctor",
-                            style: TextStyle(color: Color(0xFF34448c)),
-                          ))
-                    ],
-                  ),
-                )),
-            InkWell(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => DeptChamberDocWidget(context)));
-                },
-                child: Container(
-                  height: 110,
-                  child: Card(
-                    margin: EdgeInsets.all(0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0.0),
-                    ),
-                    color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Container(
-                          child: Image.asset(
-                            "assets/doctor_chamber.png",
-                            height: 48,
-                            width: 48,
-                          ),
-                        ),
-                        Padding(
-                            padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                            child: Text(
-                              "Chamber Doctor",
-                              style: TextStyle(color: Color(0xFF34448c)),
-                            ))
-                      ],
-                    ),
-                  ),
-                )),
-            InkWell(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              SubscriptionViewPatient(AUTH_KEY, UID)));
-                },
-                child: Card(
-                  margin: EdgeInsets.all(0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(0.0),
-                  ),
-                  color: Colors.white,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        height: 48,
-                        width: 48,
-                        child: Image.asset(
-                          "assets/subscription.png",
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Padding(
-                          padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                          child: Text(
-                            "Subscriptions",
-                            style: TextStyle(color: Color(0xFF34448c)),
-                          ))
-                    ],
-                  ),
-                )),
-            InkWell(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ChatListActivity()));
-                },
-                child: Card(
-                  margin: EdgeInsets.all(0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(0.0),
-                  ),
-                  color: Colors.white,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        height: 48,
-                        width: 48,
-                        child: Image.asset(
-                          "assets/live_chat.png",
-                        ),
-                      ),
-                      Padding(
-                          padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                          child: Text(
-                            "Chat",
-                            style: TextStyle(color: Color(0xFF34448c)),
-                          ))
-                    ],
-                  ),
-                )),
-            InkWell(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => AmbulanceWidget()));
-                },
-                child: Container(
-                  height: 110,
-                  child: Card(
-                    margin: EdgeInsets.all(0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0.0),
-                    ),
-                    color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Container(
-                          height: 48,
-                          width: 48,
-                          child: Image.asset(
-                            "assets/ambulance.png",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Padding(
-                            padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                            child: Text(
-                              "Ambulance",
-                              style: TextStyle(color: Color(0xFF34448c)),
-                            ))
-                      ],
-                    ),
-                  ),
-                )),
-            InkWell(
-                onTap: () {
-//                  Navigator.push(
-//                      context,
-//                      MaterialPageRoute(
-//                          builder: (context) => HomeVisitsDoctorsList()));
-
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => HomeVisitViewPagerWid()));
-                },
-                child: Container(
-                  height: 110,
-                  child: Card(
-                    margin: EdgeInsets.all(0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0.0),
-                    ),
-                    color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Container(
-                          height: 48,
-                          width: 48,
-                          child: Image.asset(
-                            "assets/window.png",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Center(
-                          child: Padding(
-                              padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                              child: Text(
-                                "Home Visits",
-                                style: TextStyle(
-                                  color: Color(0xFF34448c),
-                                ),
-                                textAlign: TextAlign.center,
-                              )),
-                        )
-                      ],
-                    ),
-                  ),
-                )),
-            InkWell(
-                onTap: () {
-//                  Navigator.push(
-//                      context,
-//                      MaterialPageRoute(
-//                          builder: (context) => HomeVisitsDoctorsList()));
-
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              VideoAppointmentListActivityPatient(A_KEY, UID)));
-                },
-                child: Container(
-                  height: 110,
-                  child: Card(
-                    margin: EdgeInsets.all(0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0.0),
-                    ),
-                    color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Container(
-                          height: 48,
-                          width: 48,
-                          child: Image.asset(
-                            "assets/video_call_img.png",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Center(
-                          child: Padding(
-                              padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                              child: Text(
-                                "Online Appointment",
-                                style: TextStyle(
-                                  color: Color(0xFF34448c),
-                                ),
-                                textAlign: TextAlign.center,
-                              )),
-                        )
-                      ],
-                    ),
-                  ),
-                )),
-            InkWell(
-                onTap: () {
-//                  Navigator.push(
-//                      context,
-//                      MaterialPageRoute(
-//                          builder: (context) => HomeVisitsDoctorsList()));
-
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              FollowupVideoAppointmentListActivityPatient(
-                                  A_KEY, UID)));
-                },
-                child: Container(
-                  height: 110,
-                  child: Card(
-                    margin: EdgeInsets.all(0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0.0),
-                    ),
-                    color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Container(
-                          height: 48,
-                          width: 48,
-                          child: Image.asset(
-                            "assets/video_call_img.png",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Center(
-                          child: Padding(
-                              padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                              child: Text(
-                                "Follow up Online Appointment",
-                                style: TextStyle(
-                                  color: Color(0xFF34448c),
-                                ),
-                                textAlign: TextAlign.center,
-                              )),
-                        )
-                      ],
-                    ),
-                  ),
-                )),
-          ],
+        Padding(
+          padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+          child: ListTile(
+            title: Text("Appointments"),
+            leading: Icon(
+              Icons.calendar_today,
+              color: Colors.orange,
+            ),
+            trailing: Text(
+              "See All",
+              style: TextStyle(color: Colors.orange),
+            ),
+          ),
         ),
+        FutureBuilder(
+            future: getVdoAppData(),
+            builder: (context, projectSnap) {
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: widget.videoAppList == null
+                    ? 0
+                    : widget.videoAppList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return new InkWell(
+                    onTap: () {
+                      String chatRoom = createChatRoomName(int.parse(UID),
+                          widget.videoAppList[index]["dr_info"]["id"]);
+                      CHAT_ROOM = chatRoom;
+                      showThisToast(chatRoom);
+                      // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                  widget.videoAppList[index]["dr_info"]["id"]
+                                      .toString(),
+                                  widget.videoAppList[index]["dr_info"]["name"],
+                                  _baseUrl_image +
+                                      widget.videoAppList[index]["dr_info"]
+                                          ["photo"],
+                                  UID,
+                                  UNAME,
+                                  UPHOTO,
+                                  chatRoom)));
+                    },
+                    // child: Card(
+                    //   elevation: 3,
+                    //   shape: RoundedRectangleBorder(
+                    //     borderRadius: BorderRadius.circular(10.0),
+                    //   ),
+                    //   child: Padding(
+                    //     padding: EdgeInsets.all(0),
+                    //     child: Column(
+                    //       crossAxisAlignment: CrossAxisAlignment.start,
+                    //       mainAxisAlignment: MainAxisAlignment.start,
+                    //       children: [
+                    //         Padding(
+                    //           padding: EdgeInsets.all(15),
+                    //           child: Text(
+                    //               widget.videoAppList[index]["created_at"]),
+                    //         ),
+                    //         Divider(
+                    //           color: Colors.grey,
+                    //           height: 1,
+                    //         ),
+                    //         ListTile(
+                    //           leading: CircleAvatar(
+                    //             backgroundImage: NetworkImage(_baseUrl_image +
+                    //                 widget.videoAppList[index]["dr_info"]
+                    //                     ["photo"]),
+                    //           ),
+                    //           title: Text(widget.videoAppList[index]["dr_info"]
+                    //               ["name"]),
+                    //           subtitle: Text(
+                    //             "Send a Message",
+                    //             style: TextStyle(color: Colors.blue),
+                    //           ),
+                    //         )
+                    //       ],
+                    //     ),
+                    //   ),
+                    // ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(15, 0, 15, 5),
+                      child: Container(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(15),
+                              child: Text(
+                                  widget.videoAppList[index]["created_at"]),
+                            ),
+                            Divider(
+                              color: Colors.grey,
+                              height: 1,
+                            ),
+                            ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: NetworkImage(_baseUrl_image +
+                                    widget.videoAppList[index]["dr_info"]
+                                        ["photo"]),
+                              ),
+                              title: Text(widget.videoAppList[index]["dr_info"]
+                                  ["name"]),
+                              subtitle: Text(
+                                "Send a Message",
+                                style: TextStyle(color: Colors.blue),
+                              ),
+                            )
+                          ],
+                        ),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(5),
+                            shape: BoxShape.rectangle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 5.0,
+                                spreadRadius: 1.0,
+                              ),
+                            ]),
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
+
+//         GridView.count(
+//           shrinkWrap: true,
+//           primary: false,
+//           padding: const EdgeInsets.all(5),
+//           crossAxisSpacing: 1,
+//           mainAxisSpacing: 1,
+//           crossAxisCount: 3,
+//           children: <Widget>[
+//             InkWell(
+//                 onTap: () {
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (context) => DeptListOnlineDocWidget(),
+//                       ));
+//                 },
+//                 child: Card(
+//                   margin: EdgeInsets.all(0.5),
+//                   color: Colors.white,
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(0.0),
+//                   ),
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.center,
+//                     mainAxisAlignment: MainAxisAlignment.center,
+//                     children: <Widget>[
+//                       Container(
+//                         height: 48,
+//                         width: 48,
+//                         child: Image.asset(
+//                           "assets/doctor.png",
+//                         ),
+//                       ),
+//                       Padding(
+//                           padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                           child: Text(
+//                             "Online Doctor",
+//                             style: TextStyle(color: Color(0xFF34448c)),
+//                           ))
+//                     ],
+//                   ),
+//                 )),
+//             InkWell(
+//                 onTap: () {
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                           builder: (context) => DeptChamberDocWidget(context)));
+//                 },
+//                 child: Container(
+//                   height: 110,
+//                   child: Card(
+//                     margin: EdgeInsets.all(0.5),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(0.0),
+//                     ),
+//                     color: Colors.white,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.center,
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: <Widget>[
+//                         Container(
+//                           child: Image.asset(
+//                             "assets/doctor_chamber.png",
+//                             height: 48,
+//                             width: 48,
+//                           ),
+//                         ),
+//                         Padding(
+//                             padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                             child: Text(
+//                               "Chamber Doctor",
+//                               style: TextStyle(color: Color(0xFF34448c)),
+//                             ))
+//                       ],
+//                     ),
+//                   ),
+//                 )),
+//             InkWell(
+//                 onTap: () {
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                           builder: (context) =>
+//                               SubscriptionViewPatient(AUTH_KEY, UID)));
+//                 },
+//                 child: Card(
+//                   margin: EdgeInsets.all(0.5),
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(0.0),
+//                   ),
+//                   color: Colors.white,
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.center,
+//                     mainAxisAlignment: MainAxisAlignment.center,
+//                     children: <Widget>[
+//                       Container(
+//                         height: 48,
+//                         width: 48,
+//                         child: Image.asset(
+//                           "assets/subscription.png",
+//                           fit: BoxFit.cover,
+//                         ),
+//                       ),
+//                       Padding(
+//                           padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                           child: Text(
+//                             "Subscriptions",
+//                             style: TextStyle(color: Color(0xFF34448c)),
+//                           ))
+//                     ],
+//                   ),
+//                 )),
+//             InkWell(
+//                 onTap: () {
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                           builder: (context) => ChatListActivity()));
+//                 },
+//                 child: Card(
+//                   margin: EdgeInsets.all(0.5),
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(0.0),
+//                   ),
+//                   color: Colors.white,
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.center,
+//                     mainAxisAlignment: MainAxisAlignment.center,
+//                     children: <Widget>[
+//                       Container(
+//                         height: 48,
+//                         width: 48,
+//                         child: Image.asset(
+//                           "assets/live_chat.png",
+//                         ),
+//                       ),
+//                       Padding(
+//                           padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                           child: Text(
+//                             "Chat",
+//                             style: TextStyle(color: Color(0xFF34448c)),
+//                           ))
+//                     ],
+//                   ),
+//                 )),
+//             InkWell(
+//                 onTap: () {
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                           builder: (context) => AmbulanceWidget()));
+//                 },
+//                 child: Container(
+//                   height: 110,
+//                   child: Card(
+//                     margin: EdgeInsets.all(0.5),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(0.0),
+//                     ),
+//                     color: Colors.white,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.center,
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: <Widget>[
+//                         Container(
+//                           height: 48,
+//                           width: 48,
+//                           child: Image.asset(
+//                             "assets/ambulance.png",
+//                             fit: BoxFit.cover,
+//                           ),
+//                         ),
+//                         Padding(
+//                             padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                             child: Text(
+//                               "Ambulance",
+//                               style: TextStyle(color: Color(0xFF34448c)),
+//                             ))
+//                       ],
+//                     ),
+//                   ),
+//                 )),
+//             InkWell(
+//                 onTap: () {
+// //                  Navigator.push(
+// //                      context,
+// //                      MaterialPageRoute(
+// //                          builder: (context) => HomeVisitsDoctorsList()));
+//
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                           builder: (context) => HomeVisitViewPagerWid()));
+//                 },
+//                 child: Container(
+//                   height: 110,
+//                   child: Card(
+//                     margin: EdgeInsets.all(0.5),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(0.0),
+//                     ),
+//                     color: Colors.white,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.center,
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: <Widget>[
+//                         Container(
+//                           height: 48,
+//                           width: 48,
+//                           child: Image.asset(
+//                             "assets/window.png",
+//                             fit: BoxFit.cover,
+//                           ),
+//                         ),
+//                         Center(
+//                           child: Padding(
+//                               padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                               child: Text(
+//                                 "Home Visits",
+//                                 style: TextStyle(
+//                                   color: Color(0xFF34448c),
+//                                 ),
+//                                 textAlign: TextAlign.center,
+//                               )),
+//                         )
+//                       ],
+//                     ),
+//                   ),
+//                 )),
+//             InkWell(
+//                 onTap: () {
+// //                  Navigator.push(
+// //                      context,
+// //                      MaterialPageRoute(
+// //                          builder: (context) => HomeVisitsDoctorsList()));
+//
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                           builder: (context) =>
+//                               VideoAppointmentListActivityPatient(A_KEY, UID)));
+//                 },
+//                 child: Container(
+//                   height: 110,
+//                   child: Card(
+//                     margin: EdgeInsets.all(0.5),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(0.0),
+//                     ),
+//                     color: Colors.white,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.center,
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: <Widget>[
+//                         Container(
+//                           height: 48,
+//                           width: 48,
+//                           child: Image.asset(
+//                             "assets/video_call_img.png",
+//                             fit: BoxFit.cover,
+//                           ),
+//                         ),
+//                         Center(
+//                           child: Padding(
+//                               padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                               child: Text(
+//                                 "Online Appointment",
+//                                 style: TextStyle(
+//                                   color: Color(0xFF34448c),
+//                                 ),
+//                                 textAlign: TextAlign.center,
+//                               )),
+//                         )
+//                       ],
+//                     ),
+//                   ),
+//                 )),
+//             InkWell(
+//                 onTap: () {
+// //                  Navigator.push(
+// //                      context,
+// //                      MaterialPageRoute(
+// //                          builder: (context) => HomeVisitsDoctorsList()));
+//
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                           builder: (context) =>
+//                               FollowupVideoAppointmentListActivityPatient(
+//                                   A_KEY, UID, UPHOTO)));
+//                 },
+//                 child: Container(
+//                   height: 110,
+//                   child: Card(
+//                     margin: EdgeInsets.all(0.5),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(0.0),
+//                     ),
+//                     color: Colors.white,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.center,
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: <Widget>[
+//                         Container(
+//                           height: 48,
+//                           width: 48,
+//                           child: Image.asset(
+//                             "assets/video_call_img.png",
+//                             fit: BoxFit.cover,
+//                           ),
+//                         ),
+//                         Center(
+//                           child: Padding(
+//                               padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                               child: Text(
+//                                 "Follow up Online Appointment",
+//                                 style: TextStyle(
+//                                   color: Color(0xFF34448c),
+//                                 ),
+//                                 textAlign: TextAlign.center,
+//                               )),
+//                         )
+//                       ],
+//                     ),
+//                   ),
+//                 )),
+//             InkWell(
+//                 onTap: () {
+// //                  Navigator.push(
+// //                      context,
+// //                      MaterialPageRoute(
+// //                          builder: (context) => HomeVisitsDoctorsList()));
+//
+//                   Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                           builder: (context) => PendingpaymentsActivity()));
+//                 },
+//                 child: Container(
+//                   height: 110,
+//                   child: Card(
+//                     margin: EdgeInsets.all(0.5),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(0.0),
+//                     ),
+//                     color: Colors.white,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.center,
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: <Widget>[
+//                         Container(
+//                           height: 48,
+//                           width: 48,
+//                           child: Image.asset(
+//                             "assets/payment.png",
+//                             fit: BoxFit.cover,
+//                           ),
+//                         ),
+//                         Center(
+//                           child: Padding(
+//                               padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+//                               child: Text(
+//                                 "Pending Payments",
+//                                 style: TextStyle(
+//                                   color: Color(0xFF34448c),
+//                                 ),
+//                                 textAlign: TextAlign.center,
+//                               )),
+//                         )
+//                       ],
+//                     ),
+//                   ),
+//                 )),
+//           ],
+//         ),
       ],
     ));
   }
@@ -757,7 +1313,8 @@ class _HomeState extends State<Home> {
 
 class HomeVisitsDoctorsList extends StatefulWidget {
   String address;
-  HomeVisitsDoctorsList(this. address);
+
+  HomeVisitsDoctorsList(this.address);
 
   @override
   _HomeVisitsDoctorsListState createState() => _HomeVisitsDoctorsListState();
@@ -768,8 +1325,7 @@ class _HomeVisitsDoctorsListState extends State<HomeVisitsDoctorsList> {
 
   Future<String> getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" +
-          'home_visits_doctor_search',
+      "https://appointmentbd.com/api/" + 'home_visits_doctor_search',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
@@ -806,8 +1362,8 @@ class _HomeVisitsDoctorsListState extends State<HomeVisitsDoctorsList> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                HomeVisitDoctorDetailPage(widget.address,data[index])));
+                            builder: (context) => HomeVisitDoctorDetailPage(
+                                widget.address, data[index])));
                   },
                   child: Card(
                     shape: RoundedRectangleBorder(
@@ -832,7 +1388,7 @@ class _HomeVisitsDoctorsListState extends State<HomeVisitsDoctorsList> {
                       ),
                       leading: CircleAvatar(
                         backgroundImage: NetworkImage(
-                            "http://telemedicine.drshahidulislam.com/" +
+                            "https://appointmentbd.com/" +
                                 data[index]["photo"]),
                       ),
                     ),
@@ -851,7 +1407,7 @@ class HomeVisitDoctorDetailPage extends StatefulWidget {
   dynamic data;
   String address;
 
-  HomeVisitDoctorDetailPage(this.address,this.data);
+  HomeVisitDoctorDetailPage(this.address, this.data);
 
   @override
   _HomeVisitDoctorDetailPageState createState() =>
@@ -886,7 +1442,7 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
         setState(() {
           date = selctedDate_;
         });
-        showThisToast(selctedDate_);
+        //  showThisToast(selctedDate_);
       });
   }
 
@@ -910,8 +1466,7 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
               child: CircleAvatar(
                 radius: 50,
                 backgroundImage: NetworkImage(
-                    "http://telemedicine.drshahidulislam.com/" +
-                        widget.data["photo"]),
+                    "https://appointmentbd.com/" + widget.data["photo"]),
               ),
             ),
             Padding(
@@ -959,7 +1514,6 @@ class _HomeVisitDoctorDetailPageState extends State<HomeVisitDoctorDetailPage> {
                     child: TextFormField(
                       initialValue: widget.address,
                       validator: (value) {
-
                         homeAddress = value;
                         if (value.isEmpty) {
                           return 'Please enter home address';
@@ -1223,6 +1777,2798 @@ class _ProjNotificationState extends State<ProjNotification> {
   }
 }
 
+class ChooseConsultationDateTimeActivity extends StatefulWidget {
+  dynamic docProfile;
+  List allSunday = [];
+  List allMonday = [];
+  List allTuesday = [];
+  List allWednesDay = [];
+  List allThursDay = [];
+  List allFriday = [];
+  List allSatDay = [];
+  int today = 1;
+  int selectedDate = 1;
+  int selectedMonth = 1;
+  int selectedYear = 1;
+
+  ChooseConsultationDateTimeActivity(this.docProfile);
+
+  @override
+  _ChooseConsultationDateTimeActivityState createState() =>
+      _ChooseConsultationDateTimeActivityState();
+}
+
+int getMonthCount(int month) {
+  int count = 0;
+  if (month == 1) count = 31;
+  if (month == 2) count = 29;
+  if (month == 3) count = 31;
+  if (month == 4) count = 30;
+  if (month == 5) count = 31;
+  if (month == 6) count = 30;
+  if (month == 7) count = 31;
+  if (month == 8) count = 31;
+  if (month == 9) count = 30;
+  if (month == 10) count = 31;
+  if (month == 11) count = 30;
+  if (month == 12) count = 31;
+  return count;
+}
+
+class _ChooseConsultationDateTimeActivityState
+    extends State<ChooseConsultationDateTimeActivity> {
+  getAlldays() {
+    DateTime dateTimereal = new DateTime.now();
+
+    setState(() {
+      widget.selectedMonth = dateTimereal.month;
+      widget.selectedYear = dateTimereal.year;
+      widget.today = dateTimereal.day;
+      widget.selectedDate = dateTimereal.day;
+    });
+    DateTime dateTime = new DateTime.now();
+    int thisMonth = dateTime.month;
+    dateTime = new DateTime(dateTimereal.year, dateTimereal.month, 1);
+    for (int i = 0; i <= getMonthCount(dateTimereal.month); i++) {
+      if (dateTime.weekday == 1) {
+        setState(() {
+          if (i == 0) {
+            //widget.allSunday.add(0);
+          }
+
+          widget.allMonday.add(dateTime.day);
+        });
+      }
+      if (dateTime.weekday == 2) {
+        setState(() {
+          if (i == 0) {
+            //widget.allSunday.add(0);
+            widget.allMonday.add(0);
+          }
+          widget.allTuesday.add(dateTime.day);
+        });
+      }
+      if (dateTime.weekday == 3) {
+        setState(() {
+          if (i == 0) {
+            //widget.allSunday.add(0);
+            widget.allMonday.add(0);
+            widget.allTuesday.add(0);
+          }
+          widget.allWednesDay.add(dateTime.day);
+        });
+      }
+      if (dateTime.weekday == 4) {
+        setState(() {
+          if (i == 0) {
+            //widget.allSunday.add(0);
+            widget.allMonday.add(0);
+            widget.allTuesday.add(0);
+            widget.allWednesDay.add(0);
+          }
+          widget.allThursDay.add(dateTime.day);
+        });
+      }
+      if (dateTime.weekday == 5) {
+        setState(() {
+          if (i == 0) {
+            //widget.allSunday.add(0);
+            widget.allMonday.add(0);
+            widget.allTuesday.add(0);
+            widget.allWednesDay.add(0);
+            widget.allThursDay.add(0);
+          }
+          widget.allFriday.add(dateTime.day);
+        });
+      }
+      if (dateTime.weekday == 6) {
+        setState(() {
+          if (i == 0) {
+            // widget.allSunday.add(0);
+            widget.allMonday.add(0);
+            widget.allTuesday.add(0);
+            widget.allWednesDay.add(0);
+            widget.allThursDay.add(0);
+            widget.allFriday.add(0);
+          }
+          widget.allSatDay.add(dateTime.day);
+        });
+      }
+      if (dateTime.weekday == 7) {
+        setState(() {
+          if (i == 0) {
+            //  widget.allMonday.add(0);
+            widget.allTuesday.add(0);
+            widget.allWednesDay.add(0);
+            widget.allThursDay.add(0);
+            widget.allFriday.add(0);
+            widget.allSatDay.add(0);
+          }
+          widget.allSunday.add(dateTime.day);
+        });
+      }
+      dateTime = dateTime.add(new Duration(days: 1));
+    }
+    print(widget.allSunday.toString());
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    this.getAlldays();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Text("Appointment Date & Time"),
+        elevation: 10,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Card(
+                color: Colors.white,
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      Padding(padding: EdgeInsets.all(8)),
+                      Stack(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Icon(Icons.chevron_left),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Icon(Icons.chevron_right),
+                          ),
+                          Align(
+                            alignment: Alignment.center,
+                            child: Center(
+                              child: Text("This Month"),
+                            ),
+                          )
+                        ],
+                      ),
+                      Padding(padding: EdgeInsets.all(5)),
+                      Row(
+                        children: [
+                          Expanded(
+                              child: Center(
+                            child: Text("Mon"),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: Text("Tue"),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: Text("Wed"),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: Text("Thu"),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: Text("Fri"),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: Text("Sat"),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: Text("Sun"),
+                          )),
+                        ],
+                      ),
+                      Padding(padding: EdgeInsets.all(8)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                              child: Center(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: widget.allMonday == null
+                                  ? 0
+                                  : widget.allMonday.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return widget.allMonday[index] == 0
+                                    ? Padding(
+                                        padding: EdgeInsets.all(3),
+                                        child: Container(
+                                          height: 30,
+                                          width: 30,
+                                        ),
+                                      )
+                                    : InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (widget.allMonday[index] >=
+                                                widget.today)
+                                              widget.selectedDate =
+                                                  widget.allMonday[index];
+                                          });
+                                        },
+                                        child: Center(
+                                          child: Padding(
+                                              padding: EdgeInsets.all(0),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(3),
+                                                child: Container(
+                                                  height: 30,
+                                                  width: 30,
+                                                  decoration: BoxDecoration(
+                                                      color: widget.allMonday[
+                                                                  index] ==
+                                                              widget.today
+                                                          ? Colors.blue
+                                                          : (widget.allMonday[
+                                                                      index] <
+                                                                  widget.today
+                                                              ? Colors.grey
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236)),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              0),
+                                                      shape: BoxShape.rectangle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: widget.allMonday[
+                                                                      index] ==
+                                                                  widget
+                                                                      .selectedDate
+                                                              ? Colors.blue
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236),
+                                                          blurRadius: 1.0,
+                                                          spreadRadius: 1.0,
+                                                        ),
+                                                      ]),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(3),
+                                                    child: Center(
+                                                      child: Text(widget
+                                                          .allMonday[index]
+                                                          .toString()),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                        ));
+                              },
+                            ),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: widget.allTuesday == null
+                                  ? 0
+                                  : widget.allTuesday.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return widget.allTuesday[index] == 0
+                                    ? Padding(
+                                        padding: EdgeInsets.all(3),
+                                        child: Container(
+                                          height: 30,
+                                          width: 30,
+                                        ),
+                                      )
+                                    : InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (widget.allTuesday[index] >=
+                                                widget.today)
+                                              widget.selectedDate =
+                                                  widget.allTuesday[index];
+                                          });
+                                        },
+                                        child: Center(
+                                          child: Padding(
+                                              padding: EdgeInsets.all(0),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(3),
+                                                child: Container(
+                                                  height: 30,
+                                                  width: 30,
+                                                  decoration: BoxDecoration(
+                                                      color: widget.allTuesday[
+                                                                  index] ==
+                                                              widget.today
+                                                          ? Colors.blue
+                                                          : (widget.allTuesday[
+                                                                      index] <
+                                                                  widget.today
+                                                              ? Colors.grey
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236)),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              0),
+                                                      shape: BoxShape.rectangle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: widget.allTuesday[
+                                                                      index] ==
+                                                                  widget
+                                                                      .selectedDate
+                                                              ? Colors.blue
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236),
+                                                          blurRadius: 1.0,
+                                                          spreadRadius: 1.0,
+                                                        ),
+                                                      ]),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(3),
+                                                    child: Center(
+                                                      child: Text(widget
+                                                          .allTuesday[index]
+                                                          .toString()),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                        ));
+                              },
+                            ),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: widget.allWednesDay == null
+                                  ? 0
+                                  : widget.allWednesDay.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return widget.allWednesDay[index] == 0
+                                    ? Padding(
+                                        padding: EdgeInsets.all(3),
+                                        child: Container(
+                                          height: 30,
+                                          width: 30,
+                                        ),
+                                      )
+                                    : InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (widget.allWednesDay[index] >=
+                                                widget.today)
+                                              widget.selectedDate =
+                                                  widget.allWednesDay[index];
+                                          });
+                                        },
+                                        child: Center(
+                                          child: Padding(
+                                              padding: EdgeInsets.all(0),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(3),
+                                                child: Container(
+                                                  height: 30,
+                                                  width: 30,
+                                                  decoration: BoxDecoration(
+                                                      color: widget.allWednesDay[
+                                                                  index] ==
+                                                              widget.today
+                                                          ? Colors.blue
+                                                          : (widget.allWednesDay[
+                                                                      index] <
+                                                                  widget.today
+                                                              ? Colors.grey
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236)),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              0),
+                                                      shape: BoxShape.rectangle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: widget.allWednesDay[
+                                                                      index] ==
+                                                                  widget
+                                                                      .selectedDate
+                                                              ? Colors.blue
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236),
+                                                          blurRadius: 1.0,
+                                                          spreadRadius: 1.0,
+                                                        ),
+                                                      ]),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(3),
+                                                    child: Center(
+                                                      child: Text(widget
+                                                          .allWednesDay[index]
+                                                          .toString()),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                        ));
+                              },
+                            ),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: widget.allThursDay == null
+                                  ? 0
+                                  : widget.allThursDay.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return widget.allThursDay[index] == 0
+                                    ? Padding(
+                                        padding: EdgeInsets.all(3),
+                                        child: Container(
+                                          height: 30,
+                                          width: 30,
+                                        ),
+                                      )
+                                    : InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (widget.allThursDay[index] >=
+                                                widget.today)
+                                              widget.selectedDate =
+                                                  widget.allThursDay[index];
+                                          });
+                                        },
+                                        child: Center(
+                                          child: Padding(
+                                              padding: EdgeInsets.all(0),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(3),
+                                                child: Container(
+                                                  height: 30,
+                                                  width: 30,
+                                                  decoration: BoxDecoration(
+                                                      color: widget.allThursDay[
+                                                                  index] ==
+                                                              widget.today
+                                                          ? Colors.blue
+                                                          : (widget.allThursDay[
+                                                                      index] <
+                                                                  widget.today
+                                                              ? Colors.grey
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236)),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              0),
+                                                      shape: BoxShape.rectangle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: widget.allThursDay[
+                                                                      index] ==
+                                                                  widget
+                                                                      .selectedDate
+                                                              ? Colors.blue
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236),
+                                                          blurRadius: 1.0,
+                                                          spreadRadius: 1.0,
+                                                        ),
+                                                      ]),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(3),
+                                                    child: Center(
+                                                      child: Text(widget
+                                                          .allThursDay[index]
+                                                          .toString()),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                        ));
+                              },
+                            ),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: widget.allFriday == null
+                                  ? 0
+                                  : widget.allFriday.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return widget.allFriday[index] == 0
+                                    ? Padding(
+                                        padding: EdgeInsets.all(3),
+                                        child: Container(
+                                          height: 30,
+                                          width: 30,
+                                        ),
+                                      )
+                                    : InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (widget.allFriday[index] >=
+                                                widget.today)
+                                              widget.selectedDate =
+                                                  widget.allFriday[index];
+                                          });
+                                        },
+                                        child: Center(
+                                          child: Padding(
+                                              padding: EdgeInsets.all(0),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(3),
+                                                child: Container(
+                                                  height: 30,
+                                                  width: 30,
+                                                  decoration: BoxDecoration(
+                                                      color: widget.allFriday[
+                                                                  index] ==
+                                                              widget.today
+                                                          ? Colors.blue
+                                                          : (widget.allFriday[
+                                                                      index] <
+                                                                  widget.today
+                                                              ? Colors.grey
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236)),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              0),
+                                                      shape: BoxShape.rectangle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: widget.allFriday[
+                                                                      index] ==
+                                                                  widget
+                                                                      .selectedDate
+                                                              ? Colors.blue
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236),
+                                                          blurRadius: 1.0,
+                                                          spreadRadius: 1.0,
+                                                        ),
+                                                      ]),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(3),
+                                                    child: Center(
+                                                      child: Text(widget
+                                                          .allFriday[index]
+                                                          .toString()),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                        ));
+                              },
+                            ),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: widget.allSatDay == null
+                                  ? 0
+                                  : widget.allSatDay.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return widget.allSatDay[index] == 0
+                                    ? Padding(
+                                        padding: EdgeInsets.all(3),
+                                        child: Container(
+                                          height: 30,
+                                          width: 30,
+                                        ),
+                                      )
+                                    : InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (widget.allSatDay[index] >=
+                                                widget.today)
+                                              widget.selectedDate =
+                                                  widget.allSatDay[index];
+                                          });
+                                        },
+                                        child: Center(
+                                          child: Padding(
+                                              padding: EdgeInsets.all(0),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(3),
+                                                child: Container(
+                                                  height: 30,
+                                                  width: 30,
+                                                  decoration: BoxDecoration(
+                                                      color: widget.allSatDay[
+                                                                  index] ==
+                                                              widget.today
+                                                          ? Colors.blue
+                                                          : (widget.allSatDay[
+                                                                      index] <
+                                                                  widget.today
+                                                              ? Colors.grey
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236)),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              0),
+                                                      shape: BoxShape.rectangle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: widget.allSatDay[
+                                                                      index] ==
+                                                                  widget
+                                                                      .selectedDate
+                                                              ? Colors.blue
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236),
+                                                          blurRadius: 1.0,
+                                                          spreadRadius: 1.0,
+                                                        ),
+                                                      ]),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(3),
+                                                    child: Center(
+                                                      child: Text(widget
+                                                          .allSatDay[index]
+                                                          .toString()),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                        ));
+                              },
+                            ),
+                          )),
+                          Expanded(
+                              child: Center(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: widget.allSunday == null
+                                  ? 0
+                                  : widget.allSunday.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return widget.allSunday[index] == 0
+                                    ? Padding(
+                                        padding: EdgeInsets.all(3),
+                                        child: Container(
+                                          height: 30,
+                                          width: 30,
+                                        ),
+                                      )
+                                    : InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (widget.allSunday[index] >=
+                                                widget.today)
+                                              widget.selectedDate =
+                                                  widget.allSunday[index];
+                                          });
+                                        },
+                                        child: Center(
+                                          child: Padding(
+                                              padding: EdgeInsets.all(0),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(3),
+                                                child: Container(
+                                                  height: 30,
+                                                  width: 30,
+                                                  decoration: BoxDecoration(
+                                                      color: widget.allSunday[
+                                                                  index] ==
+                                                              widget.today
+                                                          ? Colors.blue
+                                                          : (widget.allSunday[
+                                                                      index] <
+                                                                  widget.today
+                                                              ? Colors.grey
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236)),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              0),
+                                                      shape: BoxShape.rectangle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: widget.allSunday[
+                                                                      index] ==
+                                                                  widget
+                                                                      .selectedDate
+                                                              ? Colors.blue
+                                                              : Color.fromARGB(
+                                                                  255,
+                                                                  236,
+                                                                  236,
+                                                                  236),
+                                                          blurRadius: 1.0,
+                                                          spreadRadius: 1.0,
+                                                        ),
+                                                      ]),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(3),
+                                                    child: Center(
+                                                      child: Text(widget
+                                                          .allSunday[index]
+                                                          .toString()),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )),
+                                        ));
+                              },
+                            ),
+                          )),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
+              child: Text(
+                "Choose Slot",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ConsultationFormActivity(
+                            widget.selectedDate.toString() +
+                                "/" +
+                                widget.selectedMonth.toString() +
+                                "/" +
+                                widget.selectedYear.toString(),
+                            "12:00 PM",
+                            widget.docProfile["id"].toString(),widget.docProfile["name"],widget.docProfile["video_appointment_rate"]
+                            .toString() +
+                            " £")));
+              },
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 10, 0, 0),
+                child: Container(
+                  height: 45,
+                  width: 100,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(0),
+                      shape: BoxShape.rectangle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey,
+                          blurRadius: 5.0,
+                          spreadRadius: 1.0,
+                        ),
+                      ]),
+                  child: Padding(
+                    padding: EdgeInsets.all(5),
+                    child: Center(
+                      child: Text("12:00 PM"),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ConsultationFormActivity extends StatefulWidget {
+  int currentPage = 0;
+  String name = "Aminul islam", age = "27", gender = "Male";
+
+  List appointmentForUserType = [];
+  List diseasesType = [];
+  List conditionsType = [];
+  List medications = [];
+  String tempMedName = "";
+
+  String weight = "66";
+  String temperature = "34 C";
+  String bloodPressure = "120/80";
+  String date;
+
+  String time;
+
+  String reasonForVisit = "No reason selected";
+
+  String conditions = "No conditions selected";
+
+  String medicationsName = "No medicines selected";
+  String docID;
+  String docName;
+  String fees;
+
+
+  ConsultationFormActivity(this.date, this.time, this.docID,this.docName,this.fees);
+
+  @override
+  _ConsultationFormActivityState createState() =>
+      _ConsultationFormActivityState();
+}
+
+class _ConsultationFormActivityState extends State<ConsultationFormActivity> {
+  PageController _controller = PageController(
+    initialPage: 0,
+  );
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    setState(() {
+      widget.appointmentForUserType
+          .add(<String, dynamic>{'userType': "Me", 'isSelected': true});
+      widget.appointmentForUserType
+          .add(<String, dynamic>{'userType': "My Child", 'isSelected': false});
+      widget.appointmentForUserType
+          .add(<String, dynamic>{'userType': "Adult", 'isSelected': false});
+
+      widget.diseasesType
+          .add(<String, dynamic>{'name': "Allergies", 'isSelected': false});
+      widget.diseasesType
+          .add(<String, dynamic>{'name': "Cough,Cold", 'isSelected': false});
+      widget.diseasesType
+          .add(<String, dynamic>{'name': "Arthitis", 'isSelected': false});
+      widget.diseasesType
+          .add(<String, dynamic>{'name': "Asthma", 'isSelected': false});
+
+      widget.conditionsType
+          .add(<String, dynamic>{'name': "Alcohol use disorder", 'isSelected': false});
+      widget.conditionsType
+          .add(<String, dynamic>{'name': "Alergies", 'isSelected': false});
+      widget.conditionsType
+          .add(<String, dynamic>{'name': "Arthitis", 'isSelected': false});
+      widget.conditionsType
+          .add(<String, dynamic>{'name': "Asthma", 'isSelected': false});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Consultation Form"),
+        elevation: 10,
+        backgroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 15, 10, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                      child: Padding(
+                    padding: EdgeInsets.all(3),
+                    child: Container(
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: widget.currentPage == 0
+                              ? Colors.blue
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(3),
+                          shape: BoxShape.rectangle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueAccent,
+                              blurRadius: 1.0,
+                              spreadRadius: 1.0,
+                            ),
+                          ]),
+                    ),
+                  )),
+                  Expanded(
+                      child: Padding(
+                    padding: EdgeInsets.all(3),
+                    child: Container(
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: widget.currentPage == 1
+                              ? Colors.blue
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(3),
+                          shape: BoxShape.rectangle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueAccent,
+                              blurRadius: 1.0,
+                              spreadRadius: 1.0,
+                            ),
+                          ]),
+                    ),
+                  )),
+                  Expanded(
+                      child: Padding(
+                    padding: EdgeInsets.all(3),
+                    child: Container(
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: widget.currentPage == 2
+                              ? Colors.blue
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(3),
+                          shape: BoxShape.rectangle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueAccent,
+                              blurRadius: 1.0,
+                              spreadRadius: 1.0,
+                            ),
+                          ]),
+                    ),
+                  )),
+                  Expanded(
+                      child: Padding(
+                    padding: EdgeInsets.all(3),
+                    child: Container(
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: widget.currentPage == 3
+                              ? Colors.blue
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(3),
+                          shape: BoxShape.rectangle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueAccent,
+                              blurRadius: 1.0,
+                              spreadRadius: 1.0,
+                            ),
+                          ]),
+                    ),
+                  )),
+                  Expanded(
+                      child: Padding(
+                    padding: EdgeInsets.all(3),
+                    child: Container(
+                      height: 5,
+                      decoration: BoxDecoration(
+                          color: widget.currentPage == 4
+                              ? Colors.blue
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(3),
+                          shape: BoxShape.rectangle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueAccent,
+                              blurRadius: 1.0,
+                              spreadRadius: 1.0,
+                            ),
+                          ]),
+                    ),
+                  )),
+                ],
+              ),
+            ),
+            Container(
+                height: 1000,
+                child: PageView(
+                  physics: new NeverScrollableScrollPhysics(),
+                  onPageChanged: (index) {
+                    setState(() {
+                      widget.currentPage = index;
+                    });
+                  },
+                  controller: _controller,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 10, 0, 0),
+                          child: Text(
+                            "Patient Info",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 0, 0, 10),
+                          child: Text(
+                            "Who is this Visit for",
+                          ),
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: widget.appointmentForUserType == null
+                              ? 0
+                              : widget.appointmentForUserType.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                              child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      for (int i = 0;
+                                          i <
+                                              widget.appointmentForUserType
+                                                  .length;
+                                          i++) {
+                                        widget.appointmentForUserType[i]
+                                            ["isSelected"] = false;
+                                      }
+                                      widget.appointmentForUserType[index]
+                                          ["isSelected"] = true;
+                                    });
+                                  },
+                                  child: ListTile(
+                                    trailing: Checkbox(
+                                      value:
+                                          widget.appointmentForUserType[index]
+                                              ["isSelected"],
+                                      activeColor: Colors.blue,
+                                    ),
+                                    title: Padding(
+                                      padding: EdgeInsets.fromLTRB(5, 15, 0, 5),
+                                      child: new Text(
+                                        widget.appointmentForUserType[index]
+                                            ["userType"],
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )),
+                            );
+                          },
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Container(
+                            child: Center(
+                              child: Padding(
+                                  padding: EdgeInsets.all(0),
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                    child: TextFormField(
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 189, 62, 68),
+                                      ),
+                                      initialValue: "",
+                                      onChanged: (value) {
+                                        widget.name = value;
+                                      },
+                                      validator: (value) {
+                                        widget.name = value;
+                                        if (value.isEmpty) {
+                                          return 'Please enter Name';
+                                        }
+                                        return null;
+                                      },
+                                      cursorColor:
+                                          Color.fromARGB(255, 189, 62, 68),
+                                      decoration: InputDecoration(
+                                          fillColor: Color.fromARGB(
+                                              255, 234, 234, 234),
+                                          filled: true,
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                                color: Color.fromARGB(
+                                                    255, 234, 234, 234),
+                                                width: 10.0),
+                                          ),
+                                          border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          labelText: "Full Name",
+                                          focusColor:
+                                              Color.fromARGB(255, 189, 62, 68),
+                                          labelStyle: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 189, 62, 68))),
+                                      keyboardType: TextInputType.emailAddress,
+                                      autocorrect: false,
+                                    ),
+                                  )),
+                            ),
+                            height: 60,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Container(
+                            child: Center(
+                              child: Padding(
+                                  padding: EdgeInsets.all(0),
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                    child: TextFormField(
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 189, 62, 68),
+                                      ),
+                                      initialValue: "",
+                                      onChanged: (value) {
+                                        widget.age = value;
+                                      },
+                                      validator: (value) {
+                                        widget.age = value;
+                                        if (value.isEmpty) {
+                                          return 'Please enter Email';
+                                        }
+                                        return null;
+                                      },
+                                      cursorColor:
+                                          Color.fromARGB(255, 189, 62, 68),
+                                      decoration: InputDecoration(
+                                          fillColor: Color.fromARGB(
+                                              255, 234, 234, 234),
+                                          filled: true,
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                                color: Color.fromARGB(
+                                                    255, 234, 234, 234),
+                                                width: 10.0),
+                                          ),
+                                          border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          labelText: "Age",
+                                          focusColor:
+                                              Color.fromARGB(255, 189, 62, 68),
+                                          labelStyle: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 189, 62, 68))),
+                                      keyboardType: TextInputType.emailAddress,
+                                      autocorrect: false,
+                                    ),
+                                  )),
+                            ),
+                            height: 60,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Container(
+                            child: Center(
+                              child: Padding(
+                                  padding: EdgeInsets.all(0),
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                    child: TextFormField(
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 189, 62, 68),
+                                      ),
+                                      initialValue: "",
+                                      onChanged: (value) {
+                                        widget.gender = value;
+                                      },
+                                      validator: (value) {
+                                        widget.gender = value;
+                                        if (value.isEmpty) {
+                                          return 'Please enter Email';
+                                        }
+                                        return null;
+                                      },
+                                      cursorColor:
+                                          Color.fromARGB(255, 189, 62, 68),
+                                      decoration: InputDecoration(
+                                          fillColor: Color.fromARGB(
+                                              255, 234, 234, 234),
+                                          filled: true,
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                                color: Color.fromARGB(
+                                                    255, 234, 234, 234),
+                                                width: 10.0),
+                                          ),
+                                          border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          labelText: "Gender",
+                                          focusColor:
+                                              Color.fromARGB(255, 189, 62, 68),
+                                          labelStyle: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 189, 62, 68))),
+                                      keyboardType: TextInputType.emailAddress,
+                                      autocorrect: false,
+                                    ),
+                                  )),
+                            ),
+                            height: 60,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              int old = widget.currentPage;
+                              //  widget.currentPage = old+1;
+                              _controller.animateToPage(old + 1,
+                                  duration: new Duration(milliseconds: 300),
+                                  curve: Curves.easeIn);
+                              // _controller.animateTo(MediaQuery
+                              //     .of(context)
+                              //     .size
+                              //     .width, duration: new Duration(milliseconds: 300),
+                              //     curve: Curves.easeIn);
+                            });
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Card(
+                              color: Colors.blue,
+                              child: Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child: Text(
+                                    "Continue",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 10, 15, 0),
+                          child: Text(
+                            "Reason for Visit",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 0, 10, 0),
+                          child: Text(
+                              "This information will help doctor to understand your problem more"),
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: widget.diseasesType == null
+                              ? 0
+                              : widget.diseasesType.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                              child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      widget.reasonForVisit =
+                                          widget.diseasesType[index]["name"];
+
+                                      widget.diseasesType[index]
+                                                  ["isSelected"] ==
+                                              true
+                                          ? (widget.diseasesType[index]
+                                              ["isSelected"] = false)
+                                          : widget.diseasesType[index]
+                                              ["isSelected"] = true;
+                                    });
+                                  },
+                                  child: ListTile(
+                                    trailing: Checkbox(
+                                      value: widget.diseasesType[index]
+                                          ["isSelected"],
+                                      activeColor: Colors.blue,
+                                    ),
+                                    title: Padding(
+                                      padding: EdgeInsets.fromLTRB(0, 15, 0, 5),
+                                      child: new Text(
+                                        widget.diseasesType[index]["name"],
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )),
+                            );
+                          },
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              int old = widget.currentPage;
+                              // widget.currentPage = old+1;
+                              _controller.animateToPage(old + 1,
+                                  duration: new Duration(milliseconds: 300),
+                                  curve: Curves.easeIn);
+                            });
+
+                            // _controller.animateTo(MediaQuery
+                            //     .of(context)
+                            //     .size
+                            //     .width, duration: new Duration(milliseconds: 300),
+                            //     curve: Curves.easeIn);
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Card(
+                              color: Colors.blue,
+                              child: Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child: Text(
+                                    "Continue",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 10, 15, 0),
+                          child: Text(
+                            "Conditions",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 0, 10, 0),
+                          child: Text(
+                              "Have you ever diagonised with any of these conditions"),
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: widget.conditionsType == null
+                              ? 0
+                              : widget.conditionsType.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                              child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      widget.conditionsType[index]
+                                                  ["isSelected"] ==
+                                              true
+                                          ? (widget.conditionsType[index]
+                                              ["isSelected"] = false)
+                                          : widget.conditionsType[index]
+                                              ["isSelected"] = true;
+
+                                      widget.conditions = "";
+                                      for (int i = 0;
+                                          i < widget.conditionsType.length;
+                                          i++) {
+                                        if (widget.conditionsType[i]
+                                            ["isSelected"]) {
+                                          widget.conditions +=
+                                              widget.diseasesType[i]["name"] +
+                                                  " ";
+                                        }
+                                      }
+                                    });
+                                  },
+                                  child: ListTile(
+                                    trailing: Checkbox(
+                                      value: widget.conditionsType[index]
+                                          ["isSelected"],
+                                      activeColor: Colors.blue,
+                                    ),
+                                    title: Padding(
+                                      padding: EdgeInsets.fromLTRB(0, 15, 0, 5),
+                                      child: new Text(
+                                        widget.conditionsType[index]["name"],
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  )),
+                            );
+                          },
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              int old = widget.currentPage;
+                              widget.currentPage = old + 1;
+                              _controller.animateToPage(old + 1,
+                                  duration: new Duration(milliseconds: 300),
+                                  curve: Curves.easeIn);
+
+                              // _controller.animateTo(MediaQuery
+                              //     .of(context)
+                              //     .size
+                              //     .width, duration: new Duration(milliseconds: 300),
+                              //     curve: Curves.easeIn);
+                            });
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Card(
+                              color: Colors.blue,
+                              child: Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child: Text(
+                                    "Continue",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 10, 15, 0),
+                          child: Text(
+                            "Medications",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 0, 10, 0),
+                          child:
+                              Text("Please disclose any Medications you take"),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 5, 5, 5),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 200,
+                                child: TextFormField(
+                                  onChanged: (value) {
+                                    widget.tempMedName = value;
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(15, 0, 5, 0),
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      widget.medications
+                                          .add(widget.tempMedName);
+                                      widget.tempMedName = "";
+
+                                      //  widget.conditions = "";
+                                      for (int i = 0;
+                                          i < widget.medications.length;
+                                          i++) {
+                                        widget.tempMedName +=
+                                            widget.medications[i] + " ";
+                                      }
+                                    });
+                                  },
+                                  child: Card(
+                                    color: Colors.blue,
+                                    child: Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Text(
+                                          "Add",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: widget.medications == null
+                              ? 0
+                              : widget.medications.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding: EdgeInsets.fromLTRB(5, 0, 10, 5),
+                              child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      // widget.diseasesType[index]["isSelected"] == true?( widget.diseasesType[index]["isSelected"] = false): widget.diseasesType[index]["isSelected"] = true;
+                                    });
+                                  },
+                                  child: Card(
+                                    elevation: 5,
+                                    color: Colors.white,
+                                    child: ListTile(
+                                      trailing: InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            widget.medications.removeAt(index);
+                                          });
+                                        },
+                                        child: Icon(Icons.close),
+                                      ),
+                                      title: Padding(
+                                        padding:
+                                            EdgeInsets.fromLTRB(0, 0, 0, 0),
+                                        child: new Text(
+                                          widget.medications[index],
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                  )),
+                            );
+                          },
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              widget.medicationsName = "";
+                              for (int i = 0;
+                                  i < widget.medications.length;
+                                  i++) {
+                                widget.medicationsName +=
+                                    widget.medications[i] + " , ";
+                              }
+
+                              int old = widget.currentPage;
+                              widget.currentPage = old + 1;
+                              _controller.animateToPage(old + 1,
+                                  duration: new Duration(milliseconds: 300),
+                                  curve: Curves.easeIn);
+
+                              // _controller.animateTo(MediaQuery
+                              //     .of(context)
+                              //     .size
+                              //     .width, duration: new Duration(milliseconds: 300),
+                              //     curve: Curves.easeIn);
+                            });
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Card(
+                              color: Colors.blue,
+                              child: Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child: Text(
+                                    "Continue",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 10, 15, 0),
+                          child: Text(
+                            "Vitals",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 0, 10, 0),
+                          child: Text(
+                              "Would you like to share your vitals for this visit"),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Container(
+                            child: Center(
+                              child: Padding(
+                                  padding: EdgeInsets.all(0),
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(10, 5, 10, 0),
+                                    child: TextFormField(
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 189, 62, 68),
+                                      ),
+                                      initialValue: "",
+                                      onChanged: (value) {
+                                        widget.weight = value;
+                                      },
+                                      validator: (value) {
+                                        widget.weight = value;
+                                        if (value.isEmpty) {
+                                          return 'Weight in KG';
+                                        }
+                                        return null;
+                                      },
+                                      cursorColor:
+                                          Color.fromARGB(255, 189, 62, 68),
+                                      decoration: InputDecoration(
+                                          fillColor: Color.fromARGB(
+                                              255, 234, 234, 234),
+                                          filled: true,
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                                color: Color.fromARGB(
+                                                    255, 234, 234, 234),
+                                                width: 10.0),
+                                          ),
+                                          border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          labelText: "Weight in KG",
+                                          focusColor:
+                                              Color.fromARGB(255, 189, 62, 68),
+                                          labelStyle: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 189, 62, 68))),
+                                      keyboardType: TextInputType.emailAddress,
+                                      autocorrect: false,
+                                    ),
+                                  )),
+                            ),
+                            height: 60,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Container(
+                            child: Center(
+                              child: Padding(
+                                  padding: EdgeInsets.all(0),
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(10, 5, 10, 0),
+                                    child: TextFormField(
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 189, 62, 68),
+                                      ),
+                                      initialValue: "",
+                                      onChanged: (value) {
+                                        widget.temperature = value;
+                                      },
+                                      validator: (value) {
+                                        widget.temperature = value;
+                                        if (value.isEmpty) {
+                                          return 'Temperature';
+                                        }
+                                        return null;
+                                      },
+                                      cursorColor:
+                                          Color.fromARGB(255, 189, 62, 68),
+                                      decoration: InputDecoration(
+                                          fillColor: Color.fromARGB(
+                                              255, 234, 234, 234),
+                                          filled: true,
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                                color: Color.fromARGB(
+                                                    255, 234, 234, 234),
+                                                width: 10.0),
+                                          ),
+                                          border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          labelText: "Temperature",
+                                          focusColor:
+                                              Color.fromARGB(255, 189, 62, 68),
+                                          labelStyle: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 189, 62, 68))),
+                                      keyboardType: TextInputType.emailAddress,
+                                      autocorrect: false,
+                                    ),
+                                  )),
+                            ),
+                            height: 60,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Container(
+                            child: Center(
+                              child: Padding(
+                                  padding: EdgeInsets.all(0),
+                                  child: Padding(
+                                    padding: EdgeInsets.fromLTRB(10, 5, 10, 0),
+                                    child: TextFormField(
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 189, 62, 68),
+                                      ),
+                                      initialValue: "",
+                                      onChanged: (value) {
+                                        widget.bloodPressure = value;
+                                      },
+                                      validator: (value) {
+                                        widget.bloodPressure = value;
+                                        if (value.isEmpty) {
+                                          return 'Blood Pressure';
+                                        }
+                                        return null;
+                                      },
+                                      cursorColor:
+                                          Color.fromARGB(255, 189, 62, 68),
+                                      decoration: InputDecoration(
+                                          fillColor: Color.fromARGB(
+                                              255, 234, 234, 234),
+                                          filled: true,
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                                color: Color.fromARGB(
+                                                    255, 234, 234, 234),
+                                                width: 10.0),
+                                          ),
+                                          border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color.fromARGB(
+                                                      255, 234, 234, 234),
+                                                  width: 10.0)),
+                                          labelText: "Blood Pressure",
+                                          focusColor:
+                                              Color.fromARGB(255, 189, 62, 68),
+                                          labelStyle: TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 189, 62, 68))),
+                                      keyboardType: TextInputType.emailAddress,
+                                      autocorrect: false,
+                                    ),
+                                  )),
+                            ),
+                            height: 60,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Scaffold(
+                                          appBar: AppBar(
+                                            title: Text("Appointment Details"),
+                                            backgroundColor: Colors.white,
+                                          ),
+                                          body: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                Padding(
+                                                  padding: EdgeInsets.all(10),
+                                                  child: Card(
+                                                    elevation: 8,
+                                                    child: Column(
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  10),
+                                                          child: Stack(
+                                                            children: [
+                                                              Align(
+                                                                alignment: Alignment
+                                                                    .centerLeft,
+                                                                child: Padding(
+                                                                  padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                                                                  child: Text(
+                                                                      "Patient's Historty"),
+                                                                ),
+                                                              ),
+                                                              Align(
+                                                                alignment: Alignment
+                                                                    .centerRight,
+                                                                child: Text(
+                                                                  "Edit",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .blue),
+                                                                ),
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                              title: Text(
+                                                                  "Patient Name"),
+                                                              subtitle: Text(
+                                                                  widget.name),
+                                                            )),
+                                                            Expanded(
+                                                                child: ListTile(
+                                                              title: Text(
+                                                                  "Age and gender"),
+                                                              subtitle: Text(
+                                                                  widget.age +
+                                                                      " , " +
+                                                                      widget
+                                                                          .gender),
+                                                            )),
+                                                          ],
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                              title:
+                                                                  Text("Date"),
+                                                              subtitle: Text(
+                                                                  widget.date),
+                                                            )),
+                                                            Expanded(
+                                                                child: ListTile(
+                                                              title:
+                                                                  Text("Time"),
+                                                              subtitle: Text(
+
+                                                                      widget
+                                                                          .time),
+                                                            )),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.all(10),
+                                                  child: Card(
+                                                    elevation: 8,
+                                                    child: Column(
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  10),
+                                                          child: Stack(
+                                                            children: [
+                                                              Align(
+                                                                alignment: Alignment
+                                                                    .centerLeft,
+                                                                child: Padding(
+                                                                  padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                                                                  child: Text(
+                                                                      "Medical History"),
+                                                                ),
+                                                              ),
+                                                              Align(
+                                                                alignment: Alignment
+                                                                    .centerRight,
+                                                                child: Text(
+                                                                  "Edit",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .blue),
+                                                                ),
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                              title: Text(
+                                                                  "Reason for Visit"),
+                                                              subtitle: Text(widget
+                                                                  .reasonForVisit),
+                                                            )),
+                                                          ],
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                              title: Text(
+                                                                  "Condition"),
+                                                              subtitle: Text(widget
+                                                                  .conditions),
+                                                            )),
+                                                          ],
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                              title: Text(
+                                                                  "Medications"),
+                                                              subtitle: Text(widget
+                                                                  .medicationsName),
+                                                            )),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.all(10),
+                                                  child: Card(
+                                                    elevation: 8,
+                                                    child: Column(
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                          EdgeInsets.all(
+                                                              10),
+                                                          child: Stack(
+                                                            children: [
+                                                              Align(
+                                                                alignment: Alignment
+                                                                    .centerLeft,
+                                                                child: Padding(
+                                                                  padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                                                                  child: Text(
+                                                                      "Vitals"),
+                                                                ),
+                                                              ),
+                                                              Align(
+                                                                alignment: Alignment
+                                                                    .centerRight,
+                                                                child: Text(
+                                                                  "Edit",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .blue),
+                                                                ),
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                                  title: Text(
+                                                                      "Weight"),
+                                                                  subtitle: Text(
+                                                                      widget.weight),
+                                                                )),
+                                                            Expanded(
+                                                                child: ListTile(
+                                                                  title: Text(
+                                                                      "Temparature"),
+                                                                  subtitle: Text(
+                                                                      widget.temperature ),
+                                                                )),
+                                                          ],
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                                  title:
+                                                                  Text("Blood Pressure"),
+                                                                  subtitle: Text(
+                                                                      widget.date),
+                                                                )),
+
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.all(10),
+                                                  child: Card(
+                                                    elevation: 8,
+                                                    child: Column(
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                          EdgeInsets.all(
+                                                              10),
+                                                          child: Stack(
+                                                            children: [
+                                                              Align(
+                                                                alignment: Alignment
+                                                                    .centerLeft,
+                                                                child: Padding(
+                                                                  padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                                                                  child: Text(
+                                                                      "Doctor's Profile"),
+                                                                ),
+                                                              ),
+                                                              Align(
+                                                                alignment: Alignment
+                                                                    .centerRight,
+                                                                child: Text(
+                                                                  "Edit",
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .blue),
+                                                                ),
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                                  title: Text(
+                                                                      "Name"),
+                                                                  subtitle: Text(
+                                                                     widget.docName),
+                                                                )),
+
+                                                          ],
+                                                        ),
+                                                        Divider(
+                                                          color: Colors.grey,
+                                                          height: 1,
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                                child: ListTile(
+                                                                  title:
+                                                                  Text("Consultation Fees"),
+                                                                  subtitle: Text(
+                                                                      widget.fees),
+                                                                )),
+
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.all(10),
+                                                  child: Card(
+                                                    color: Colors.blue,
+                                                    elevation: 8,
+                                                    child: InkWell(
+                                                      child: Center(
+                                                        child: Padding(
+                                                          padding: EdgeInsets.all(15),
+                                                          child: Text(
+                                                            "Submit",
+                                                            style: TextStyle(color: Colors.white,fontSize: 18),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      onTap: () async {
+                                                        var appointmentSubmitRespons =
+                                                            await performAppointmentSubmitNewVersion(
+                                                                AUTH_KEY,
+                                                                UID,
+                                                                widget.docID,
+                                                                widget.conditions,
+                                                                "012",
+                                                                widget.name,
+                                                                null,
+                                                                widget.date,
+                                                                "0",
+                                                                "n",
+                                                                widget.time,
+                                                            widget.age,
+                                                            widget.gender,
+                                                            widget.reasonForVisit,
+                                                            widget.conditions,
+                                                            widget.medicationsName,
+                                                            widget.weight,
+                                                            widget.temperature,
+                                                            widget.bloodPressure,
+                                                            widget.fees
+                                                            );
+                                                        Navigator.of(context).pop();
+                                                        Navigator.of(context).pop();
+                                                        Navigator.of(context).pop();
+                                                        Navigator.of(context).pop();
+                                                        Navigator.of(context).pop();
+
+                                                        showThisToast(
+                                                            appointmentSubmitRespons
+                                                                .toString());
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        )));
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Card(
+                              color: Colors.blue,
+                              child: Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child: Text(
+                                    "Confirm",
+                                    style: TextStyle(color: Colors.white,fontSize: 18),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ))
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+//TabBarView
+class SimpleDocProfileActivity extends StatefulWidget {
+  dynamic profileData;
+
+  SimpleDocProfileActivity(this.profileData);
+
+  @override
+  _SimpleDocProfileActivityState createState() =>
+      _SimpleDocProfileActivityState();
+}
+
+class _SimpleDocProfileActivityState extends State<SimpleDocProfileActivity> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Profile"),
+        backgroundColor: Colors.white,
+        elevation: 10,
+      ),
+      body: Stack(
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Card(
+                        child: Padding(
+                      padding: EdgeInsets.all(0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.all(15),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 30,
+                                  backgroundImage: NetworkImage(
+                                    _baseUrl_image +
+                                        widget.profileData["photo"],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.profileData["name"]
+                                            .toString()
+                                            .trim(),
+                                        style: TextStyle(
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        widget.profileData["department_info"]
+                                            ["name"],
+                                        style: TextStyle(),
+                                      )
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          Divider(
+                            height: 1,
+                            color: Colors.grey,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(15),
+                            child: Stack(
+                              children: [
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    "Video Call Fees",
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    widget.profileData["video_appointment_rate"]
+                                            .toString() +
+                                        " £",
+                                    style: TextStyle(),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          Divider(
+                            height: 1,
+                            color: Colors.grey,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(15),
+                            child: Text(
+                              "Specialization",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(15, 0, 15, 15),
+                            child: Text(
+                              widget.profileData["designation_title"] == null
+                                  ? "No Information"
+                                  : widget.profileData["designation_title"],
+                              style: TextStyle(),
+                            ),
+                          )
+                        ],
+                      ),
+                    )),
+                  )
+                ],
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            ChooseConsultationDateTimeActivity(
+                                widget.profileData)));
+              },
+              child: Card(
+                color: Colors.blue,
+                child: Container(
+                  width: double.infinity,
+                  height: 50,
+                  child: Center(
+                    child: Text(
+                      "Book Appointment",
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class DoctorSearchActivity extends StatefulWidget {
+  List downloadedData = [];
+
+  bool _enabled2 = true;
+
+  @override
+  _DoctorSearchActivityState createState() => _DoctorSearchActivityState();
+}
+
+class _DoctorSearchActivityState extends State<DoctorSearchActivity> {
+  String key;
+
+  getData() async {
+    final http.Response response = await http.post(
+      "https://appointmentbd.com/api/" + 'doctor-search',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': AUTH_KEY,
+      },
+      // body: jsonEncode(<String, String>{'department_id': "17"}),
+    );
+    // showThisToast(response.statusCode.toString());
+
+    setState(() {
+      widget.downloadedData = json.decode(response.body);
+      //showThisToast("doc size "+widget.downloadedData.length.toString());
+    });
+
+    //showThisToast(downloadedData.length.toString());
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    this.getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Padding(
+          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+          child: TextFormField(
+            onChanged: (text) {
+              print("First text field: $text");
+              showThisToast("First text field: $text");
+            },
+            style: TextStyle(
+              color: Color.fromARGB(255, 189, 62, 68),
+            ),
+            initialValue: "",
+            validator: (value) {
+              key = value;
+              if (value.isEmpty) {
+                return 'Please enter Email';
+              }
+              return null;
+            },
+            cursorColor: Colors.black,
+            decoration: InputDecoration(
+                fillColor: Color.fromARGB(255, 234, 234, 234),
+                filled: true,
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                      color: Color.fromARGB(255, 234, 234, 234), width: 10.0),
+                ),
+                border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Color.fromARGB(255, 234, 234, 234),
+                        width: 10.0)),
+                enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Color.fromARGB(255, 234, 234, 234),
+                        width: 10.0)),
+                focusColor: Color.fromARGB(255, 189, 62, 68),
+                labelStyle: TextStyle(color: Colors.black)),
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Padding(
+            //   padding: EdgeInsets.all(10),
+            //   child: Text(
+            //     "What are you looking for",
+            //     style: TextStyle(color: Colors.black, fontSize: 18),
+            //   ),
+            // ),
+            // Padding(padding: EdgeInsets.fromLTRB(15, 2, 0, 5),child: Container(
+            //   child: Padding(
+            //     padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+            //     child: Text("Doctor"),
+            //   ),
+            //   decoration: BoxDecoration(
+            //       color: Colors.white,
+            //       borderRadius: BorderRadius.circular(3),
+            //       shape: BoxShape.rectangle,
+            //       boxShadow: [
+            //         BoxShadow(
+            //           color: Colors.blue,
+            //           blurRadius: 1.0,
+            //           spreadRadius: 1.0,
+            //         ),
+            //       ]),
+            // ),),
+            //
+            Center(
+              child: InkWell(
+                onTap: () {
+                  showModalBottomSheet(
+                      context: context,
+                      builder: (BuildContext bc) {
+                        return Container(
+                          child: new Wrap(
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.all(10),
+                                child: Stack(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        "Reset",
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        " Filters",
+                                        style: TextStyle(
+                                            color: Colors.grey, fontSize: 18),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              new ListTile(
+                                leading: new Icon(Icons.settings),
+                                title: new Text('Setting 1'),
+                                onTap: () => {},
+                              ),
+                              new ListTile(
+                                leading: new Icon(Icons.settings),
+                                title: new Text('Setting 2'),
+                                onTap: () => {},
+                              ),
+                              new ListTile(
+                                leading: new Icon(Icons.settings),
+                                title: new Text('Setting 3'),
+                                onTap: () => {},
+                              ),
+                              Center(
+                                child: Card(
+                                    child: Padding(
+                                  padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                  child: Text(
+                                    "Filter",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                )),
+                              )
+                            ],
+                          ),
+                        );
+                      });
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    "Filter",
+                    style: TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                ),
+              ),
+            ),
+            widget.downloadedData.length == 0
+                ? Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 16.0),
+                    child: Center(
+                      child: Text("Loading"),
+                    ),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: widget.downloadedData == null
+                        ? 0
+                        : widget.downloadedData.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Padding(
+                        padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                        child: Container(
+                            child: InkWell(
+                                onTap: () {
+                                  // Navigator.push(
+                                  //     context,
+                                  //     MaterialPageRoute(
+                                  //         builder: (context) =>
+                                  //             OnlineDoctorFullProfileView(
+                                  //                 widget.downloadedData[index][
+                                  //                     "id"],
+                                  //                 widget.downloadedData[index]
+                                  //                     ["name"],
+                                  //                 widget.downloadedData[index]
+                                  //                     ["photo"],
+                                  //                 widget.downloadedData[index]
+                                  //                     ["designation_title"],
+                                  //                 widget.downloadedData[index][
+                                  //                     "online_doctors_service_info"])));
+                                  //
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              SimpleDocProfileActivity(widget
+                                                  .downloadedData[index])));
+                                },
+                                child: ListTile(
+                                  trailing: Text(widget.downloadedData[index]
+                                              ["video_appointment_rate"]
+                                          .toString() +
+                                      " £"),
+                                  subtitle: Padding(
+                                    padding: EdgeInsets.fromLTRB(5, 0, 20, 5),
+                                    child: new Text(
+                                      widget.downloadedData[index]
+                                          ["department_info"]["name"],
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  title: Padding(
+                                    padding: EdgeInsets.fromLTRB(5, 15, 0, 5),
+                                    child: new Text(
+                                      widget.downloadedData[index]["name"],
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  leading: CircleAvatar(
+                                    backgroundImage: NetworkImage(
+                                        (_baseUrl_image +
+                                            widget.downloadedData[index]
+                                                ["photo"])),
+                                  ),
+                                )),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(3),
+                                shape: BoxShape.rectangle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 5.0,
+                                    spreadRadius: 1.0,
+                                  ),
+                                ])),
+                      );
+
+                      return new InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      OnlineDoctorFullProfileView(
+                                          widget.downloadedData[index]["id"],
+                                          widget.downloadedData[index]["name"],
+                                          widget.downloadedData[index]["photo"],
+                                          widget.downloadedData[index]
+                                              ["designation_title"],
+                                          widget.downloadedData[index][
+                                              "online_doctors_service_info"])));
+                        },
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(00.0),
+                          ),
+                          child: ListTile(
+                            subtitle: Padding(
+                              padding: EdgeInsets.fromLTRB(5, 0, 20, 5),
+                              child: new Text(
+                                widget.downloadedData[index]
+                                            ["designation_title"] !=
+                                        null
+                                    ? widget.downloadedData[index]
+                                        ["designation_title"]
+                                    : "No Designation data",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            title: Padding(
+                              padding: EdgeInsets.fromLTRB(5, 15, 0, 5),
+                              child: new Text(
+                                widget.downloadedData[index]["name"],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage((_baseUrl_image +
+                                  widget.downloadedData[index]["photo"])),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _filterModalBottomSheet(context) {
+  showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        return Container(
+          child: new Wrap(
+            children: <Widget>[
+              new ListTile(
+                  leading: new Icon(Icons.music_note),
+                  title: new Text('Music'),
+                  onTap: () => {}),
+              new ListTile(
+                leading: new Icon(Icons.videocam),
+                title: new Text('Video'),
+                onTap: () => {},
+              ),
+            ],
+          ),
+        );
+      });
+}
+
+class PendingpaymentsActivity extends StatefulWidget {
+  @override
+  PendingpaymentsActivityState createState() => PendingpaymentsActivityState();
+}
+
+class PendingpaymentsActivityState extends State<PendingpaymentsActivity> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("All Pending Payments"),
+      ),
+    );
+  }
+}
+
 Widget AmbulanceBodyWidget(dynamic ambulanceBody) {
   return Scaffold(
     appBar: AppBar(
@@ -1381,7 +4727,11 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Basic Information"),
             subtitle: Text("Update name,photo"),
-            leading: Image.asset("assets/man_.png",width: 30,height: 30,),
+            leading: Image.asset(
+              "assets/man_.png",
+              width: 30,
+              height: 30,
+            ),
           ),
           Divider(),
           ListTile(
@@ -1392,7 +4742,11 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Disease History"),
             subtitle: Text("Add/View your diseases history"),
-            leading: Image.asset("heart_disease.png",width: 30,height: 30,),
+            leading: Image.asset(
+              "heart_disease.png",
+              width: 30,
+              height: 30,
+            ),
           ),
           Divider(),
           ListTile(
@@ -1405,7 +4759,11 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Prescriptions"),
             subtitle: Text("Add/View your prescriptions"),
-            leading: Image.asset("prescription_.png",width: 30,height: 30,),
+            leading: Image.asset(
+              "prescription_.png",
+              width: 30,
+              height: 30,
+            ),
           ),
           Divider(),
           ListTile(
@@ -1419,7 +4777,11 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Prescription Review"),
             subtitle: Text("View your prescription request and responses"),
-            leading: Image.asset("prescription_.png",width: 30,height: 30,),
+            leading: Image.asset(
+              "prescription_.png",
+              width: 30,
+              height: 30,
+            ),
           ),
           Divider(),
           ListTile(
@@ -1433,7 +4795,11 @@ class _ProfileState extends State<Profile> {
             trailing: Icon(Icons.keyboard_arrow_right),
             title: Text("Test Recommendations"),
             subtitle: Text("View your recommended tests from doctors"),
-            leading: Image.asset("chemistry.png",width: 30,height: 30,),
+            leading: Image.asset(
+              "chemistry.png",
+              width: 30,
+              height: 30,
+            ),
           ),
         ],
       ),
@@ -1506,7 +4872,7 @@ Widget ConfirmedList() {
                                 trailing: Icon(Icons.keyboard_arrow_right),
                                 leading: CircleAvatar(
                                     backgroundImage: NetworkImage(
-                                  "http://telemedicine.drshahidulislam.com/" +
+                                  "https://appointmentbd.com/" +
                                       projectSnap.data[index]["dr_info"]
                                           ["photo"],
                                 )),
@@ -1693,8 +5059,7 @@ Widget myDrawer() {
                     padding: EdgeInsets.fromLTRB(0, 50, 0, 5),
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundImage:
-                          NetworkImage(_baseUrl_image + UPHOTO),
+                      backgroundImage: NetworkImage(_baseUrl_image + UPHOTO),
                     )),
                 Padding(
                     padding: EdgeInsets.fromLTRB(0, 10, 0, 25),
@@ -1715,11 +5080,11 @@ Widget myDrawer() {
           leading: SizedBox(
             height: 25,
             width: 25,
-            child: Image.asset("assets/facebook.png"),
+            child: Image.asset("assets/logo2.jpeg"),
           ),
-          title: Text('Facebook'),
+          title: Text('Website'),
           onTap: () {
-            const url = "https://www.facebook.com";
+            const url = "https://abettahealth.com/";
 
             launch(url);
             //Share.share("https://www.facebook.com");
@@ -1729,14 +5094,15 @@ Widget myDrawer() {
           leading: SizedBox(
             height: 25,
             width: 25,
-            child: Image.asset("assets/youtube.png"),
+            child: Image.asset("assets/facebook.png"),
           ),
-          title: Text('Youtube'),
+          title: Text('Facebook'),
           onTap: () {
-            const url = "https://www.youtube.com";
+            const url =
+                "https://web.facebook.com/Betta-Health-112876333823426/";
 
             launch(url);
-            //Share.share("https://www.youtube.com");
+            //Share.share("https://www.facebook.com");
           },
         ),
         ListTile(
@@ -1747,7 +5113,7 @@ Widget myDrawer() {
           ),
           title: Text('Twitter'),
           onTap: () {
-            const url = "https://www.twitter.com";
+            const url = "https://twitter.com/HealthBetta";
 
             launch(url);
             // Share.share("https://www.twitter.com");
@@ -1759,11 +5125,11 @@ Widget myDrawer() {
             width: 25,
             child: Image.asset("assets/info.png"),
           ),
-          title: Text('Guidline'),
+          title: Text('Privacy Policy'),
           onTap: () {
-            const url = "https://www.twitter.com";
+            const url = "https://abettahealth.com/privacy-policy/";
 
-            // launch(url);
+            launch(url);
             // Share.share("https://www.twitter.com");
           },
         ),
@@ -1862,6 +5228,8 @@ class _BasicProfileState extends State<BasicProfile> {
     //this one is ok
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 10,
         title: Text("Profile Information"),
       ),
       body: ListView(
@@ -1886,12 +5254,12 @@ class _BasicProfileState extends State<BasicProfile> {
               request.files.add(multipartFile);
               request.fields.addAll(<String, String>{'user_id': UID});
               request.headers.addAll(header);
-              showThisToast(AUTH_KEY + "/n" + UID);
+              //  showThisToast(AUTH_KEY + "/n" + UID);
 
               var response = await request.send();
 
               print(response.statusCode);
-              showThisToast(response.statusCode.toString());
+              // showThisToast(response.statusCode.toString());
 
               response.stream.transform(utf8.decoder).listen((value) {
                 //print(value);
@@ -1899,7 +5267,7 @@ class _BasicProfileState extends State<BasicProfile> {
 
                 var data = jsonDecode(value);
                 //showThisToast(data.t);
-                showThisToast((data["photo"]).toString());
+                // showThisToast((data["photo"]).toString());
                 setState(() {
                   user_picture = (data["photo"]).toString();
                   UPHOTO = user_picture;
@@ -1908,140 +5276,159 @@ class _BasicProfileState extends State<BasicProfile> {
             },
             child: Padding(
               padding: EdgeInsets.all(15),
-              child: CircleAvatar(
-                radius: 100,
-                backgroundImage: NetworkImage(_baseUrl_image + UPHOTO),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                      //  top: 0,bottom: 0,left: 0,right: 0,
+                      child: CircleAvatar(
+                    radius: 72,
+                    backgroundColor: Colors.orange,
+                  )),
+                  Center(
+                    // top: 0,bottom: 0,left: 0,right: 0,
+
+                    child: CircleAvatar(
+                      radius: 70,
+                      backgroundImage: NetworkImage(_baseUrl_image + UPHOTO),
+                    ),
+                  )
+                ],
               ),
             ),
           )),
           Padding(
             padding: EdgeInsets.fromLTRB(10, 10, 10, 00),
             child: Card(
-              child: ListTile(
-                onTap: () {
-                  final _formKey = GlobalKey<FormState>();
-                  String newName;
-                  return showDialog<void>(
-                    context: context,
-                    barrierDismissible: false, // user must tap button!
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text('Edit Display Name'),
-                        content: SingleChildScrollView(
-                          child: ListBody(
-                            children: <Widget>[
-                              Form(
-                                key: _formKey,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    TextFormField(
-                                      initialValue: user_name_from_state,
-                                      validator: (value) {
-                                        newName = value;
-                                        if (value.isEmpty) {
-                                          return 'Please enter Display Name';
-                                        }
-                                        return null;
-                                      },
+              elevation: 10,
+              child: Column(
+                children: [
+                  ListTile(
+                    onTap: () {
+                      final _formKey = GlobalKey<FormState>();
+                      String newName;
+                      return showDialog<void>(
+                        context: context,
+                        barrierDismissible: false, // user must tap button!
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('Edit Display Name'),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: <Widget>[
+                                  Form(
+                                    key: _formKey,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        TextFormField(
+                                          initialValue: user_name_from_state,
+                                          validator: (value) {
+                                            newName = value;
+                                            if (value.isEmpty) {
+                                              return 'Please enter Display Name';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        actions: <Widget>[
-                          FlatButton(
-                            child: Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          FlatButton(
-                            child: Text('Update'),
-                            onPressed: () {
-                              if (_formKey.currentState.validate()) {
-                                var status =
-                                    updateDisplayName(AUTH_KEY, UID, newName);
-                                USER_NAME = newName;
-                                UNAME = newName;
-                                prefs.setString("uname", newName);
+                                  )
+                                ],
+                              ),
+                            ),
+                            actions: <Widget>[
+                              FlatButton(
+                                child: Text('Cancel'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              FlatButton(
+                                child: Text('Update'),
+                                onPressed: () {
+                                  if (_formKey.currentState.validate()) {
+                                    var status = updateDisplayName(
+                                        AUTH_KEY, UID, newName);
+                                    USER_NAME = newName;
+                                    UNAME = newName;
+                                    prefs.setString("uname", newName);
 
-                                setState(() {
-                                  user_name_from_state = newName;
-                                  UNAME = newName;
-                                });
-                                status.then(
-                                    (value) => Navigator.of(context).pop());
-                              }
-                            },
-                          ),
-                        ],
+                                    setState(() {
+                                      user_name_from_state = newName;
+                                      UNAME = newName;
+                                    });
+                                    status.then(
+                                        (value) => Navigator.of(context).pop());
+                                  }
+                                },
+                              ),
+                            ],
+                          );
+                        },
                       );
                     },
-                  );
-                },
-                subtitle: Padding(
-                  padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
-                  child: Text(user_name_from_state),
-                ),
-                title: Row(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
-                      child: Text("Display Name"),
+                    subtitle: Padding(
+                      padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
+                      child: Text(user_name_from_state),
                     ),
-                    Padding(
-                      child: Text(
-                        "EDIT",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      padding: EdgeInsets.fromLTRB(10, 00, 00, 00),
-                    )
-                  ],
-                ),
+                    title: Row(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
+                          child: Text("Display Name"),
+                        ),
+                        Padding(
+                          child: Text(
+                            "EDIT",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          padding: EdgeInsets.fromLTRB(10, 00, 00, 00),
+                        )
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    color: Colors.grey,
+                    height: 1,
+                  ),
+                  ListTile(
+                    subtitle: Padding(
+                      padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
+                      child: Text(UPHONE),
+                    ),
+                    title: Row(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
+                          child: Text("Phone"),
+                        )
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    color: Colors.grey,
+                    height: 1,
+                  ),
+                  ListTile(
+                    subtitle: Padding(
+                      padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
+                      child: Text(UEMAIL),
+                    ),
+                    title: Row(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
+                          child: Text("Email"),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(10, 00, 10, 00),
-            child: Card(
-              child: ListTile(
-                subtitle: Padding(
-                  padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
-                  child: Text(UPHONE),
-                ),
-                title: Row(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
-                      child: Text("Phone"),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(10, 00, 10, 10),
-            child: Card(
-              child: ListTile(
-                subtitle: Padding(
-                  padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
-                  child: Text(UEMAIL),
-                ),
-                title: Row(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
-                      child: Text("Email"),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          )
         ],
       ),
     );
@@ -2421,7 +5808,6 @@ Widget ChatListWidget(BuildContext context) {
                               context,
                               MaterialPageRoute(
                                   builder: (context) => ChatScreen(
-
                                       partner_id,
                                       partner_name,
                                       parner_photo,
@@ -2437,7 +5823,7 @@ Widget ChatListWidget(BuildContext context) {
                                 ? ListTile(
                                     leading: CircleAvatar(
                                         backgroundImage: NetworkImage(
-                                      "http://telemedicine.drshahidulislam.com/" +
+                                      "https://appointmentbd.com/" +
                                           lists[index]["receiver_photo"],
                                     )),
                                     title: Text(lists[index]["receiver_name"]),
@@ -2451,7 +5837,7 @@ Widget ChatListWidget(BuildContext context) {
                                 : ListTile(
                                     leading: CircleAvatar(
                                         backgroundImage: NetworkImage(
-                                      "http://telemedicine.drshahidulislam.com/" +
+                                      "https://appointmentbd.com/" +
                                           lists[index]["sender_photo"],
                                     )),
                                     title: Text(lists[index]["sender_name"]),
@@ -2697,9 +6083,9 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
       _baseUrl + 'get-prescription-info',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': AUTH_KEY,
+        'Authorization': A_KEY,
       },
-      body: jsonEncode(<String, String>{'id': USER_ID, 'user_type': 'patient'}),
+      body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
     );
     this.setState(() {
       prescriptionList = json.decode(response.body);
@@ -2788,9 +6174,16 @@ class _PrescriptionsWidgetState extends State<PrescriptionsWidget> {
                         child: ListTile(
                           trailing: Icon(Icons.arrow_right),
                           leading: CircleAvatar(
-                            backgroundImage: NetworkImage(_baseUrl_image +
-                                prescriptionList[index]["dr_info"]["photo"]),
-                          ),
+                              backgroundImage: NetworkImage(
+                            _baseUrl_image +
+                                ((prescriptionList[index]["dr_info"] == null ||
+                                        prescriptionList[index]["dr_info"]
+                                                ["photo"] ==
+                                            null)
+                                    ? ""
+                                    : prescriptionList[index]["dr_info"]
+                                        ["photo"]),
+                          )),
                           title: new Text(
                             (prescriptionList[index]["dr_info"] == null
                                 ? "No Doctor Name"
@@ -3223,7 +6616,7 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
   List prescriptionReviewList = [];
 
   Future<String> getData() async {
-   // showThisToast("user id " + UID);
+    // showThisToast("user id " + UID);
     final http.Response response = await http.post(
       _baseUrl + 'test-recommendation-list',
       headers: <String, String>{
@@ -3267,14 +6660,11 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
               itemBuilder: (BuildContext context, int index) {
                 return new InkWell(
                     onTap: () {
-
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    TestRecomendationView(
-                                        prescriptionReviewList[index])));
-
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => TestRecomendationView(
+                                  prescriptionReviewList[index])));
                     },
                     child: Card(
                       shape: RoundedRectangleBorder(
@@ -3297,8 +6687,7 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: new Text(
-                            prescriptionReviewList[index]
-                                    ["problems"]
+                            prescriptionReviewList[index]["problems"]
                                 .toString(),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
@@ -3317,7 +6706,8 @@ class _TestRecomendationState extends State<TestRecomendationWidget> {
 }
 
 class TestRecomendationView extends StatefulWidget {
-  dynamic testRecomBody ;
+  dynamic testRecomBody;
+
   TestRecomendationView(this.testRecomBody);
 
   @override
@@ -3326,12 +6716,9 @@ class TestRecomendationView extends StatefulWidget {
 }
 
 class _TestRecomendationViewWidgetState extends State<TestRecomendationView> {
-
-
   @override
   void initState() {
     // TODO: implement initState
-
   }
 
   @override
@@ -3350,56 +6737,50 @@ class _TestRecomendationViewWidgetState extends State<TestRecomendationView> {
               subtitle: Text(widget.testRecomBody["problems"]),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(15,0,0,0),
+              padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
               child: Text("Recommened Tests"),
             ),
             ListView.builder(
-              shrinkWrap: true,
-              itemCount: widget.testRecomBody["test_recommendation_info"] == null
-                  ? 0
-                  : widget.testRecomBody["test_recommendation_info"].length,
-              itemBuilder: (BuildContext context, int index) {
-                return new InkWell(
-                  onTap: () {
+                shrinkWrap: true,
+                itemCount: widget.testRecomBody["test_recommendation_info"] ==
+                        null
+                    ? 0
+                    : widget.testRecomBody["test_recommendation_info"].length,
+                itemBuilder: (BuildContext context, int index) {
+                  return new InkWell(
+                    onTap: () {
 //                      Navigator.push(
 //                          context,
 //                          MaterialPageRoute(
 //                              builder: (context) =>
 //                                  TestRecomendationView(
 //                                      prescriptionReviewList[index])));
-
-                  },
-                  child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(00.0),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(05),
-                        child: ListTile(
-                          subtitle: new Text(widget.testRecomBody["test_recommendation_info"][index]["test_info"]["type"]),
-                         // trailing: Icon(Icons.keyboard_arrow_right),
-                          leading: Icon(Icons.label_important),
-                          title: new Text(widget.testRecomBody["test_recommendation_info"][index]["test_info"]["name"],
-
-
-                          ),
+                    },
+                    child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(00.0),
                         ),
-                      )),
-
-
-                );
-              }
-    )
-
-
-
+                        child: Padding(
+                          padding: EdgeInsets.all(05),
+                          child: ListTile(
+                            subtitle: new Text(
+                                widget.testRecomBody["test_recommendation_info"]
+                                    [index]["test_info"]["type"]),
+                            // trailing: Icon(Icons.keyboard_arrow_right),
+                            leading: Icon(Icons.label_important),
+                            title: new Text(
+                              widget.testRecomBody["test_recommendation_info"]
+                                  [index]["test_info"]["name"],
+                            ),
+                          ),
+                        )),
+                  );
+                })
           ],
         ),
       ),
-
     );
   }
-
 }
 
 class PrescriptionsReviewWidget extends StatefulWidget {
@@ -3421,7 +6802,7 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
       body: jsonEncode(<String, String>{'id': UID, 'user_type': 'patient'}),
     );
     //showThisToast(response.statusCode.toString());
-   // showThisToast(response.body);
+    // showThisToast(response.body);
     this.setState(() {
       prescriptionReviewList = json.decode(response.body);
       // showThisToast(prescriptionReviewList.toString());
@@ -3514,17 +6895,18 @@ class _PrescriptionsReviewWidgetState extends State<PrescriptionsReviewWidget> {
   }
 }
 
-
-
 class PrescriptionsReviewBodyWidget2 extends StatefulWidget {
   dynamic prescriptionReview;
 
   PrescriptionsReviewBodyWidget2(this.prescriptionReview);
+
   @override
-  _PrescriptionsReviewBodyWidget2State createState() => _PrescriptionsReviewBodyWidget2State();
+  _PrescriptionsReviewBodyWidget2State createState() =>
+      _PrescriptionsReviewBodyWidget2State();
 }
 
-class _PrescriptionsReviewBodyWidget2State extends State<PrescriptionsReviewBodyWidget2> {
+class _PrescriptionsReviewBodyWidget2State
+    extends State<PrescriptionsReviewBodyWidget2> {
   List prescriptionReviewList = [];
   dynamic oldPrescription;
   dynamic newPrescription;
@@ -3546,7 +6928,7 @@ class _PrescriptionsReviewBodyWidget2State extends State<PrescriptionsReviewBody
   }
 
   Future<String> getOldPrescription() async {
-    showThisToast(widget.prescriptionReview["old_prescription_id"].toString());
+    // showThisToast(widget.prescriptionReview["old_prescription_id"].toString());
 
     final http.Response response = await http.post(
       _baseUrl + 'get_single_prescription_info',
@@ -3579,7 +6961,7 @@ class _PrescriptionsReviewBodyWidget2State extends State<PrescriptionsReviewBody
         'id': widget.prescriptionReview["new_prescription_id"].toString(),
       }),
     );
-   // showThisToast("new pr download "+response.statusCode.toString());
+    // showThisToast("new pr download "+response.statusCode.toString());
 
     this.setState(() {
       print("Single Prescriptin");
@@ -3597,102 +6979,95 @@ class _PrescriptionsReviewBodyWidget2State extends State<PrescriptionsReviewBody
     print("orescription id " +
         widget.prescriptionReview["old_prescription_id"].toString());
 
-   // this.getData();
+    // this.getData();
     this.getOldPrescription();
     this.getNewPrescription();
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
         child: DefaultTabController(
-          length: 3,
-          child: Scaffold(
-            appBar: AppBar(
-
-              title: Text("Review From Doctor"),
-              bottom: new PreferredSize(
-                preferredSize: Size.fromHeight(kToolbarHeight),
-                child: new Container(
-
-                  height: 50.0,
-                  child: new TabBar(
-                    tabs: [
-                      Tab(
-                        text: "Summery",
-                      ), Tab(
-                        text: "Old Prescription",
-                      ),
-                      Tab(text: "New Prescription"),
-                    ],
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Review From Doctor"),
+          bottom: new PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+            child: new Container(
+              height: 50.0,
+              child: new TabBar(
+                tabs: [
+                  Tab(
+                    text: "Summery",
                   ),
-                ),
+                  Tab(
+                    text: "Old Prescription",
+                  ),
+                  Tab(text: "New Prescription"),
+                ],
               ),
             ),
-
-            body: TabBarView(
-              children: [
-               Padding(
-                 padding: EdgeInsets.fromLTRB(15, 10, 0, 0),
-                 child:  Column(
-                   mainAxisAlignment: MainAxisAlignment.start,
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     Text("Patient's Comment :"),
-                     Text(widget.prescriptionReview["patient_comment"]),
-                     Text("Doctors's Comment :"),
-                     Text(widget.prescriptionReview["dr_comment"].toString()),
-
-                   ],
-                 ),
-               ),
-                ListView(
-                  shrinkWrap: true,
-                  children: <Widget>[
-
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(00, 0, 0, 0),
-                      child: ListTile(
-                        title: Text("Doctors Comment"),
-                        subtitle: Text(oldPrescription != null
-                            ? oldPrescription["diseases_name"]
-                            : "Loading"),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(15, 0, 0, 5),
-                      child: Text("Medicines"),
-                    ),
-                    medicinesListOfAPrescriptionWidget(oldPrescription)
-                  ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(15, 10, 0, 0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Patient's Comment :"),
+                  Text(widget.prescriptionReview["patient_comment"]),
+                  Text("Doctors's Comment :"),
+                  Text(widget.prescriptionReview["dr_comment"].toString()),
+                ],
+              ),
+            ),
+            ListView(
+              shrinkWrap: true,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.fromLTRB(00, 0, 0, 0),
+                  child: ListTile(
+                    title: Text("Doctors Comment"),
+                    subtitle: Text(oldPrescription != null
+                        ? oldPrescription["diseases_name"]
+                        : "Loading"),
+                  ),
                 ),
-               ListView(
-                 children: [
-                   Padding(
-                     padding: EdgeInsets.fromLTRB(00, 0, 0, 0),
-                     child: ListTile(
-                       title: Text("Doctors Comment"),
-                       subtitle: Text(newPrescription != null
-                           ? newPrescription["diseases_name"]
-                           : "Loading"),
-                     ),
-                   ),
-                   Padding(
-                     padding: EdgeInsets.fromLTRB(15, 0, 0, 5),
-                     child: Text("Medicines"),
-                   ),
-                   medicinesListOfAPrescriptionWidget(newPrescription)
-                 ],
-               )
+                Padding(
+                  padding: EdgeInsets.fromLTRB(15, 0, 0, 5),
+                  child: Text("Medicines"),
+                ),
+                medicinesListOfAPrescriptionWidget(oldPrescription)
               ],
             ),
-          ),
-        ));
+            ListView(
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(00, 0, 0, 0),
+                  child: ListTile(
+                    title: Text("Doctors Comment"),
+                    subtitle: Text(newPrescription != null
+                        ? newPrescription["diseases_name"]
+                        : "Loading"),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(15, 0, 0, 5),
+                  child: Text("Medicines"),
+                ),
+                medicinesListOfAPrescriptionWidget(newPrescription)
+              ],
+            )
+          ],
+        ),
+      ),
+    ));
   }
 }
-
-
-
-
 
 class HomeVisitViewPagerWid extends StatefulWidget {
   @override
@@ -3714,20 +7089,19 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
     keepPage: true,
   );
 
-  _getCurrentLocation() async{
+  _getCurrentLocation() async {
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
-
-
 
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) async{
+        .then((Position position) async {
       List<Placemark> p = await geolocator.placemarkFromCoordinates(
           position.latitude, position.longitude);
       Placemark place = p[0];
-    //  showThisToast("${place.locality}, ${place.postalCode}, ${place.country}");
+      //  showThisToast("${place.locality}, ${place.postalCode}, ${place.country}");
       setState(() {
-        currentLocation = "${place.name}, ${place.postalCode}, ${place.country}";
+        currentLocation =
+            "${place.name}, ${place.postalCode}, ${place.country}";
         //currentLocation = place.locality;
         address = "${place.name}, ${place.postalCode}, ${place.country}";
         //address =place.administrativeArea;
@@ -3738,8 +7112,6 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
       print(e);
     });
   }
-
-
 
   Widget buildPageView(BuildContext context) {
     return Stack(
@@ -3783,7 +7155,7 @@ class _HomeVisitViewPagerWidState extends State<HomeVisitViewPagerWid> {
                         // double latitude = detail.result.geometry.location.lat;
                         // double longitude = detail.result.geometry.location.lng;
                         String address = prediction.description;
-                      //  showThisToast(address);
+                        //  showThisToast(address);
 
                         setState(() {
                           currentLocation = address;

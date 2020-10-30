@@ -9,7 +9,8 @@ import '../login_view.dart';
 import 'package:http/http.dart' as http;
 String AUTH_KEY;
 
-
+final String _baseUrl = "https://appointmentbd.com/api/";
+final String _baseUrl_image = "https://appointmentbd.com/";
 class OnlineDoctorList extends StatefulWidget {
   String selectedCategory;
 
@@ -25,7 +26,7 @@ class HomePageState extends State<OnlineDoctorList> {
 
   Future<String> getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'search-online-doctors',
+      "https://appointmentbd.com/api/" + 'search-online-doctors',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
@@ -91,7 +92,7 @@ class HomePageState extends State<OnlineDoctorList> {
                     style: TextStyle(fontWeight: FontWeight.bold),),
                 ),
                 leading: Image.network(
-                    "http://telemedicine.drshahidulislam.com/" +
+                    "https://appointmentbd.com/" +
                         data[index]["photo"], fit: BoxFit.fill),
 
               ),
@@ -109,7 +110,7 @@ List data_;
 
 Future<List> getData(String id) async {
   final http.Response response = await http.post(
-    "http://telemedicine.drshahidulislam.com/api/" + 'search-online-doctors',
+    "https://appointmentbd.com/api/" + 'search-online-doctors',
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
       'Authorization': AUTH_KEY,
@@ -138,7 +139,7 @@ class _ChooseDoctorChamberState extends State<ChooseDoctorOnline> {
   List downloadedData = [];
   Future<List> getData(String id) async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'search-online-doctors',
+      "https://appointmentbd.com/api/" + 'search-online-doctors',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
@@ -254,7 +255,8 @@ class _ChooseDoctorChamberState extends State<ChooseDoctorOnline> {
                 subtitle: Padding(
                   padding: EdgeInsets.fromLTRB(5, 0, 20, 5),
                   child: new Text(
-                    downloadedData[index]["designation_title"],
+                    downloadedData[index]["designation_title"]!=null?downloadedData[index]["designation_title"]:"No Designation data"
+                    ,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -267,7 +269,7 @@ class _ChooseDoctorChamberState extends State<ChooseDoctorOnline> {
                 ),
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(
-                      ("http://telemedicine.drshahidulislam.com/" +
+                      (_baseUrl_image +
                           downloadedData[index]["photo"])),
                 ),
               ),
@@ -391,7 +393,7 @@ class _ChooseDoctorChamberState extends State<ChooseDoctorOnline> {
 //                          style: TextStyle(fontWeight: FontWeight.bold),),
 //                      ),
 //                      leading: CircleAvatar(
-//                        backgroundImage: NetworkImage(("http://telemedicine.drshahidulislam.com/" +
+//                        backgroundImage: NetworkImage(("https://appointmentbd.com/" +
 //                            projectSnap.data[index]["photo"])),
 //                      ),
 //
@@ -510,7 +512,7 @@ Widget OnlineDoctorListWidget2(String id) {
                         style: TextStyle(fontWeight: FontWeight.bold),),
                     ),
                     leading: CircleAvatar(
-                      backgroundImage: NetworkImage(("http://telemedicine.drshahidulislam.com/" +
+                      backgroundImage: NetworkImage(("https://appointmentbd.com/" +
                           projectSnap.data[index]["photo"])),
                     ),
 

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:appxplorebd/chat/model/chat_message.dart';
 import 'package:appxplorebd/utils/mySharedPreffManager.dart';
 import 'package:appxplorebd/view/login_view.dart';
 import 'package:appxplorebd/view/patient/sharedActivitys.dart';
 import 'package:autocomplete_textfield/autocomplete_textfield.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'dart:convert';
@@ -34,14 +36,15 @@ import 'package:firebase_database/firebase_database.dart';
 
 import 'myYoutubePlayer.dart';
 
-var OWN_PHOTO;
-String AUTH_KEY;
+var OWN_PHOTO="";
+String AUTH_KEY="";
 
-String UPHOTO;
-String UEMAIL;
-String UID;
-String UNAME;
-String UPHONE;
+String UPHOTO="";
+String UEMAIL="";
+String UID="";
+String UNAME="";
+String UPHONE="";
+String UDES="";
 List medicineList = [];
 var PARTNER_PHOTO;
 Map<int, Color> colorCodes = {
@@ -58,8 +61,8 @@ Map<int, Color> colorCodes = {
 };
 // Green color code: FF93cd48
 MaterialColor customColor = MaterialColor(0xFF34448c, colorCodes);
-final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
-final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
+final String _baseUrl = "https://appointmentbd.com/api/";
+final String _baseUrl_image = "https://appointmentbd.com/";
 var header = <String, String>{
   'Content-Type': 'application/json; charset=UTF-8',
   'Authorization': AUTH_KEY,
@@ -77,10 +80,12 @@ void mainD() async {
   UPHOTO = prefs.getString("uphoto");
   UEMAIL = prefs.getString("uemail");
   UPHONE = prefs.getString("uphone");
+  UDES = prefs.getString("udes");
   // = prefs.getString("auth");
+  UID_FOR_CHAT = UID;
+
   runApp(DoctorAPP());
 }
-
 class DoctorAPP extends StatelessWidget {
   // This widget is the root of your application.
 
@@ -105,16 +110,27 @@ class DoctorAPP extends StatelessWidget {
   }
 }
 
+
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
   final String title;
+ /* String AUTH_KEY;
+
+  String UPHOTO;
+  String UEMAIL;
+  String UID;
+  String UNAME;
+  String UPHONE;
+
+  */
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
   int bottomSelectedIndex = 0;
   int _page = 0;
   List _titles = ["Home", "Notifications", "Profile", "Blog", "Settings"];
@@ -177,6 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
     keepPage: true,
   );
 
+
   Widget buildPageView() {
     return PageView(
       controller: pageController,
@@ -192,10 +209,88 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
   }
+  loadSession()async{
+
+    FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+    firebaseMessaging.subscribeToTopic(UID);
+/*
+    Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
+    prefs = await _prefs;
+    FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+    firebaseMessaging.subscribeToTopic(prefs.getString("uid"));
+    setState(() {
+      AUTH_KEY = prefs.getString("auth");
+      UID = prefs.getString("uid");
+      UNAME = prefs.getString("uname");
+      UPHOTO = prefs.getString("uphoto");
+      UEMAIL = prefs.getString("uemail");
+      UPHONE = prefs.getString("uphone");
+      // = prefs.getString("auth");
+      UID_FOR_CHAT = UID;
+
+      widget.AUTH_KEY = prefs.getString("auth");
+      widget.UID = prefs.getString("uid");
+      widget.UNAME = prefs.getString("uname");
+      widget.UPHOTO = prefs.getString("uphoto");
+      widget.UEMAIL = prefs.getString("uemail");
+      widget.UPHONE = prefs.getString("uphone");
+
+
+
+
+    });
+
+ */
+  }
+  onBackPress(){
+    Navigator.pop(this.context, false);
+  }
 
   @override
-  void initState() {
+  void initState()
+  {
     super.initState();
+    this.loadSession();
+
+
+    FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+    _firebaseMessaging.configure(
+      // onBackgroundMessage: myBackgroundMessageHandler,
+      /*     onLaunch: (Map<String, dynamic> message) async {
+        //_navigateToItemDetail(message);
+        print("on launch " + message.toString());
+        Navigator.push(
+            useThisContext,
+            MaterialPageRoute(
+                builder: (context) => IncomingCallActivity(message["data"])));
+      },
+
+      onResume: (Map<String, dynamic> message) async {
+        print("on resume " + message.toString());
+        Navigator.push(
+            useThisContext,
+            MaterialPageRoute(
+                builder: (context) => IncomingCallActivity(message["data"])));
+      },
+
+  */
+      onMessage: (Map<String, dynamic> message) async {
+        // _navigateToItemDetail(message);
+        print("on message " + message.toString());
+
+        //showThisToast(message["data"].toString());
+
+        if (message["data"]["type"] == "reject_call" ) {
+          this.onBackPress();
+
+          showThisToast("User is busy");
+        } else {
+          showThisToast("unknown type");
+        }
+      },
+    );
+
   }
 
   void pageChanged(int index) {
@@ -224,17 +319,17 @@ class _MyHomePageState extends State<MyHomePage> {
       return Future.value(false);
     }
 
-    return AppWidget();
+    return AppWidget(widget);
   }
 
-  Widget AppWidget() {
+  Widget AppWidget(MyHomePage widget) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[bottomSelectedIndex]),
         backgroundColor: Color(0xFF34448c),
         elevation: 0.0,
       ),
-      drawer: myDrawer(),
+      drawer: myDrawer(widget),
       body: buildPageView(),
       bottomNavigationBar: CurvedNavigationBar(
         height: 56,
@@ -822,7 +917,7 @@ class _EarningSummeryWidgetState extends State<EarningSummeryWidget> {
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(25, 10, 0, 5),
                     child: Text(
-                      "All Widthdrawn",
+                      "All Withdrawn",
                       textAlign: TextAlign.justify,
                     ),
                   ),
@@ -1080,9 +1175,9 @@ class _EarningWidthDrawWidgetState extends State<EarningWidthDrawWidget> {
                           if (_formKey.currentState.validate()) {
                             if (double.parse(amount) <=
                                 double.parse(widget.wallet)) {
-                              showThisToast("permitted");
+                             // showThisToast("permitted");
                             } else {
-                              showThisToast("not permitted");
+                            //  showThisToast("not permitted");
                             }
                             var status =
                                 request_withdraw(AUTH_KEY, UID, amount, bank);
@@ -1608,7 +1703,7 @@ class _GiveTestRecomdActivityState extends State<GiveTestRecomdActivity> {
   getData() async {
     String da = await getTestRecListData(AUTH_KEY);
     widget.testList = json.decode(da);
-    showThisToast("test count " + widget.testList.length.toString());
+   // showThisToast("test count " + widget.testList.length.toString());
     setState(() {
       widget.testList = json.decode(da);
     });
@@ -1788,7 +1883,7 @@ class _VideoCallListWidgetState extends State<VideoCallListWidget> {
                                       ["id"]
                                   .toString()));
                           CHAT_ROOM = chatRoom;
-                          showThisToast(chatRoom);
+                         // showThisToast(chatRoom);
                           Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -2066,12 +2161,16 @@ class _ChamberAppointmentPrescriptionWriteWidgetState
                       'dr_name': widget.confirmedList["dr_info"]["name"],
                     }),
                   );
-
-                  showThisToast(response.body.toString());
+                  Navigator.pop(context, false);
+                  Navigator.pop(context, false);
+                 // Navigator.pop(context, false);
+                 // showThisToast(response.body.["message"].toString());
                   print((jsonDecode(response.body))["message"]);
                   if (response.statusCode == 200) {
                     data_Confirmd = json.decode(response.body);
-                    Navigator.of(context).pop(true);
+                    Navigator.pop(context, false);
+                    Navigator.pop(context, false);
+                    Navigator.pop(context, false);
                     return json.decode(response.body);
 
                     // return LoginResponse.fromJson(json.decode(response.body));
@@ -2262,12 +2361,16 @@ class _VideoAppointmentPrescriptionWriteWidgetState
                       'dr_name': widget.confirmedList["dr_info"]["name"],
                     }),
                   );
-
-                  showThisToast(response.body.toString());
+                  Navigator.pop(context, false);
+                  Navigator.pop(context, false);
+                 // Navigator.pop(context, false);
+                 // showThisToast(response.body["message"].toString());
                   print((jsonDecode(response.body))["message"]);
                   if (response.statusCode == 200) {
                     data_Confirmd = json.decode(response.body);
-                    Navigator.of(context).pop(true);
+                    Navigator.pop(context, false);
+                    Navigator.pop(context, false);
+                    Navigator.pop(context, false);
                     // return json.decode(response.body);
 
                     // return LoginResponse.fromJson(json.decode(response.body));
@@ -3143,7 +3246,7 @@ class _FollowupVideoAppointmentListActivityDoctorState
                       ListTile(
                         onTap: () {
                           String chatRoom = createChatRoomName(
-                              int.parse(UID),
+                              int.parse(widget.USER_ID),
                               int.parse(data[index]["patient_info"]["id"]
                                   .toString()));
                           CHAT_ROOM = chatRoom;
@@ -3156,7 +3259,7 @@ class _FollowupVideoAppointmentListActivityDoctorState
                                           .toString(),
                                       data[index]["patient_info"]["name"],
                                       data[index]["patient_info"]["photo"],
-                                      UID,
+                                      widget.USER_ID,
                                       UNAME,
                                       UPHOTO,
                                       chatRoom)));
@@ -3194,7 +3297,8 @@ class _FollowupVideoAppointmentListActivityDoctorState
                                     headers: <String, String>{
                                       'Content-Type':
                                           'application/json; charset=UTF-8',
-                                      'Authorization': AUTH_KEY,
+                                      'Authorization': widget.AUTH,
+
                                     },
                                     body: jsonEncode(<String, String>{
                                       'status': newValue ? "1" : "0",
@@ -3219,7 +3323,7 @@ class _FollowupVideoAppointmentListActivityDoctorState
                                       MaterialPageRoute(
                                           builder: (context) =>
                                               PatientFullProfileView(
-                                                  AUTH_KEY,
+                                                  widget.AUTH,
                                                   data[index]["patient_info"]
                                                           ["id"]
                                                       .toString(),
@@ -3533,7 +3637,7 @@ Widget ConfirmedList() {
                                 trailing: Icon(Icons.keyboard_arrow_right),
                                 leading: CircleAvatar(
                                     backgroundImage: NetworkImage(
-                                  "http://telemedicine.drshahidulislam.com/" +
+                                  "https://appointmentbd.com/" +
                                       projectSnap.data[index]["dr_info"]
                                           ["photo"],
                                 )),
@@ -3694,7 +3798,7 @@ class _BlogState extends State<Blog> {
   }
 }
 
-Widget myDrawer() {
+Widget myDrawer(MyHomePage widget) {
   return Drawer(
     // Add a ListView to the drawer. This ensures the user can scroll
     // through the options in the drawer if there isn't enough vertical
@@ -3713,13 +3817,13 @@ Widget myDrawer() {
                     child: CircleAvatar(
                       radius: 50,
                       backgroundImage:
-                          NetworkImage(_baseUrl_image + USER_PHOTO),
+                          NetworkImage(_baseUrl_image + UPHOTO),
                     )),
                 Padding(
                     padding: EdgeInsets.fromLTRB(0, 10, 0, 25),
                     child: new Center(
                       child: Text(
-                        USER_NAME,
+                        UNAME,
                         style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -3734,11 +3838,11 @@ Widget myDrawer() {
           leading: SizedBox(
             height: 25,
             width: 25,
-            child: Image.asset("assets/facebook.png"),
+            child: Image.asset("assets/logo2.jpeg"),
           ),
-          title: Text('Facebook'),
+          title: Text('Website'),
           onTap: () {
-            const url = "https://www.facebook.com";
+            const url = "https://abettahealth.com/";
 
             launch(url);
             //Share.share("https://www.facebook.com");
@@ -3748,16 +3852,17 @@ Widget myDrawer() {
           leading: SizedBox(
             height: 25,
             width: 25,
-            child: Image.asset("assets/youtube.png"),
+            child: Image.asset("assets/facebook.png"),
           ),
-          title: Text('Youtube'),
+          title: Text('Facebook'),
           onTap: () {
-            const url = "https://www.youtube.com";
+            const url = "https://web.facebook.com/Betta-Health-112876333823426/";
 
             launch(url);
-            //Share.share("https://www.youtube.com");
+            //Share.share("https://www.facebook.com");
           },
         ),
+
         ListTile(
           leading: SizedBox(
             height: 25,
@@ -3766,7 +3871,7 @@ Widget myDrawer() {
           ),
           title: Text('Twitter'),
           onTap: () {
-            const url = "https://www.twitter.com";
+            const url = "https://twitter.com/HealthBetta";
 
             launch(url);
             // Share.share("https://www.twitter.com");
@@ -3778,11 +3883,11 @@ Widget myDrawer() {
             width: 25,
             child: Image.asset("assets/info.png"),
           ),
-          title: Text('Guidline'),
+          title: Text('Privacy Policy'),
           onTap: () {
-            const url = "https://www.twitter.com";
+            const url = "https://abettahealth.com/privacy-policy/";
 
-            // launch(url);
+             launch(url);
             // Share.share("https://www.twitter.com");
           },
         ),
@@ -3872,6 +3977,7 @@ class BasicProfile extends StatefulWidget {
 
 class _BasicProfileState extends State<BasicProfile> {
   String user_name_from_state = UNAME;
+  String user_designation_from_state = UDES;
   String user_picture = UPHOTO;
 
   @override
@@ -4007,6 +4113,96 @@ class _BasicProfileState extends State<BasicProfile> {
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
                       child: Text("Display Name"),
+                    ),
+                    Padding(
+                      child: Text(
+                        "EDIT",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      padding: EdgeInsets.fromLTRB(10, 00, 00, 00),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: EdgeInsets.fromLTRB(10, 10, 10, 00),
+            child: Card(
+              child: ListTile(
+                onTap: () {
+                  final _formKey = GlobalKey<FormState>();
+                  String newName;
+                  return showDialog<void>(
+                    context: context,
+                    barrierDismissible: false, // user must tap button!
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Edit Designation'),
+                        content: SingleChildScrollView(
+                          child: ListBody(
+                            children: <Widget>[
+                              Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    TextFormField(
+                                      initialValue: user_designation_from_state,
+                                      validator: (value) {
+                                        newName = value;
+                                        if (value.isEmpty) {
+                                          return 'Please enter Designation';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                        actions: <Widget>[
+                          FlatButton(
+                            child: Text('Cancel'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          FlatButton(
+                            child: Text('Update'),
+                            onPressed: () {
+                              if (_formKey.currentState.validate()) {
+                                var status =
+                                updateDesignationName(AUTH_KEY, UID, newName);
+                                UNAME = newName;
+                                prefs.setString("udes", newName);
+
+                                setState(() {
+                                  user_designation_from_state = newName;
+                                  UDES = newName;
+                                });
+                                status.then(
+                                        (value) => Navigator.of(context).pop());
+                              }
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                subtitle: Padding(
+                  padding: EdgeInsets.fromLTRB(00, 00, 00, 00),
+                  child: Text(user_designation_from_state),
+                ),
+                title: Row(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 00, 00, 00),
+                      child: Text("Designation"),
                     ),
                     Padding(
                       child: Text(
@@ -4430,16 +4626,22 @@ Widget ChatListWidget(BuildContext context) {
                           String chatRoom = createChatRoomName(
                               int.parse(UID), int.parse(partner_id));
                           CHAT_ROOM = chatRoom;
+
+                          //showThisToast(lists[index].toString());
+
+
+
                           Navigator.push(
                               context,
                               MaterialPageRoute(
                                   builder: (context) => ChatScreen(
-                                      own_id,
-                                      own_name,
-                                      own_photo,
+
                                       partner_id,
                                       partner_name,
                                       parner_photo,
+                                      own_id,
+                                      own_name,
+                                      own_photo,
                                       chatRoom)));
                         },
                         child: Card(
@@ -4449,7 +4651,7 @@ Widget ChatListWidget(BuildContext context) {
                                 ? ListTile(
                                     leading: CircleAvatar(
                                         backgroundImage: NetworkImage(
-                                      "http://telemedicine.drshahidulislam.com/" +
+                                      "https://appointmentbd.com/" +
                                           lists[index]["receiver_photo"],
                                     )),
                                     title: Text(lists[index]["receiver_name"]),
@@ -4463,7 +4665,7 @@ Widget ChatListWidget(BuildContext context) {
                                 : ListTile(
                                     leading: CircleAvatar(
                                         backgroundImage: NetworkImage(
-                                      "http://telemedicine.drshahidulislam.com/" +
+                                      "https://appointmentbd.com/" +
                                           lists[index]["sender_photo"],
                                     )),
                                     title: Text(lists[index]["sender_name"]),

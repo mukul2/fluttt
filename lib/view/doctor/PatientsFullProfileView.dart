@@ -13,8 +13,8 @@ import 'package:http/http.dart' as http;
 List skill_info;
 List education_info;
 
-final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
-final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
+final String _baseUrl = "https://appointmentbd.com/api/";
+final String _baseUrl_image = "https://appointmentbd.com/";
 
 class PatientFullProfileView extends StatefulWidget {
   String name;
@@ -413,18 +413,18 @@ Widget Services(List online_doctors_service_info) {
                 ),
                 onPressed: () {
                   // makePayment();
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => PaypalPayment(
-                          "",
-                          onFinish: (number) async {
-                            // payment done
-                            // showThisToast('order id: '+number);
-                            print('order id: ' + number);
-                          },
-                        ),
-                      ));
+                  // Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (BuildContext context) => PaypalPayment(
+                  //         "",
+                  //         onFinish: (number) async {
+                  //           // payment done
+                  //           // showThisToast('order id: '+number);
+                  //           print('order id: ' + number);
+                  //         },
+                  //       ),
+                  //     ));
                 },
               ),
             ),
@@ -516,7 +516,7 @@ Widget Educations(List education_info) {
 //CircleAvatar(
 //radius: 70,
 //backgroundImage: NetworkImage(
-//"http://telemedicine.drshahidulislam.com/" + widget.photo,
+//"https://appointmentbd.com/" + widget.photo,
 //)),
 //Center(
 //child: Padding(

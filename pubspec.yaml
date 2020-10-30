@@ -54,7 +54,11 @@ dependencies:
   autocomplete_textfield: ^1.7.3
   file_picker: ^1.13.3
   shimmer: ^1.1.1
-
+  package_info: ^0.4.0+16
+  firebase_messaging: ^6.0.16
+  flutter_local_notifications: ^2.0.0
+  in_app_purchase: ^0.3.4+12
+  custom_rounded_rectangle_border: ^0.0.1
 
   # Cache manager
   flutter_cache_manager: ^1.1.1
@@ -118,6 +122,7 @@ flutter:
     - heart_disease.png
     - prescription_.png
     - chemistry.png
+    - nurse.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

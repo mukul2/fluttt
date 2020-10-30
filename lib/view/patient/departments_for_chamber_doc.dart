@@ -20,7 +20,7 @@ class HomePageState extends State<DeptForChamberDoc> {
 
   Future<String> getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'department-list',
+      "https://appointmentbd.com/api/" + 'department-list',
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': AUTH_KEY,
@@ -160,7 +160,7 @@ Widget DeptChamberDocWidget(BuildContext context) {
                               MaterialPageRoute(
                                   builder: (context) => ChooseDoctorChamber(
                                       (projectSnap.data[index]["id"])
-                                          .toString())));
+                                          .toString(),AUTH_KEY)));
                         },
                       );
                     });
@@ -220,7 +220,7 @@ Widget DeptChamberDocWidget2(BuildContext context) {
 //)
 Future<List> getData() async {
   final http.Response response = await http.post(
-    "http://telemedicine.drshahidulislam.com/api/" + 'department-list',
+    "https://appointmentbd.com/api/" + 'department-list',
     headers: <String, String>{
       'Content-Type': 'application/json',
       'Authorization': AUTH_KEY,

@@ -99,6 +99,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.3.3"
+  custom_rounded_rectangle_border:
+    dependency: "direct main"
+    description:
+      name: custom_rounded_rectangle_border
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.1"
   equatable:
     dependency: transitive
     description:
@@ -176,6 +183,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.1.6"
+  firebase_messaging:
+    dependency: "direct main"
+    description:
+      name: firebase_messaging
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "6.0.16"
   firebase_storage:
     dependency: "direct main"
     description:
@@ -223,6 +237,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.7.5"
+  flutter_local_notifications:
+    dependency: "direct main"
+    description:
+      name: flutter_local_notifications
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.1"
+  flutter_local_notifications_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.0"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -324,6 +352,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.0"
+  in_app_purchase:
+    dependency: "direct main"
+    description:
+      name: in_app_purchase
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.4+15"
   intl:
     dependency: transitive
     description:
@@ -338,6 +373,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.6.2"
+  json_annotation:
+    dependency: transitive
+    description:
+      name: json_annotation
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.1.0"
   location_permissions:
     dependency: transitive
     description:
@@ -366,6 +408,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.9.7"
+  package_info:
+    dependency: "direct main"
+    description:
+      name: package_info
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.3"
   path:
     dependency: transitive
     description:
@@ -588,6 +637,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.2.19-nullsafety"
+  timezone:
+    dependency: transitive
+    description:
+      name: timezone
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.5.7"
   typed_data:
     dependency: transitive
     description:

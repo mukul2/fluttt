@@ -69,7 +69,7 @@ class _HomePageState extends State<HomePageMapCl> {
 //    LatLng(41.138344, -8.611236),
 //    LatLng(41.139813, -8.609381),
 //  ];
-  final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
+  final String _baseUrl_image = "https://appointmentbd.com/";
 
   /// Called when the Google Map widget is created. Updates the map loading state
   /// and inits the markers.

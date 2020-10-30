@@ -10,8 +10,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_maps_webservice/directions.dart';
 import 'package:http/http.dart' as http;
 
-final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
-final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
+final String _baseUrl = "https://appointmentbd.com/api/";
+final String _baseUrl_image = "https://appointmentbd.com/";
 var body;
 
 String createChatRoomName(int one, int two) {
@@ -39,7 +39,7 @@ Future<String> makePostReq(String url, String auth, body_) async {
 
 class VideoAppointmentListActivityPatient extends StatefulWidget {
   String AUTH, USER_ID;
-
+  List videoAppList = [];
   VideoAppointmentListActivityPatient(this.AUTH, this.USER_ID);
 
   @override
@@ -49,7 +49,7 @@ class VideoAppointmentListActivityPatient extends StatefulWidget {
 
 class _VideoAppointmentListActivityPatientState
     extends State<VideoAppointmentListActivityPatient> {
-  List data = [];
+
 
   Future getData() async {
     body = <String, String>{
@@ -60,7 +60,10 @@ class _VideoAppointmentListActivityPatientState
     String apiResponse =
         await makePostReq("get_video_appointment_list", widget.AUTH, body);
     this.setState(() {
-      data = json.decode(apiResponse);
+      widget. videoAppList = json.decode(apiResponse);
+      showThisToast("video app size "+widget.videoAppList.length.toString());
+
+
     });
   }
 
@@ -71,69 +74,64 @@ class _VideoAppointmentListActivityPatientState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Video Appointments"),
-      ),
-      body: data.length > 0
-          ? ListView.builder(
-              shrinkWrap: true,
-              itemCount: data == null ? 0 : data.length,
-              itemBuilder: (BuildContext context, int index) {
-                return new InkWell(
-                  onTap: () {
-                    String chatRoom = createChatRoomName(
-                        int.parse(widget.USER_ID),
-                        data[index]["dr_info"]["id"]);
-                    CHAT_ROOM = chatRoom;
-                    showThisToast(chatRoom);
-                    // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ChatScreen(
-                                data[index]["dr_info"]["id"].toString(),
-                                data[index]["dr_info"]["name"],
-                                _baseUrl_image +
-                                    data[index]["dr_info"]["photo"],
-                                widget.USER_ID,
-                                UNAME,
-                                UPHOTO,
-                                chatRoom)));
-                  },
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(00.0),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(0),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              _baseUrl_image + data[index]["dr_info"]["photo"]),
-                        ),
-                        title: Text(data[index]["dr_info"]["name"]),
-                        subtitle: Text(
-                          "Send a Message",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            )
-          : Center(
-              child: Text("No Data"),
+    return widget. videoAppList.length > 0
+        ? ListView.builder(
+      shrinkWrap: true,
+      itemCount:widget. videoAppList == null ? 0 : widget.videoAppList.length,
+      itemBuilder: (BuildContext context, int index) {
+        return new InkWell(
+          onTap: () {
+            String chatRoom = createChatRoomName(
+                int.parse(widget.USER_ID),
+                widget. videoAppList[index]["dr_info"]["id"]);
+            CHAT_ROOM = chatRoom;
+            showThisToast(chatRoom);
+            // showThisToast(_baseUrl_image+data[index]["dr_info"]["photo"]);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                        widget. videoAppList[index]["dr_info"]["id"].toString(),
+                        widget. videoAppList[index]["dr_info"]["name"],
+                        _baseUrl_image +
+                            widget.videoAppList[index]["dr_info"]["photo"],
+                        widget.USER_ID,
+                        UNAME,
+                        UPHOTO,
+                        chatRoom)));
+          },
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(00.0),
             ),
+            child: Padding(
+              padding: EdgeInsets.all(0),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(
+                      _baseUrl_image +widget. videoAppList[index]["dr_info"]["photo"]),
+                ),
+                title: Text(widget.videoAppList[index]["dr_info"]["name"]),
+                subtitle: Text(
+                  "Send a Message",
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    )
+        : Center(
+      child: Text("No Data"),
     );
   }
 }
 
 class FollowupVideoAppointmentListActivityPatient extends StatefulWidget {
-  String AUTH, USER_ID;
+  String AUTH, USER_ID,USER_PHOTO;
 
-  FollowupVideoAppointmentListActivityPatient(this.AUTH, this.USER_ID);
+  FollowupVideoAppointmentListActivityPatient(this.AUTH, this.USER_ID,this.USER_PHOTO);
 
   @override
   _FollowupVideoAppointmentListActivityPatientState createState() =>
@@ -166,7 +164,7 @@ class _FollowupVideoAppointmentListActivityPatientState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Followup Video Appointments"),
+        title: Text("Follow up Video Appointments"),
       ),
       body: data.length > 0
           ? ListView.builder(
@@ -185,14 +183,15 @@ class _FollowupVideoAppointmentListActivityPatientState
                         context,
                         MaterialPageRoute(
                             builder: (context) => ChatScreen(
-                                widget.USER_ID,
-                                UNAME,
-                                _baseUrl_image +
-                                    data[index]["dr_info"]["photo"],
+
                                 data[index]["dr_info"]["id"].toString(),
                                 data[index]["dr_info"]["name"],
                                 _baseUrl_image +
                                     data[index]["dr_info"]["photo"],
+                                widget.USER_ID,
+                                UNAME,
+                                _baseUrl_image +
+                                    widget.USER_PHOTO,
                                 chatRoom)));
                   },
                   child: Card(
@@ -225,10 +224,10 @@ class _FollowupVideoAppointmentListActivityPatientState
 }
 
 class ChoosePrescriptionForPrescriptionreview extends StatefulWidget {
-  String AUTH, USER_ID, TRANS_ID, PAYPAL_ID, DR_ID;
-
+  String AUTH, USER_ID, TRANS_ID, PAYPAL_ID, DR_ID,ISPAYLATER,ISPAID;
+  List data = [];
   ChoosePrescriptionForPrescriptionreview(
-      this.AUTH, this.USER_ID, this.DR_ID, this.TRANS_ID, this.PAYPAL_ID);
+      this.AUTH, this.USER_ID, this.DR_ID, this.TRANS_ID, this.PAYPAL_ID,this.ISPAYLATER,this.ISPAID);
 
   @override
   _ChoosePrescriptionForPrescriptionreviewState createState() =>
@@ -237,15 +236,15 @@ class ChoosePrescriptionForPrescriptionreview extends StatefulWidget {
 
 class _ChoosePrescriptionForPrescriptionreviewState
     extends State<ChoosePrescriptionForPrescriptionreview> {
-  List data = [];
+
 
   Future getData() async {
     body = <String, String>{'user_type': "patient", 'id': widget.USER_ID};
     String apiResponse =
         await makePostReq("get-prescription-info", widget.AUTH, body);
     this.setState(() {
-      data = json.decode(apiResponse);
-      showThisToast("total pres found " + data.length.toString());
+      widget.data = json.decode(apiResponse);
+     // showThisToast("total pres found " +  widget.data.length.toString());
     });
   }
 
@@ -260,10 +259,10 @@ class _ChoosePrescriptionForPrescriptionreviewState
       appBar: AppBar(
         title: Text("-Choose a Prescription for Review"),
       ),
-      body: data.length > 0
+      body: widget. data.length > 0
           ? ListView.builder(
               shrinkWrap: true,
-              itemCount: data == null ? 0 : data.length,
+              itemCount:  widget.data == null ? 0 :  widget.data.length,
               itemBuilder: (BuildContext context, int index) {
                 return new InkWell(
                   onTap: () {
@@ -275,11 +274,11 @@ class _ChoosePrescriptionForPrescriptionreviewState
                                     widget.AUTH,
                                     widget.USER_ID,
                                     widget.DR_ID,
-                                    data[index]["id"].toString(),
+                                    widget.data[index]["id"].toString(),
                                     widget.TRANS_ID,
                                     widget.PAYPAL_ID,
                                     payable_amount,
-                                    "0")));
+                                    widget.ISPAID,widget.ISPAYLATER)));
 
 //                    String chatRoom = createChatRoomName(
 //                        int.parse(widget.USER_ID),
@@ -310,9 +309,9 @@ class _ChoosePrescriptionForPrescriptionreviewState
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundImage: NetworkImage(
-                              _baseUrl_image + data[index]["dr_info"]["photo"]),
+                              _baseUrl_image +  widget.data[index]["dr_info"]["photo"]),
                         ),
-                        title: Text(data[index]["dr_info"]["name"]),
+                        title: Text( widget.data[index]["dr_info"]["name"]),
                         subtitle: Text(
                           "Review This Prescription",
                           style: TextStyle(color: Colors.blue),
@@ -415,7 +414,7 @@ class ChooseCommentForPresRecheckAndPublish extends StatefulWidget {
       payment_details,
       paypal_id,
       amount,
-      payment_status;
+      payment_status,ISPAYLATER;
 
   ChooseCommentForPresRecheckAndPublish(
       this.AUTH,
@@ -425,7 +424,7 @@ class ChooseCommentForPresRecheckAndPublish extends StatefulWidget {
       this.payment_details,
       this.paypal_id,
       this.amount,
-      this.payment_status);
+      this.payment_status,this.ISPAYLATER);
 
   @override
   _ChooseCommentForPresRecheckAndPublishState createState() =>
@@ -521,10 +520,11 @@ class _ChooseCommentForPresRecheckAndPublishState
                             'dr_id': widget.dr_id,
                             'old_prescription_id': widget.old_pres_id,
                             'patient_comment': problem,
-                            'payment_status': "1",
+                            'payment_status': widget.payment_status,
                             'payment_details': widget.payment_details,
                             'amount': widget.amount,
-                            'paypal_id': widget.paypal_id
+                            'paypal_id': widget.paypal_id,
+                            'isPaymentPending': widget.ISPAYLATER
                           });
                           final http.Response response = await http.post(
                             _baseUrl + 'add-prescription-recheck-request',
@@ -550,7 +550,7 @@ class _ChooseCommentForPresRecheckAndPublishState
                               Navigator.of(context).pop();
                               Navigator.of(context).pop();
                               Navigator.of(context).pop();
-                              Navigator.of(context).pop();
+                             // Navigator.of(context).pop();
                               showThisToast(jsonRes["message"]);
                             } else {
                               setState(() {

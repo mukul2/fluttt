@@ -11,8 +11,8 @@ import 'dart:async';
 import 'dart:convert';
 import '../login_view.dart';
 import 'package:http/http.dart' as http;
-final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
-final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
+final String _baseUrl = "https://appointmentbd.com/api/";
+final String _baseUrl_image = "https://appointmentbd.com/";
 List data = [];
 String AUTH_KEY;
 String uid, uname;
@@ -33,7 +33,7 @@ class HomePageState extends State<SubscriptionViewPatient> {
     uid = prefs.getString("uid");
     uname = prefs.getString("uname");
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'get_subscription_list',
+      "https://appointmentbd.com/api/" + 'get_subscription_list',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': widget.AUTH,
@@ -198,7 +198,7 @@ Widget NewSubscription() {
 //CircleAvatar(
 //radius: 70,
 //backgroundImage: NetworkImage(
-//"http://telemedicine.drshahidulislam.com/" + widget.photo,
+//"https://appointmentbd.com/" + widget.photo,
 //)),
 //Center(
 //child: Padding(

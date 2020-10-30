@@ -163,7 +163,7 @@ class MyCustomFormState extends State<AppointmentConfirmForm> {
                             widget.chamberID_,
                             widget.SELECTED_DATE,
                             "0",
-                            "n");
+                            "n","no time provided");
                     if (appointmentSubmitRespons["status"]) {
                       //show page
                       //_ConfirmedAppointmentPageState
@@ -227,7 +227,7 @@ class _ConfirmedAppointmentPageState extends State<ConfirmedAppointmentPage> {
       widget. UID__  = prefs.getString("uid");
     });
     final http.Response response = await http.get(
-      "http://telemedicine.drshahidulislam.com/api/" +
+      "https://appointmentbd.com/api/" +
           'get_payment_methods_list',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
@@ -266,6 +266,12 @@ class _ConfirmedAppointmentPageState extends State<ConfirmedAppointmentPage> {
           ),
           Text(
             "Your Appointment request has been submitted successfully",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            "Ref # "+widget.response["appointment_id"].toString() ,
+
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
           ),
@@ -316,6 +322,10 @@ class _ConfirmedAppointmentPageState extends State<ConfirmedAppointmentPage> {
                                       if (widget.paymentMethods[
                                       index_]["name"] ==
                                           "Paypal") {
+
+                                        fun(number){
+
+                                        }
                                         Navigator.push(
                                             context,
                                             MaterialPageRoute(
@@ -323,8 +333,8 @@ class _ConfirmedAppointmentPageState extends State<ConfirmedAppointmentPage> {
                                               context) =>
                                                   PaypalPayment(
                                                     type,
-                                                    onFinish:
-                                                        (number) async {},
+                                                    widget.AUTH__,widget.UID__,
+                                                    fun,
                                                   ),
                                             ));
                                       } else if (widget

@@ -46,7 +46,7 @@ class HomePageState extends State<ChamberDoctorFullProfileView> {
     prefs = await _prefs;
     AUTH_KEY = prefs.getString("auth");
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" +
+      "https://appointmentbd.com/api/" +
           'doctor-education-chamber-info',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
@@ -294,41 +294,41 @@ Widget Educations(List education_info) {
 Widget chamberBooking(chamber_info, BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      title: Text("Book an Appointment"),
+      title: Text("Book an Appointment error here"),
     ),
     body: SingleChildScrollView(
         child: new Column(
 
           children: <Widget>[
-            Card(
+           Container(height: 90,child:  Center(child: Card(
 
-              child: ListTile(
-                leading: Padding(
-                  padding: EdgeInsets.fromLTRB(0, 0, 00, 0),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    child: Expanded(
-                      child: CircleAvatar(
-                        backgroundImage: NetworkImage(
-                            "http://telemedicine.drshahidulislam.com/" +
-                                photo_),
-                      ),
-                    ),
-                  ),
-                ),
-                trailing: Text((chamber_info["fee"]).toString() + " USD"),
-                title: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Your Doctor", style: TextStyle(fontSize: 12),),
-                    Text(name_, style: TextStyle(color: Colors.black),),
-                    Text(designation_title_, style: TextStyle(fontSize: 12),)
-                  ],
-                ),
-              ),
-            ),
+             child: Center(child: Padding(padding: EdgeInsets.fromLTRB(0, 10, 0, 0),child: ListTile(
+               leading: Padding(
+                 padding: EdgeInsets.fromLTRB(0, 0, 00, 0),
+                 child: Container(
+                   width: 30,
+                   height: 30,
+                   child: Expanded(
+                     child: CircleAvatar(
+                       backgroundImage: NetworkImage(
+                           "https://appointmentbd.com/" +
+                               photo_),
+                     ),
+                   ),
+                 ),
+               ),
+               trailing: Text((chamber_info["fee"]).toString() + " USD"),
+               title: Column(
+                 mainAxisAlignment: MainAxisAlignment.start,
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   Text("Your Doctor", style: TextStyle(fontSize: 12),),
+                   Text(name_, style: TextStyle(color: Colors.black),),
+                   Text(designation_title_!=null?designation_title_:"No Designation Data", style: TextStyle(fontSize: 12),)
+                 ],
+               ),
+             ),),),
+           ),),),
 
             Card(
                 child: ListTile(
@@ -740,7 +740,7 @@ int getMonthCount(int month) {
 //CircleAvatar(
 //radius: 70,
 //backgroundImage: NetworkImage(
-//"http://telemedicine.drshahidulislam.com/" + widget.photo,
+//"https://appointmentbd.com/" + widget.photo,
 //)),
 //Center(
 //child: Padding(

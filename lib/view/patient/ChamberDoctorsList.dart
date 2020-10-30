@@ -26,7 +26,7 @@ class HomePageState extends State<ChamberDoctorList> {
 
   Future<String> getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'doctor-search',
+      "https://appointmentbd.com/api/" + 'doctor-search',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
@@ -87,7 +87,7 @@ class HomePageState extends State<ChamberDoctorList> {
                 ),
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(
-                      ("http://telemedicine.drshahidulislam.com/" +
+                      ("https://appointmentbd.com/" +
                           data[index]["photo"])),
                 ),
               ),
@@ -110,7 +110,7 @@ List data_;
 
 Future<List> getData(String id) async {
   final http.Response response = await http.post(
-    "http://telemedicine.drshahidulislam.com/api/" + 'search-online-doctors',
+    "https://appointmentbd.com/api/" + 'search-online-doctors',
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
       'Authorization': AUTH_KEY,
@@ -128,9 +128,10 @@ Future<List> getData(String id) async {
 
 class ChooseDoctorChamber extends StatefulWidget {
   String id;
+  String auth;
 
   bool _enabled2 = true;
-  ChooseDoctorChamber(this.id);
+  ChooseDoctorChamber(this.id,this.auth);
   @override
   _ChooseDoctorChamberState createState() => _ChooseDoctorChamberState();
 }
@@ -139,10 +140,10 @@ class _ChooseDoctorChamberState extends State<ChooseDoctorChamber> {
   List downloadedData = [];
   Future<List> getData(String id) async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'search-online-doctors',
+      "https://appointmentbd.com/api/" + 'doctor-search',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': AUTH_KEY,
+        'Authorization': widget.auth,
       },
       body: jsonEncode(<String, String>{'department_id': id}),
     );
@@ -152,7 +153,8 @@ class _ChooseDoctorChamberState extends State<ChooseDoctorChamber> {
 
     });
 
-   // showThisToast(response.body.toString());
+
+    //showThisToast(response.body.toString());
     //showThisToast(downloadedData.length.toString());
 
     return data_;
@@ -257,7 +259,7 @@ class _ChooseDoctorChamberState extends State<ChooseDoctorChamber> {
                 subtitle: Padding(
                   padding: EdgeInsets.fromLTRB(5, 0, 20, 5),
                   child: new Text(
-                    downloadedData[index]["designation_title"],
+                    downloadedData[index]["designation_title"]!=null?downloadedData[index]["designation_title"]:"No designation data",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -270,7 +272,7 @@ class _ChooseDoctorChamberState extends State<ChooseDoctorChamber> {
                 ),
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(
-                      ("http://telemedicine.drshahidulislam.com/" +
+                      ("https://appointmentbd.com/" +
                           downloadedData[index]["photo"])),
                 ),
               ),
@@ -374,7 +376,7 @@ Widget ChamberDoctorListWidget(String id) {
                           ),
                           leading: CircleAvatar(
                             backgroundImage: NetworkImage(
-                                ("http://telemedicine.drshahidulislam.com/" +
+                                ("https://appointmentbd.com/" +
                                     projectSnap.data[index]["photo"])),
                           ),
                         ),

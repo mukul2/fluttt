@@ -21,9 +21,13 @@ import 'package:http/http.dart' as http;
 
 import 'config.dart';
 
-final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
+final String _baseUrl = "https://appointmentbd.com/api/";
 String A_KEY;
 String UID;
+String U_NAME;
+String U_PHOTO;
+
+bool isExternalPayment = true ;
 
 String createChatRoomName(int one, int two) {
   if (one > two) {
@@ -36,8 +40,11 @@ String createChatRoomName(int one, int two) {
 class PaypalPayment extends StatefulWidget {
   final Function onFinish;
   String TYPE;
+  String AUTH;
+  String UID;
 
-  PaypalPayment(this.TYPE, {this.onFinish});
+
+  PaypalPayment(this.TYPE,this.AUTH,this.UID ,this.onFinish);
 
   @override
   State<StatefulWidget> createState() {
@@ -144,9 +151,9 @@ class PaypalPaymentState extends State<PaypalPayment> {
             }
           },
           "description": "The payment transaction description.",
-          "payment_options": {
-            "allowed_payment_method": "INSTANT_FUNDING_SOURCE"
-          },
+          // "payment_options": {
+          //   "allowed_payment_method": "INSTANT_FUNDING_SOURCE"
+          // },
           "item_list": {
             "items": items,
             if (isEnableShipping && isEnableAddress)
@@ -193,23 +200,24 @@ class PaypalPaymentState extends State<PaypalPayment> {
                 services
                     .executePayment(executeUrl, payerID, accessToken)
                     .then((id) async {
-                  showThisToast("real " + id);
+               //   showThisToast("real " + id);
                   //  widget.onFinish(id);
                   //  Navigator.of(context).pop();
                   Future<SharedPreferences> _prefs =
                       SharedPreferences.getInstance();
                   prefs = await _prefs;
-                  A_KEY = prefs.getString("auth");
-                  UID = prefs.getString("uid");
+                  //
+                  U_NAME = prefs.getString("uname");
+                   U_PHOTO = prefs.getString("uphoto");
                   if (widget.TYPE == 'Prescription Service') {
                     final http.Response response = await http.post(
                       _baseUrl + 'add_payment_info_only',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'dr_id': docID,
                         'amount': payable_amount,
                         'status': "1",
@@ -229,11 +237,11 @@ class PaypalPaymentState extends State<PaypalPayment> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    MakePrescriptionRequestWidget(A_KEY,UID,
+                                    MakePrescriptionRequestWidget(widget.AUTH,widget.UID,
                                         id,
                                         payable_amount,
                                         docID,
-                                        jsonResponse["message"].toString(),payable_amount)));
+                                        jsonResponse["message"].toString(),payable_amount,"0")));
                       } else {
                         showThisToast("Failed to insert data");
                       }
@@ -264,10 +272,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_subscription_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'dr_id': docID,
                         'payment_status': "1",
                         'number_of_months': "1",
@@ -276,6 +284,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'amount': payable_amount,
                         'ends': endDate,
                         'status': "1",
+                        'isPaymentPending': "0",
 
                       }),
                     );
@@ -310,10 +319,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_subscription_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'dr_id': docID,
                         'payment_status': "1",
                         'number_of_months': "3",
@@ -322,6 +331,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'amount': payable_amount,
                         'ends': endDate,
                         'status': "1",
+                      'isPaymentPending': "0",
 
                       }),
                     );
@@ -355,10 +365,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_subscription_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'dr_id': docID,
                         'payment_status': "1",
                         'number_of_months': "6",
@@ -367,6 +377,7 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'amount': payable_amount,
                         'ends': endDate,
                         'status': "1",
+                        'isPaymentPending': "0",
 
                       }),
                     );
@@ -401,10 +412,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_subscription_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'dr_id': docID,
                         'payment_status': "1",
                         'number_of_months': "12",
@@ -413,21 +424,13 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         'amount': payable_amount,
                         'ends': endDate,
                         'status': "1",
+                        'isPaymentPending': "0",
 
                       }),
                     );
-                    print(jsonEncode(<String, String>{
-                      'patient_id': UID,
-                      'dr_id': docID,
-                      'payment_status': "1",
-                      'number_of_months': "12",
-                      'payment_details': id,
-                      'starts': startDate,
-                      'amount': payable_amount,
-                      'ends': endDate,
-                    }));
-                    showThisToast(response.statusCode.toString());
-                    showThisToast(response.body);
+
+                   // showThisToast(response.statusCode.toString());
+                   // showThisToast(response.body);
                     //popup count
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
@@ -440,10 +443,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_chat_appointment_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'dr_id': docID,
                         'amount': payable_amount,
                         'payment_details': id,
@@ -459,11 +462,14 @@ class PaypalPaymentState extends State<PaypalPayment> {
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
+
+
                     //Navigator.of(context).pop();
                     String chatRoom = createChatRoomName(
-                        int.parse(USER_ID), int.parse(docID));
+                        int.parse(widget.UID), int.parse(docID));
                     CHAT_ROOM = chatRoom;
                     print("chat room " + chatRoom);
+                   // showThisToast(chatRoom);
                     DatabaseReference _messageDatabaseReference;
 
                     DatabaseReference _messageDatabaseReference_last;
@@ -479,121 +485,123 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         .child("lastChatHistory");
 
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("message_body")
                         .set("Chat service payment is compleated");
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("message_type")
                         .set("TYPE_TEXT");
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("receiver_name")
                         .set(docNAME);
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("receiver_photo")
                         .set(docPhoto);
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("recever_id")
                         .set((docID));
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("sender_id")
-                        .set(USER_ID);
+                        .set(widget.UID);
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("sender_name")
-                        .set(USER_NAME);
+                        .set(U_NAME);
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("sender_photo")
-                        .set(USER_PHOTO);
+                        .set(U_PHOTO);
                     _messageDatabaseReference_last
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child(docID)
                         .child("time")
                         .set(new DateTime.now().toUtc().toIso8601String());
 
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("message_body")
                         .set("Chat service payment is compleated");
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("message_type")
                         .set("TYPE_TEXT");
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("receiver_name")
                         .set(docNAME);
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("receiver_photo")
                         .set(docPhoto);
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("recever_id")
                         .set((docID));
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("sender_id")
-                        .set(USER_ID);
+                        .set(widget.UID);
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("sender_name")
-                        .set(USER_NAME);
+                        .set(U_NAME);
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("sender_photo")
-                        .set(USER_PHOTO);
+                        .set(U_PHOTO);
                     _messageDatabaseReference_last
                         .child(docID)
-                        .child(USER_ID)
+                        .child(widget.UID)
                         .child("time")
                         .set(new DateTime.now().toUtc().toIso8601String());
+                    //showThisToast("should go to chat");
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => ChatScreen(
-                                USER_ID,
-                                USER_NAME,
-                                USER_PHOTO,
+
                                 docID,
                                 docNAME,
                                 docPhoto,
+                                widget.UID,
+                                U_NAME,
+                                U_PHOTO,
                                 chatRoom)));
                   } else if (widget.TYPE == "Video Call") {
                     final http.Response response = await http.post(
                       _baseUrl + 'add_video_appointment_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'doctor_id': docID,
                         'payment_details': id,
                         'payment_status': "1",
                         'amount': payable_amount,
-                        'is_review_appointment': "1",
+                        'is_review_appointment': "0",
 
                       }),
                     );
@@ -604,17 +612,17 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         MaterialPageRoute(
                             builder: (context) =>
                                 VideoAppointmentListActivityPatient(
-                                    A_KEY, UID)));
+                                    widget.AUTH, widget.UID)));
                     // Navigator.of(context).pop();
                   } else if (widget.TYPE == "Prescription Review") {
                     final http.Response response = await http.post(
                       _baseUrl + 'add_payment_info_only',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'dr_id': docID,
                         'amount': payable_amount,
                         'status': "1",
@@ -634,8 +642,8 @@ class PaypalPaymentState extends State<PaypalPayment> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    ChoosePrescriptionForPrescriptionreview(A_KEY,UID, docID,id,
-                                        jsonResponse["message"].toString())));
+                                    ChoosePrescriptionForPrescriptionreview(widget.AUTH,widget.UID, docID,id,
+                                        jsonResponse["message"].toString(),"0","1")));
                       } else {
                         showThisToast("Failed to insert data");
                       }
@@ -647,10 +655,10 @@ class PaypalPaymentState extends State<PaypalPayment> {
                       _baseUrl + 'add_video_appointment_info',
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': A_KEY,
+                        'Authorization': widget.AUTH,
                       },
                       body: jsonEncode(<String, String>{
-                        'patient_id': UID,
+                        'patient_id': widget.UID,
                         'doctor_id': docID,
                         'payment_details': id,
                         'payment_status': "1",
@@ -667,18 +675,18 @@ class PaypalPaymentState extends State<PaypalPayment> {
                         MaterialPageRoute(
                             builder: (context) =>
                                 FollowupVideoAppointmentListActivityPatient(
-                                    A_KEY, UID)));
+                                    widget.AUTH, widget.UID,U_PHOTO)));
                     // Navigator.of(context).pop();
                   }  else {
-                    showThisToast("Unknwon service " + widget.TYPE);
+                  //  showThisToast("Unknwon service " + widget.TYPE);
                   }
                 });
               } else {
-                showThisToast("No Payer id found");
+               // showThisToast("No Payer id found");
               }
               //  Navigator.of(context).pop();
             } else {
-              showThisToast("probl here 1");
+             // showThisToast("probl here 1");
             }
             if (request.url.contains(cancelURL)) {
               Navigator.of(context).pop();
@@ -714,9 +722,10 @@ class MakePrescriptionRequestWidget extends StatefulWidget {
   String paypalID;
   String auth,uid;
   String amount ;
+  String isPayLater ;
 
   MakePrescriptionRequestWidget(this.auth,this.uid,
-      this.tranactionID, this.fees, this.docID, this.paypalID,this.amount);
+      this.tranactionID, this.fees, this.docID, this.paypalID,this.amount,this.isPayLater);
 
   @override
   _MakePrescriptionRequestState createState() =>
@@ -797,12 +806,12 @@ class _MakePrescriptionRequestState
                           var body_ = jsonEncode(<String, String>{
                             'patient_id': widget.uid,
                             'dr_id': widget.docID,
-                            'payment_status': "1",
                             'problem': problem,
-                            'payment_status': "1",
+                            'payment_status':widget.paypalID=="0"?"0": "1",
                             'amount': payable_amount,
                             'payment_details': widget.tranactionID,
-                            'paypal_id': widget.paypalID
+                            'paypal_id': widget.paypalID,
+                            'isPayLater': widget.isPayLater,
                           });
                           final http.Response response = await http.post(
                             _baseUrl + 'add-prescription-request',
@@ -827,7 +836,7 @@ class _MakePrescriptionRequestState
                               Navigator.of(context).pop();
                               Navigator.of(context).pop();
                               Navigator.of(context).pop();
-                              Navigator.of(context).pop();
+                             // Navigator.of(context).pop();
                               showThisToast(jsonRes["message"]);
                             } else {
                               setState(() {

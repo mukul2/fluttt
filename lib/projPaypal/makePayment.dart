@@ -52,18 +52,15 @@ class _makePaymentState extends State<makePayment> {
                       onPressed: (){
 
                         // make PayPal payment
+                        fun(ss){
+
+                        }
 
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (BuildContext context) => PaypalPayment("",
+                            builder: (BuildContext context) => PaypalPayment("","","",
 
-                              onFinish: (number) async {
-
-                                // payment done
-                            //    showThisToast('order id: '+number);
-                                print('order id: '+number);
-
-                              },
+                             fun,
                             ),
                           ),
                         );

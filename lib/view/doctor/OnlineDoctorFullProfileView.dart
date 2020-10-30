@@ -31,7 +31,7 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
 
   Future<String> getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'doctor-education-chamber-info',
+      "https://appointmentbd.com/api/" + 'doctor-education-chamber-info',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
@@ -132,18 +132,15 @@ Widget Services(List online_doctors_service_info) {
                 child: Text("Purchase",style: TextStyle(color: Colors.white),),
                 onPressed: (){
                  // makePayment();
+                  fun(number)async{
+                    print('order id: '+number);
+                  }
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (BuildContext context) => PaypalPayment("",
+                        builder: (BuildContext context) => PaypalPayment("","","",
 
-                          onFinish: (number) async {
-
-                            // payment done
-                           // showThisToast('order id: '+number);
-                            print('order id: '+number);
-
-                          },
+                            fun
                         ),
                       )
                   );
@@ -237,7 +234,7 @@ Widget Educations(List education_info) {
 //CircleAvatar(
 //radius: 70,
 //backgroundImage: NetworkImage(
-//"http://telemedicine.drshahidulislam.com/" + widget.photo,
+//"https://appointmentbd.com/" + widget.photo,
 //)),
 //Center(
 //child: Padding(

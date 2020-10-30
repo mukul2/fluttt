@@ -1,19 +1,34 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:appxplorebd/appPhoneVerification.dart';
 import 'package:appxplorebd/myCalling/settings.dart';
+import 'package:appxplorebd/view/patient/patient_view.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
+bool isCallingEngagged= false ;
+int userCount = 0;
 class CallPage extends StatefulWidget {
   /// non-modifiable channel name of the page
   final String channelName;
+  final String UID;
+  final String ownName;
+  final String partnerID;
+  final String partnerPhoto;
   final bool isCameraOn;
+  final bool isCaller;
+
 
   /// non-modifiable client role of the page
   final ClientRole role;
 
   /// Creates a call page with given channel name.
-  const CallPage({Key key, this.channelName, this.role,this.isCameraOn}) : super(key: key);
+  const CallPage(
+      {Key key, this.channelName, this.role, this.isCameraOn, this.UID,this.ownName,this.partnerID,this.partnerPhoto,this.isCaller})
+      : super(key: key);
 
   @override
   _CallPageState createState() => _CallPageState();
@@ -32,6 +47,43 @@ class _CallPageState extends State<CallPage> {
     AgoraRtcEngine.leaveChannel();
     AgoraRtcEngine.destroy();
     super.dispose();
+    isCallingEngagged = false ;
+  }
+
+  sendPush()async{
+    //send push
+    FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+    await firebaseMessaging.requestNotificationPermissions(
+      const IosNotificationSettings(sound: true, badge: true, alert: true, provisional: false),
+    );
+    http.Response response  =   await http.post(
+      'https://fcm.googleapis.com/fcm/send',
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=AAAA8TsH26U:APA91bEK0P-32wiwnhs3iEicQzLFe20P4o7hx0-o4OS2oENSY0jfKSbd0zERkFJL1BNPYV3yE8_Y9PG4-HQ-j4ZXmV9AwrrjKvAiQdnh1JIR3JCmNg0Z4X3bM3lPZoiNGAsGXPkEdoGw', // Constant string
+      },
+      body: jsonEncode(
+        <String, dynamic>{
+          'notification': <String, dynamic>{
+'title':"Incomming Call",
+            'body':'Call from '+widget.ownName
+          },
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'doc_id': widget.UID,
+            'doc_name': widget.ownName,
+            'doc_photo': widget.partnerPhoto,
+            'type': 'incomming_call',
+            'room': widget.channelName
+          },
+          'to': "/topics/"+widget.partnerID
+        },
+      ),
+    );
+   // showThisToast(response.statusCode.toString());
+
+    //send push ends
   }
 
   @override
@@ -39,6 +91,7 @@ class _CallPageState extends State<CallPage> {
     super.initState();
     // initialize agora sdk
     initialize();
+    this.sendPush();
   }
 
   Future<void> initialize() async {
@@ -56,20 +109,18 @@ class _CallPageState extends State<CallPage> {
     _addAgoraEventHandlers();
     await AgoraRtcEngine.enableWebSdkInteroperability(true);
     VideoEncoderConfiguration configuration = VideoEncoderConfiguration();
-    configuration.dimensions = Size(1920, 1080);
+    configuration.dimensions = Size(320, 240);
     await AgoraRtcEngine.setVideoEncoderConfiguration(configuration);
-    await AgoraRtcEngine.joinChannel(null, widget.channelName, null, 0);
+    await AgoraRtcEngine.joinChannel(
+        null, widget.channelName, null, int.parse(widget.UID));
   }
 
   /// Create agora sdk instance and initialize
   Future<void> _initAgoraRtcEngine() async {
     await AgoraRtcEngine.create(APP_ID);
-    if(widget.isCameraOn){
+    if (widget.isCameraOn) {
       await AgoraRtcEngine.enableVideo();
-
-    }else{
-
-    }
+    } else {}
     await AgoraRtcEngine.setChannelProfile(ChannelProfile.LiveBroadcasting);
     await AgoraRtcEngine.setClientRole(widget.role);
   }
@@ -99,6 +150,11 @@ class _CallPageState extends State<CallPage> {
         _infoStrings.add('onLeaveChannel');
         _users.clear();
       });
+      isCallingEngagged = false;
+      userCount = _users.length;
+      Navigator.of(context).pop();
+      isCallingEngagged = false ;
+
     };
 
     AgoraRtcEngine.onUserJoined = (int uid, int elapsed) {
@@ -107,6 +163,7 @@ class _CallPageState extends State<CallPage> {
         _infoStrings.add(info);
         _users.add(uid);
       });
+      userCount = _users.length;
     };
 
     AgoraRtcEngine.onUserOffline = (int uid, int reason) {
@@ -115,6 +172,9 @@ class _CallPageState extends State<CallPage> {
         _infoStrings.add(info);
         _users.remove(uid);
       });
+      userCount = _users.length;
+      Navigator.of(context).pop();
+      isCallingEngagged = false;
     };
 
     AgoraRtcEngine.onFirstRemoteVideoFrame = (
@@ -158,17 +218,18 @@ class _CallPageState extends State<CallPage> {
   /// Video layout wrapper
   Widget _viewRows() {
     final views = _getRenderViews();
+    //showThisToast(views.length.toString());
     switch (views.length) {
-      case 1:
-        return Container(
-            child: Column(
-          children: <Widget>[
-            Container(
-              height: 200,
-              child: Center(child : Text("Partner is not available.Please wait or come later",style : TextStyle(color : Colors.white))),
-            ),
-            _videoView(views[0])],
-        ));
+      // case 1:
+      //   return Stack(
+      //     children: [
+      //       _videoView(views[0]),
+      //       Center(
+      //         child: Text("Calling",style: TextStyle(color: Colors.white),),
+      //       )
+      //
+      //     ],
+      //   );
 //      case 2:
 //        return Container(
 //            child: Column(
@@ -179,36 +240,49 @@ class _CallPageState extends State<CallPage> {
 //        ));
       case 2:
         return Stack(
-           children: [
-             views[1],
-             Positioned(
-               top: 10,
-               right: 10,
-               child: Container(
-                 width: 100,
-                 height: 180,
-                 child: views[0],
-               ),
-             )
-           ],
-
+          children: [
+            views[1],
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Container(
+                width: 100,
+                height: 180,
+                child: views[0],
+              ),
+            )
+          ],
         );
       case 3:
-        return Container(
-            child: Column(
-          children: <Widget>[
-            _expandedVideoRow(views.sublist(0, 2)),
-            _expandedVideoRow(views.sublist(2, 3))
+        return Stack(
+          children: [
+            views[1],
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Container(
+                width: 100,
+                height: 180,
+                child: views[0],
+              ),
+            )
           ],
-        ));
+        );
       case 4:
-        return Container(
-            child: Column(
-          children: <Widget>[
-            _expandedVideoRow(views.sublist(0, 2)),
-            _expandedVideoRow(views.sublist(2, 4))
+        return Stack(
+          children: [
+            views[1],
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Container(
+                width: 100,
+                height: 180,
+                child: views[0],
+              ),
+            )
           ],
-        ));
+        );
       default:
     }
     return Container();
@@ -314,8 +388,73 @@ class _CallPageState extends State<CallPage> {
     );
   }
 
-  void _onCallEnd(BuildContext context) {
+  void _onCallEnd(BuildContext context)async {
+    //showThisToast("user count "+_getRenderViews().length.toString());
     Navigator.pop(context);
+    isCallingEngagged =  false ;
+
+    //Navigator.of(context).pop();
+
+    if( widget.isCaller==true && _getRenderViews().length==2 ){
+      //showThisToast(widget.partnerID);
+      http.Response response  =   await http.post(
+        'https://fcm.googleapis.com/fcm/send',
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization': 'key=AAAA8TsH26U:APA91bEK0P-32wiwnhs3iEicQzLFe20P4o7hx0-o4OS2oENSY0jfKSbd0zERkFJL1BNPYV3yE8_Y9PG4-HQ-j4ZXmV9AwrrjKvAiQdnh1JIR3JCmNg0Z4X3bM3lPZoiNGAsGXPkEdoGw', // Constant string
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'notification': <String, dynamic>{
+
+            },
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              // 'doc_id': widget.UID,
+              // 'doc_name': widget.ownName,
+              // 'doc_photo': widget.partnerPhoto,
+              'type': 'end_call',
+              //'room': widget.channelName
+            },
+            'to': "/topics/"+widget.partnerID
+          },
+        ),
+      );
+    }else if( widget.isCaller==true && _getRenderViews().length==1 ){
+      //showThisToast(widget.partnerID);
+      http.Response response  =   await http.post(
+        'https://fcm.googleapis.com/fcm/send',
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization': 'key=AAAA8TsH26U:APA91bEK0P-32wiwnhs3iEicQzLFe20P4o7hx0-o4OS2oENSY0jfKSbd0zERkFJL1BNPYV3yE8_Y9PG4-HQ-j4ZXmV9AwrrjKvAiQdnh1JIR3JCmNg0Z4X3bM3lPZoiNGAsGXPkEdoGw', // Constant string
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'notification': <String, dynamic>{
+
+            },
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              // 'doc_id': widget.UID,
+              // 'doc_name': widget.ownName,
+              // 'doc_photo': widget.partnerPhoto,
+              'type': 'cancel_call',
+              //'room': widget.channelName
+            },
+            'to': "/topics/"+widget.partnerID
+          },
+        ),
+      );
+    }else {
+      //showThisToast("Doc ended the call but no noti ");
+    }
+
+
+
+
+
   }
 
   void _onToggleMute() {
@@ -323,6 +462,7 @@ class _CallPageState extends State<CallPage> {
       muted = !muted;
     });
     AgoraRtcEngine.muteLocalAudioStream(muted);
+
   }
 
   void _onSwitchCamera() {
@@ -340,11 +480,21 @@ class _CallPageState extends State<CallPage> {
         child: Stack(
           children: <Widget>[
             _viewRows(),
-           // _panel(),
+            // _panel(),
             _toolbar(),
           ],
         ),
       ),
     );
   }
+}
+void showThisToast(String s) {
+  Fluttertoast.showToast(
+      msg: s,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.CENTER,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0);
 }

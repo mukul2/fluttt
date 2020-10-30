@@ -6,19 +6,21 @@ import 'package:http_auth/http_auth.dart';
 class PaypalServices {
 
   String domain = "https://api.sandbox.paypal.com"; // for sandbox mode
- //String domain = "https://api.paypal.com"; // for production mode
+  //String domain = "https://api.paypal.com"; // for production mode
 
   // change clientId and secret with your own, provided by paypal
-  String secret = 'EKhFgFpUrlW1LDVxd4QwsyIkz7e3TYa2AvSv7QCI-9uAja8u2LxIwH1LIsih8FSDqekvITP2KpVmvPBm';
+  //String secret = 'EJVDPj8_qePxy2nuhNs7vjtyD0Vy0DTnphtyySbZm5z4NFDvPwGbdwLjtWzTb6SFW0x39LxcrZB47sEV';
   //String PAY_PAL_CLIENT_ID = "AbIBVjvWbMUKsiuGMRtmiGyMbip8KXnrDeSeIXghUM1aQQW3jRnz80i6cDftFVbYbtwToA9hbQ9yCZq2" ;
-  String clientId = "AbZcTBiyddfmw5Cnh6oTKaURCmALlmN18LsGxz4WDZY6714koqcQNfJ2Qm-AIQNhWk-TjqstCTHpBQXD" ;
- // String PAY_PAL_CLIENT_ID = "AbZcTBiyddfmw5Cnh6oTKaURCmALlmN18LsGxz4WDZY6714koqcQNfJ2Qm-AIQNhWk-TjqstCTHpBQXD" ;
+ //String clientId = "AYlDJ-amnO-AHUwDEMG_nRKzLsLkOZ7TT-YMugoTd5WL40FJ5QVg5PTHX2GVs-UoAaEVdYe0JelcpSzn" ;
+  //String PAY_PAL_CLIENT_ID = "AbZcTBiyddfmw5Cnh6oTKaURCmALlmN18LsGxz4WDZY6714koqcQNfJ2Qm-AIQNhWk-TjqstCTHpBQXD" ;
 
 
   // for getting the access token from Paypal
   Future<String> getAccessToken() async {
     try {
-      var client = BasicAuthClient(clientId, secret);
+      //var client = BasicAuthClient(clientId, secret);
+     //given by client// var client = BasicAuthClient("AYlDJ-amnO-AHUwDEMG_nRKzLsLkOZ7TT-YMugoTd5WL40FJ5QVg5PTHX2GVs-UoAaEVdYe0JelcpSzn", "EB1myt5qAUTELO4hEbTo5oTDsFXwGEBKH1gq45EUSwC0ylhJmkQA96k6M1pw91m8oNd2WdBjmEpV0PSg");
+      var client = BasicAuthClient("AbZcTBiyddfmw5Cnh6oTKaURCmALlmN18LsGxz4WDZY6714koqcQNfJ2Qm-AIQNhWk-TjqstCTHpBQXD", "EKhFgFpUrlW1LDVxd4QwsyIkz7e3TYa2AvSv7QCI-9uAja8u2LxIwH1LIsih8FSDqekvITP2KpVmvPBm");
       var response = await client.post('$domain/v1/oauth2/token?grant_type=client_credentials');
       if (response.statusCode == 200) {
         final body = convert.jsonDecode(response.body);

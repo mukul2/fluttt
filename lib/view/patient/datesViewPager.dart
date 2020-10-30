@@ -10,7 +10,7 @@ import 'dart:async';
 import 'dart:convert';
 import '../login_view.dart';
 import 'package:http/http.dart' as http;
-final String _baseUrl_image = "http://telemedicine.drshahidulislam.com/";
+final String _baseUrl_image = "https://appointmentbd.com/";
 
 List skill_info;
 List education_info;
@@ -38,7 +38,7 @@ class DatesViewPager extends StatefulWidget {
 class HomePageState extends State<DatesViewPager> {
   Future<String> getData() async {
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" +
+      "https://appointmentbd.com/api/" +
           'doctor-education-chamber-info',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
@@ -296,7 +296,7 @@ Widget printAllDates() {
   String dates = "";
  // showThisToast((now.month).toString() + ' starts');
   showThisToast(now.toString());
-  now = now.add(new Duration(days: 10));
+  now = now.add(new Duration(days: 0));
   showThisToast(now.toString());
   int i = 0;
 //  while ((now.weekday) == monday) {
@@ -345,7 +345,7 @@ int getMonthCount(int month) {
 //CircleAvatar(
 //radius: 70,
 //backgroundImage: NetworkImage(
-//"http://telemedicine.drshahidulislam.com/" + widget.photo,
+//"https://appointmentbd.com/" + widget.photo,
 //)),
 //Center(
 //child: Padding(

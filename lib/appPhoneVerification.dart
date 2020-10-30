@@ -16,7 +16,7 @@ class PhoneVerificationScreen extends StatelessWidget {
 
   Future<bool> loginUser(String phone, BuildContext context) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
-    showThisToast("trying with " + phone);
+   // showThisToast("trying with " + phone);
 
     _auth.verifyPhoneNumber(
         phoneNumber: phone,

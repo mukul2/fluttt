@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
@@ -6,21 +7,21 @@ import 'package:appxplorebd/networking/ApiProvider.dart';
 import 'package:appxplorebd/projPaypal/config.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:appxplorebd/chat/model/chat_message.dart';
 import 'package:appxplorebd/chat/service/authentication.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
-
+import 'package:http/http.dart' as http;
 String CLIEND_ID = "xploreDoc";
 
 class ChatScreen extends StatefulWidget {
-  ChatScreen(this.partner_id, this.partner_name, this.partner_photo,
-      this.own_id, this.own_name, this.own_photo, this.chatRoom);
 
   String partner_id = "";
   String partner_name = "";
@@ -29,6 +30,10 @@ class ChatScreen extends StatefulWidget {
   String own_name = "";
   String own_photo = "";
   String chatRoom = "";
+  ChatScreen(this.partner_id, this.partner_name, this.partner_photo,
+      this.own_id, this.own_name, this.own_photo, this.chatRoom);
+
+
 
   @override
   State createState() => ChatScreenState();
@@ -530,50 +535,72 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               padding: EdgeInsets.only(right: 20.0),
               child: GestureDetector(
                 onTap: () async {
-                  ClientRole _role = ClientRole.Broadcaster;
-                  // await for camera and mic permissions before pushing video page
-                  await _handleCameraAndMic();
-                  // push video page with given channel name
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CallPage(
-                        channelName: widget.chatRoom,
-                        role: _role,
-                        isCameraOn: false,
-                      ),
-                    ),
-                  );
+
+
+                  // ClientRole _role = ClientRole.Broadcaster;
+                  // // await for camera and mic permissions before pushing video page
+                  // await _handleCameraAndMic();
+                  // // push video page with given channel name
+                  // await Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => CallPage(
+                  //       channelName: widget.chatRoom,
+                  //       role: _role,
+                  //       isCameraOn: false,
+                  //     ),
+                  //   ),
+                  // );
                 },
                 child: Icon(
                   Icons.call,
                   size: 26.0,
                 ),
               )),
-          Padding(
-              padding: EdgeInsets.only(right: 20.0),
-              child: GestureDetector(
-                onTap: () async {
-                  ClientRole _role = ClientRole.Broadcaster;
-                  // await for camera and mic permissions before pushing video page
-                  await _handleCameraAndMic();
-                  // push video page with given channel name
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CallPage(
-                        channelName: widget.chatRoom,
-                        role: _role,
-                        isCameraOn: true,
-                      ),
+
+          InkWell(
+            onTap: () async {
+
+
+
+              if(true){
+                ClientRole _role = ClientRole.Broadcaster;
+                // await for camera and mic permissions before pushing video page
+                await _handleCameraAndMic();
+                // push video page with given channel name
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CallPage(
+                      channelName: "call_"+widget.chatRoom,
+                      role: _role,
+                      isCameraOn: true,
+                      UID: widget.own_id,
+                      ownName: widget.own_name,
+                      partnerID: widget.partner_id,
+                      partnerPhoto: widget.partner_photo,
+                      isCaller: true,
+
                     ),
-                  );
-                },
-                child: Icon(
-                  Icons.video_call,
-                  size: 26.0,
-                ),
-              )),
+                  ),
+                );
+              }else {
+                // showThisToast(response.statusCode.toString());
+              }
+
+
+
+
+
+
+
+
+            },
+            child:Padding(padding: EdgeInsets.only(right: 20.0),child: Icon(
+              Icons.video_call,
+              size: 26.0,
+            ) ,),
+          )
         ],
         elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
       ),
@@ -620,7 +647,39 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 }
+Future<void> sendNotificationOnBackground({
+  @required String id,
+}) async {
+  FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+  await firebaseMessaging.requestNotificationPermissions(
+    const IosNotificationSettings(sound: true, badge: true, alert: true, provisional: false),
+  );
+  await Future.delayed(Duration(seconds: 5), () async {
+    await http.post(
+      'https://fcm.googleapis.com/fcm/send',
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=AAAA8TsH26U:APA91bEK0P-32wiwnhs3iEicQzLFe20P4o7hx0-o4OS2oENSY0jfKSbd0zERkFJL1BNPYV3yE8_Y9PG4-HQ-j4ZXmV9AwrrjKvAiQdnh1JIR3JCmNg0Z4X3bM3lPZoiNGAsGXPkEdoGw', // Constant string
+      },
+      body: jsonEncode(
+        <String, dynamic>{
+          'notification': <String, dynamic>{
 
+          },
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'id': '1',
+            'status': 'done',
+            'title': 'title from data',
+            'message': 'message from data'
+          },
+          'to': id
+        },
+      ),
+    );
+  });
+}
 Future<void> _handleCameraAndMic() async {
   await PermissionHandler().requestPermissions(
     [PermissionGroup.camera, PermissionGroup.microphone],
@@ -631,4 +690,14 @@ class Choice {
   const Choice(this.title);
 
   final String title;
+}
+void showThisToast(String s) {
+  Fluttertoast.showToast(
+      msg: s,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.CENTER,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0);
 }

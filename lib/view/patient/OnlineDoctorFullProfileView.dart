@@ -27,7 +27,7 @@ String UID;
 String type = "";
 String CLIEND_ID = "xploreDoc";
 
-final String _baseUrl = "http://telemedicine.drshahidulislam.com/api/";
+final String _baseUrl = "https://appointmentbd.com/api/";
 
 class OnlineDoctorFullProfileView extends StatefulWidget {
   String name;
@@ -36,6 +36,7 @@ class OnlineDoctorFullProfileView extends StatefulWidget {
   List online_doctors_service_info;
   int id;
   List paymentMethods = [];
+  String auth,uid;
 
   dynamic subscriptionStatus;
 
@@ -47,21 +48,27 @@ class OnlineDoctorFullProfileView extends StatefulWidget {
 }
 
 class HomePageState extends State<OnlineDoctorFullProfileView> {
-
   bool shouldPurChase = true;
 
-  Function funtionChangeState ;
+  Function funtionChangeState;
+
   Future<String> getData() async {
     Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
     SharedPreferences prefs;
     prefs = await _prefs;
     AUTH_KEY = prefs.getString("auth");
+    UID = prefs.getString("uid");
+
+    setState(() {
+      widget.auth = prefs.getString("auth");
+      widget.uid = prefs.getString("uid");
+    });
+
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" +
-          'doctor-education-chamber-info',
+      "https://appointmentbd.com/api/" + 'doctor-education-chamber-info',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': AUTH_KEY,
+        'Authorization': widget.auth,
       },
       body: jsonEncode(<String, String>{'dr_id': widget.id.toString()}),
     );
@@ -84,7 +91,7 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
     String uid_ = prefs.getString("uid");
 
     final http.Response response = await http.post(
-      "http://telemedicine.drshahidulislam.com/api/" + 'check_subscriptions',
+      "https://appointmentbd.com/api/" + 'check_subscriptions',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
@@ -114,13 +121,13 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
     AUTH_KEY = prefs.getString("auth");
     UID = prefs.getString("uid");
     final http.Response response = await http.get(
-      "http://telemedicine.drshahidulislam.com/api/" +
-          'get_payment_methods_list',
+      "https://appointmentbd.com/api/" + 'get_payment_methods_list',
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': AUTH_KEY,
       },
     );
+    //showThisToast(response.body);
 
     this.setState(() {
       widget.paymentMethods = json.decode(response.body);
@@ -133,6 +140,9 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
 
   @override
   void initState() {
+    docID = widget.id.toString();
+    docNAME = widget.name;
+    docPhoto = widget.photo;
     this.getSubscriptions();
     this.getData();
     this.getPaymentMethods();
@@ -336,9 +346,9 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
 //                        ),
                         trailing: getPurchsedTrace(
                             widget.online_doctors_service_info[index]
-                            ["service_name_info"]["name"],
-                            widget.subscriptionStatus,widget.online_doctors_service_info[index]
-                        ),
+                                ["service_name_info"]["name"],
+                            widget.subscriptionStatus,
+                            widget.online_doctors_service_info[index]),
                       ),
                     ));
               },
@@ -351,8 +361,8 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
     );
   }
 
-  Widget getPurchsedTrace(String serviceName, dynamic allStatus,dynamic  online_doctors_service_info) {
-
+  Widget getPurchsedTrace(String serviceName, dynamic allStatus,
+      dynamic online_doctors_service_info) {
     //shouldPurChase = true;
     String direction = "Purchase";
     print(serviceName);
@@ -362,290 +372,493 @@ class HomePageState extends State<OnlineDoctorFullProfileView> {
     if (allStatus != null) {
       if (serviceName == "Video Call") {
         if (allStatus["video"].toString() != "0") {
-          direction = "Allready Purchased";
-          print("Allready Purchased " + serviceName);
+          direction = "Already Purchased";
+          print("Already Purchased " + serviceName);
           isActivated = true;
         }
       }
 
       if (serviceName == "Chat") {
         if (allStatus["chat"].toString() != "0") {
-          direction = "Allready Purchased";
-          print("Allready Purchased " + serviceName);
+          direction = "Already Purchased";
+          print("Already Purchased " + serviceName);
           isActivated = true;
         }
       }
 
       if (serviceName == "1 Month Subscription") {
         if (allStatus["one"].toString() != "0") {
-          direction = "Allready Purchased";
-          print("Allready Purchased " + serviceName);
+          direction = "Already Purchased";
+          print("Already Purchased " + serviceName);
           isActivated = true;
         }
       }
       if (serviceName == "3 Month Subscription") {
         if (allStatus["three"].toString() != "0") {
-          direction = "Allready Purchased";
-          print("Allready Purchased " + serviceName);
+          direction = "Already Purchased";
+          print("Already Purchased " + serviceName);
           isActivated = true;
         }
       }
 
       if (serviceName == "6 Month Subscription") {
         if (allStatus["six"].toString() != "0") {
-          direction = "Allready Purchased";
-          print("Allready Purchased " + serviceName);
+          direction = "Already Purchased";
+          print("Already Purchased " + serviceName);
           isActivated = true;
         }
       }
 
       if (serviceName == "12 Month Subscription") {
         if (allStatus["year"].toString() != "0") {
-          direction = "Allready Purchased";
-          print("Allready Purchased " + serviceName);
+          direction = "Already Purchased";
+          print("Already Purchased " + serviceName);
           isActivated = true;
         }
       }
     }
     shouldPurChase = !isActivated;
 
-
-
     return InkWell(
-      onTap: (){
+      onTap: () {
         docID = widget.id.toString();
         docNAME = widget.name;
         docPhoto = widget.photo;
-        type = (online_doctors_service_info
-        ["service_name_info"]["name"])
+        type = (online_doctors_service_info["service_name_info"]["name"])
             .toString();
         // makePayment();
         if (!isActivated) {
-          payable_amount =
-              (["fees_per_unit"])
-                  .toString();
+          payable_amount = (["fees_per_unit"]).toString();
 
-          showThisToast(type);
-          scaffoldKey.currentState
-              .showBottomSheet((context) => Container(
-            width: double.infinity,
-            child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(15),
-                  child: Text(
-                    "Choose a Payment Method",
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight:
-                        FontWeight.bold),
-                  ),
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount:
-                  widget.paymentMethods == null
-                      ? 0
-                      : widget.paymentMethods
-                      .length,
-                  itemBuilder:
-                      (BuildContext context,
-                      int index_) {
-                    return new InkWell(
-                        onTap: () {
-                          payable_amount =
-                              (online_doctors_service_info[
-                              "fees_per_unit"])
+          // showThisToast(type);
+          scaffoldKey.currentState.showBottomSheet((context) => Container(
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(15),
+                      child: Text(
+                        "Choose a Payment Method",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: widget.paymentMethods == null
+                          ? 0
+                          : widget.paymentMethods.length,
+                      itemBuilder: (BuildContext context, int index_) {
+                        return new InkWell(
+                            onTap: () async {
+                              payable_amount =
+                                  (online_doctors_service_info["fees_per_unit"])
+                                      .toString();
+                              docID = widget.id.toString();
+                              docNAME = widget.name;
+                              docPhoto = widget.photo;
+                              type = (online_doctors_service_info[
+                                      "service_name_info"]["name"])
                                   .toString();
-                          docID =
-                              widget.id.toString();
-                          docNAME = widget.name;
-                          docPhoto = widget.photo;
-                          type = (online_doctors_service_info[
-                          "service_name_info"]
-                          ["name"])
-                              .toString();
 
-                          if (widget.paymentMethods[
-                          index_]["name"] ==
-                              "Paypal") {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (BuildContext
-                                  context) =>
-                                      PaypalPayment(
+                              if (widget.paymentMethods[index_]["name"] ==
+                                  "Paypal") {
+                                fun(number)async{
+                                  print('order id: '+number);
+                                }
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          PaypalPayment(
                                         type,
-                                        onFinish:
-                                            (number) async {},
+                                              AUTH_KEY,UID,
+
+                                       fun
                                       ),
-                                ));
-                          } else if (widget
-                              .paymentMethods[
-                          index_]["name"] ==
-                              "Bank Transfer") {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (BuildContext
-                                  context) =>
-                                      BkashPaymentActivity(
-                                          widget.paymentMethods[
-                                          index_],
-                                          UID,
-                                          AUTH_KEY,
-                                          payable_amount,
-                                          docID,
-                                          type),
-                                ));
-                          }
-                        },
-                        child: Card(
-                            color: Colors.white70,
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(
-                                  00.0),
-                            ),
-                            child: ListTile(
-                              trailing: Icon(Icons
-                                  .arrow_right),
-                              title: Text(widget
-                                  .paymentMethods[
-                              index_]["name"]),
-                            )));
-                  },
+                                    ));
+                              } else if (widget.paymentMethods[index_]
+                                      ["name"] ==
+                                  "Bank Transfer") {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          BkashPaymentActivity(
+                                              widget.paymentMethods[index_],
+                                              UID,
+                                              AUTH_KEY,
+                                              payable_amount,
+                                              docID,
+                                              type),
+                                    ));
+                              } else if (widget.paymentMethods[index_]
+                                      ["name"] ==
+                                  "Pay Later") {
+                                if (type == "Prescription Service") {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              MakePrescriptionRequestWidget(
+                                                  AUTH_KEY,
+                                                  UID,
+                                                  "No trans id",
+                                                  payable_amount,
+                                                  docID,
+                                                  "0",
+                                                  payable_amount,
+                                                  "1")));
+                                } else  if (type == "Prescription Review") {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              ChoosePrescriptionForPrescriptionreview(AUTH_KEY,UID, docID,"No Trans id",
+                                                 "0","1","0")));
+                                }  else if (type == "Video Call") {
+
+
+                                  final http.Response response = await http.post(
+                                    _baseUrl + 'add_video_appointment_info',
+                                    headers: <String, String>{
+                                      'Content-Type': 'application/json; charset=UTF-8',
+                                      'Authorization': AUTH_KEY,
+                                    },
+                                    body: jsonEncode(<String, String>{
+                                      'patient_id': UID,
+                                      'doctor_id': docID,
+                                      'payment_details': "No trans id",
+                                      'payment_status': "0",
+                                      'amount': payable_amount,
+                                      'is_review_appointment': "1",
+                                      'isPaymentPending': "1",
+
+                                    }),
+                                  );
+
+                                  if(response.statusCode==200){
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop();
+                                  }
+
+
+                                }else if (type == "Follow up Video Appointment") {
+                                  final http.Response response = await http.post(
+                                    _baseUrl + 'add_video_appointment_info',
+                                    headers: <String, String>{
+                                      'Content-Type': 'application/json; charset=UTF-8',
+                                      'Authorization': AUTH_KEY,
+                                    },
+                                    body: jsonEncode(<String, String>{
+                                      'patient_id': UID,
+                                      'doctor_id': docID,
+                                      'payment_details': "No trans id",
+                                      'payment_status': "0",
+                                      'amount': payable_amount,
+                                      'is_review_appointment': "1",
+                                      'isPaymentPending': "1",
+                                    }),
+                                  );
+
+
+                                  if(response.statusCode==200){
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop();
+                                  }
+                                  // Navigator.of(context).pop();
+                                }else if (type == '1 Month Subscription') {
+                                  DateTime selectedDate = DateTime.now();
+                                  String startDate = (selectedDate.year).toString() +
+                                      "-" +
+                                      (selectedDate.month).toString() +
+                                      "-" +
+                                      (selectedDate.day).toString();
+                                  DateTime endDate_ =
+                                  DateTime.now().add((Duration(days: 30)));
+                                  endDate_.add((Duration(days: 30)));
+                                  String endDate =
+                                      (DateTime.now().add((Duration(days: 30))).year)
+                                          .toString() +
+                                          "-" +
+                                          (DateTime.now().add((Duration(days: 30))).month)
+                                              .toString() +
+                                          "-" +
+                                          (DateTime.now().add((Duration(days: 30))).day)
+                                              .toString();
+
+                                  final http.Response response = await http.post(
+                                    _baseUrl + 'add_subscription_info',
+                                    headers: <String, String>{
+                                      'Content-Type': 'application/json; charset=UTF-8',
+                                      'Authorization': AUTH_KEY,
+                                    },
+                                    body: jsonEncode(<String, String>{
+                                      'patient_id': UID,
+                                      'dr_id': docID,
+                                      'payment_status': "0",
+                                      'number_of_months': "1",
+                                      'payment_details': "No trans id",
+                                      'starts': startDate,
+                                      'amount': payable_amount,
+                                      'ends': endDate,
+                                      'status': "1",
+                                      'isPaymentPending': "1",
+
+                                    }),
+                                  );
+                                  // showThisToast(response.statusCode.toString());
+                                  //popup count
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  // Navigator.of(context).pop();
+                                } else if (type == '3 Month Subscription') {
+                                  DateTime selectedDate = DateTime.now();
+                                  String startDate = (selectedDate.year).toString() +
+                                      "-" +
+                                      (selectedDate.month).toString() +
+                                      "-" +
+                                      (selectedDate.day).toString();
+
+                                  selectedDate.add((Duration(days: 90)));
+                                  String endDate =
+                                      (DateTime.now().add((Duration(days: 90))).year)
+                                          .toString() +
+                                          "-" +
+                                          (DateTime.now().add((Duration(days: 90))).month)
+                                              .toString() +
+                                          "-" +
+                                          (DateTime.now().add((Duration(days: 90))).day)
+                                              .toString();
+
+                                  final http.Response response = await http.post(
+                                    _baseUrl + 'add_subscription_info',
+                                    headers: <String, String>{
+                                      'Content-Type': 'application/json; charset=UTF-8',
+                                      'Authorization': AUTH_KEY,
+                                    },
+                                    body: jsonEncode(<String, String>{
+                                      'patient_id': UID,
+                                      'dr_id': docID,
+                                      'payment_status': "0",
+                                      'number_of_months': "3",
+                                      'payment_details': "No trans id",
+                                      'starts': startDate,
+                                      'amount': payable_amount,
+                                      'ends': endDate,
+                                      'status': "1",
+
+                                      'isPaymentPending': "1",
+                                    }),
+                                  );
+                                  // showThisToast(response.statusCode.toString());
+                                  //popup count
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  //  Navigator.of(context).pop();
+                                } else if (type== '6 Month Subscription') {
+                                  DateTime selectedDate = DateTime.now();
+                                  String startDate = (selectedDate.year).toString() +
+                                      "-" +
+                                      (selectedDate.month).toString() +
+                                      "-" +
+                                      (selectedDate.day).toString();
+
+                                  selectedDate.add((Duration(days: 180)));
+                                  String endDate =
+                                      (DateTime.now().add((Duration(days: 180))).year)
+                                          .toString() +
+                                          "-" +
+                                          (DateTime.now().add((Duration(days: 180))).month)
+                                              .toString() +
+                                          "-" +
+                                          (DateTime.now().add((Duration(days: 180))).day)
+                                              .toString();
+                                  final http.Response response = await http.post(
+                                    _baseUrl + 'add_subscription_info',
+                                    headers: <String, String>{
+                                      'Content-Type': 'application/json; charset=UTF-8',
+                                      'Authorization': AUTH_KEY,
+                                    },
+                                    body: jsonEncode(<String, String>{
+                                      'patient_id': UID,
+                                      'dr_id': docID,
+                                      'payment_status': "0",
+                                      'number_of_months': "6",
+                                      'payment_details': "No trans id",
+                                      'starts': startDate,
+                                      'amount': payable_amount,
+                                      'ends': endDate,
+                                      'status': "1",
+
+                                      'isPaymentPending': "1",
+                                    }),
+                                  );
+                                  //  showThisToast(response.statusCode.toString());
+                                  //popup count
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  //Navigator.of(context).pop();
+                                } else if (type == '1 Year Subscription') {
+                                  DateTime selectedDate = DateTime.now();
+                                  String startDate = (selectedDate.year).toString() +
+                                      "-" +
+                                      (selectedDate.month).toString() +
+                                      "-" +
+                                      (selectedDate.day).toString();
+
+                                  selectedDate.add((Duration(days: 360)));
+                                  String endDate =
+                                      (DateTime.now().add((Duration(days: 360))).year)
+                                          .toString() +
+                                          "-" +
+                                          (DateTime.now().add((Duration(days: 360))).month)
+                                              .toString() +
+                                          "-" +
+                                          (DateTime.now().add((Duration(days: 360))).day)
+                                              .toString();
+
+                                  final http.Response response = await http.post(
+                                    _baseUrl + 'add_subscription_info',
+                                    headers: <String, String>{
+                                      'Content-Type': 'application/json; charset=UTF-8',
+                                      'Authorization': AUTH_KEY,
+                                    },
+                                    body: jsonEncode(<String, String>{
+                                      'patient_id': UID,
+                                      'dr_id': docID,
+                                      'payment_status': "0",
+                                      'number_of_months': "12",
+                                      'payment_details': "No trans id",
+                                      'starts': startDate,
+                                      'amount': payable_amount,
+                                      'ends': endDate,
+                                      'status': "1",
+
+                                      'isPaymentPending': "1",
+                                    }),
+                                  );
+
+                                  // showThisToast(response.statusCode.toString());
+                                  // showThisToast(response.body);
+                                  //popup count
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  // Navigator.of(context).pop();
+                                }
+                              }
+                            },
+                            child: Card(
+                                color: Colors.white70,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(00.0),
+                                ),
+                                child: ListTile(
+                                  trailing: Icon(Icons.arrow_right),
+                                  title: Text(
+                                      widget.paymentMethods[index_]["name"]),
+                                )));
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            margin: const EdgeInsets.only(
-                top: 5, left: 15, right: 15),
-            color: Colors.white,
-          ));
-        }else{
-          if(type == "Video Call"){
-
-            String chatRoom = createChatRoomName(
-                int.parse(UID), int.parse(docID));
+                margin: const EdgeInsets.only(top: 5, left: 15, right: 15),
+                color: Colors.white,
+              ));
+        } else {
+          if (type == "Video Call") {
+            String chatRoom =
+                createChatRoomName(int.parse(UID), int.parse(docID));
             CHAT_ROOM = chatRoom;
             //   showThisToast("chat room " + CHAT_ROOM);
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                        docID,
-                        docNAME,
-                        docPhoto,
-                        UID,
-                        UNAME,
-                        UPHOTO,
-                        chatRoom)));
-
-          }else  if(type == "Chat"){
-
-            String chatRoom = createChatRoomName(
-                int.parse(UID), int.parse(docID));
+                    builder: (context) => ChatScreen(docID, docNAME, docPhoto,
+                        UID, UNAME, UPHOTO, chatRoom)));
+          } else if (type == "Chat") {
+            String chatRoom =
+                createChatRoomName(int.parse(UID), int.parse(docID));
             CHAT_ROOM = chatRoom;
             //   showThisToast("chat room " + CHAT_ROOM);
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                        docID,
-                        docNAME,
-                        docPhoto,
-                        UID,
-                        UNAME,
-                        UPHOTO,
-                        chatRoom)));
-
-          }else  if(type == "1 Month Subscription"){
-
-            String chatRoom = createChatRoomName(
-                int.parse(UID), int.parse(docID));
+                    builder: (context) => ChatScreen(docID, docNAME, docPhoto,
+                        UID, UNAME, UPHOTO, chatRoom)));
+          } else if (type == "1 Month Subscription") {
+            String chatRoom =
+                createChatRoomName(int.parse(UID), int.parse(docID));
             CHAT_ROOM = chatRoom;
             //   showThisToast("chat room " + CHAT_ROOM);
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                        docID,
-                        docNAME,
-                        docPhoto,
-                        UID,
-                        UNAME,
-                        UPHOTO,
-                        chatRoom)));
-
-          }else  if(type == "3 Month Subscription"){
-
-            String chatRoom = createChatRoomName(
-                int.parse(UID), int.parse(docID));
+                    builder: (context) => ChatScreen(docID, docNAME, docPhoto,
+                        UID, UNAME, UPHOTO, chatRoom)));
+          } else if (type == "3 Month Subscription") {
+            String chatRoom =
+                createChatRoomName(int.parse(UID), int.parse(docID));
             CHAT_ROOM = chatRoom;
             //   showThisToast("chat room " + CHAT_ROOM);
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                        docID,
-                        docNAME,
-                        docPhoto,
-                        UID,
-                        UNAME,
-                        UPHOTO,
-                        chatRoom)));
-
-          }else  if(type == "6 Month Subscription"){
-
-            String chatRoom = createChatRoomName(
-                int.parse(UID), int.parse(docID));
+                    builder: (context) => ChatScreen(docID, docNAME, docPhoto,
+                        UID, UNAME, UPHOTO, chatRoom)));
+          } else if (type == "6 Month Subscription") {
+            String chatRoom =
+                createChatRoomName(int.parse(UID), int.parse(docID));
             CHAT_ROOM = chatRoom;
             //   showThisToast("chat room " + CHAT_ROOM);
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                        docID,
-                        docNAME,
-                        docPhoto,
-                        UID,
-                        UNAME,
-                        UPHOTO,
-                        chatRoom)));
-
-          }else  if(type == "1 Year Subscription"){
-
-            String chatRoom = createChatRoomName(
-                int.parse(UID), int.parse(docID));
+                    builder: (context) => ChatScreen(docID, docNAME, docPhoto,
+                        UID, UNAME, UPHOTO, chatRoom)));
+          } else if (type == "1 Year Subscription") {
+            String chatRoom =
+                createChatRoomName(int.parse(UID), int.parse(docID));
             CHAT_ROOM = chatRoom;
             //   showThisToast("chat room " + CHAT_ROOM);
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                        docID,
-                        docNAME,
-                        docPhoto,
-                        UID,
-                        UNAME,
-                        UPHOTO,
-                        chatRoom)));
-
+                    builder: (context) => ChatScreen(docID, docNAME, docPhoto,
+                        UID, UNAME, UPHOTO, chatRoom)));
           }
-          //showThisToast("Allready purchased" +"   "+docID+"  "+docNAME+"  "+type);
+          //showThisToast("Already purchased" +"   "+docID+"  "+docNAME+"  "+type);
         }
       },
-      child: Text(direction),
+      child: Card(
+        color: Colors.red,
+        child: Padding(
+          padding: EdgeInsets.all(10),
+          child: Text(
+            direction,
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ),
     );
   }
 }
 
 class BkashPaymentActivity extends StatefulWidget {
-  String uid, auth, amount, docid, TYPE;
+  String uid, auth, amount, docid, TYPE,USER_NAME,USER_PHOTO;
   dynamic paymentMethodBody;
 
   BkashPaymentActivity(this.paymentMethodBody, this.uid, this.auth, this.amount,
@@ -656,6 +869,20 @@ class BkashPaymentActivity extends StatefulWidget {
 }
 
 class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
+
+  @override
+  void initState() async{
+    // TODO: implement initState
+    super.initState();
+    Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+    prefs = await _prefs;
+
+
+    setState(() {
+      widget.USER_NAME = prefs.getString("uname");
+      widget.USER_PHOTO = prefs.getString("uphoto");
+    });
+  }
   final _formKey = GlobalKey<FormState>();
   String transID;
   Widget StandbyWid = Text(
@@ -769,10 +996,13 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                 };
                                 Map<String, String> header = <String, String>{
                                   'Content-Type':
-                                  'application/json; charset=UTF-8',
+                                      'application/json; charset=UTF-8',
                                   'Authorization': widget.auth,
                                 };
                                 function_name(val) {
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
                                   Navigator.of(context).pop();
                                   Navigator.of(context).pop();
                                   Navigator.of(context).pop();
@@ -792,6 +1022,8 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
 //                                                  widget.amount)));
                                 }
 
+                                print(body);
+
                                 if (selectedImage == null) {
                                   apiRequestWithMultipart(
                                       null,
@@ -809,7 +1041,8 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                       'add_payment_info_only_for_chamber_appoiontment',
                                       function_name);
                                 }
-                              } else if (widget.TYPE == 'Prescription Service') {
+                              } else if (widget.TYPE ==
+                                  'Prescription Service') {
                                 Map<String, String> body = <String, String>{
                                   'patient_id': widget.uid,
                                   'dr_id': widget.docid,
@@ -835,7 +1068,8 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                                   payable_amount,
                                                   widget.docid,
                                                   val["message"].toString(),
-                                                  widget.amount)));
+                                                  widget.amount,
+                                                  "0")));
                                 }
 
                                 if (selectedImage == null) {
@@ -892,6 +1126,7 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                   'amount': widget.amount,
                                   'ends': endDate,
                                   'status': "0",
+                                  'isPaymentPending': "0",
                                 };
                                 Map<String, String> header = <String, String>{
                                   'Content-Type':
@@ -964,6 +1199,7 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                   'amount': widget.amount,
                                   'ends': endDate,
                                   'status': "0",
+                                  'isPaymentPending': "0",
                                 };
                                 Map<String, String> header = <String, String>{
                                   'Content-Type':
@@ -1031,6 +1267,7 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                   'amount': widget.amount,
                                   'ends': endDate,
                                   'status': "0",
+                                  'isPaymentPending': "0",
                                 };
                                 Map<String, String> header = <String, String>{
                                   'Content-Type':
@@ -1097,6 +1334,7 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                   'amount': widget.amount,
                                   'ends': endDate,
                                   'status': "0",
+                                  'isPaymentPending': "0",
                                 };
                                 Map<String, String> header = <String, String>{
                                   'Content-Type':
@@ -1208,12 +1446,12 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                       .child(USER_ID)
                                       .child(docID)
                                       .child("sender_name")
-                                      .set(USER_NAME);
+                                      .set(widget.USER_NAME);
                                   _messageDatabaseReference_last
                                       .child(USER_ID)
                                       .child(docID)
                                       .child("sender_photo")
-                                      .set(USER_PHOTO);
+                                      .set(widget.USER_PHOTO);
                                   _messageDatabaseReference_last
                                       .child(USER_ID)
                                       .child(docID)
@@ -1257,12 +1495,12 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                       .child(docID)
                                       .child(USER_ID)
                                       .child("sender_name")
-                                      .set(USER_NAME);
+                                      .set(UNAME);
                                   _messageDatabaseReference_last
                                       .child(docID)
                                       .child(USER_ID)
                                       .child("sender_photo")
-                                      .set(USER_PHOTO);
+                                      .set(widget.USER_PHOTO);
                                   _messageDatabaseReference_last
                                       .child(docID)
                                       .child(USER_ID)
@@ -1278,8 +1516,8 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                       MaterialPageRoute(
                                           builder: (context) => ChatScreen(
                                               widget.uid,
-                                              USER_NAME,
-                                              USER_PHOTO,
+                                              widget.USER_NAME,
+                                              widget.USER_PHOTO,
                                               widget.docid,
                                               docNAME,
                                               docPhoto,
@@ -1308,9 +1546,9 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                   'patient_id': widget.uid,
                                   'doctor_id': widget.docid,
                                   'payment_details': transID,
-                                  'payment_status': "0",
                                   'amount': widget.amount,
                                   'is_review_appointment': "0",
+                                  'payment_status': "0",
                                 };
 
                                 Map<String, String> header = <String, String>{
@@ -1328,6 +1566,8 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                   showThisToast(
                                       "Please wait while your pending transaction gets approved");
                                 }
+
+                                //  showThisToast(body.toString());
 
                                 if (selectedImage == null) {
                                   apiRequestWithMultipart(
@@ -1370,7 +1610,7 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                                   widget.uid,
                                                   widget.docid,
                                                   transID,
-                                                  val["message"].toString())));
+                                                  val["message"].toString(),"0","0")));
                                 }
 
                                 if (selectedImage == null) {
@@ -1408,7 +1648,12 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                 };
 
                                 function_name(data) {
-                                  mainP();
+                                  // mainP();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
                                   showThisToast(
                                       "Please wait while your pending transaction gets approved");
                                 }
@@ -1431,7 +1676,7 @@ class _BkashPaymentActivityState extends State<BkashPaymentActivity> {
                                       function_name);
                                 }
                               } else {
-                                showThisToast("Unknwon service " + widget.TYPE);
+                                //   showThisToast("Unknwon service " + widget.TYPE);
                               }
                               setState(() {
                                 StandbyWid = Text("Please wait");
@@ -1698,7 +1943,7 @@ Widget Educations(List education_info) {
 //CircleAvatar(
 //radius: 70,
 //backgroundImage: NetworkImage(
-//"http://telemedicine.drshahidulislam.com/" + widget.photo,
+//"https://appointmentbd.com/" + widget.photo,
 //)),
 //Center(
 //child: Padding(
